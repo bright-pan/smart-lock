@@ -1,0 +1,13 @@
+target remote localhost:3333 
+monitor reset halt 
+monitor wait_halt 
+monitor sleep 100 
+monitor poll 
+monitor flash probe 0 
+monitor flash write_image erase main.bin 0x08000000
+monitor sleep 200 
+monitor soft_reset_halt m
+onitor wait_halt 
+monitor poll 
+thbreak main 
+continue 

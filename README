@@ -1,0 +1,155 @@
+1. building the project
+   
+   a. add environment variable in ~/.bashrc
+
+      export RTT_ROOT=/home/bright/smart-lock/RT-Thread
+      export RTT_EXEC_PATH=/usr/local/gcc-arm-none-eabi-4_7-2013q1/bin
+      export RTT_CC=gcc
+      export RTT_BUILD=debug
+
+   b. modify rtconfig.py for compile command and other variable
+
+      PROJECT = 'rtthread'      
+      ARCH='arm'
+      CPU='cortex-m3'
+      
+      EXEC_PATH = '/usr/local/gcc-arm-none-eabi-4_7-2013q1/bin'
+
+   c. copy bsp/stm32f10x/* to your project root directory
+
+      .
+      ├── README
+      ├── RT-Thread
+      ├── Libraries
+      ├── SConscript
+      ├── SConstruct
+      ├── rtconfig.h
+      ├── rtconfig.py
+      ├── yuettak_smart_lock.cfg
+      ├── stm32_rom.ld
+      ├── gdb.init
+      ├── stm32f10x_conf.h
+      ├── stm32f10x_it.c
+      ├── stm32f10x_it.h
+      ├── startup.c
+      ├── application.c
+      ├── board.c
+      ├── board.h
+      ├── calibration.c
+      ├── dm9000a.c
+      ├── dm9000a.h
+      ├── enc28j60.c
+      ├── enc28j60.h
+      ├── ili_lcd_general.c
+      ├── ili_lcd_general.h
+      ├── led.c
+      ├── led.h
+      ├── msd.c
+      ├── msd.h
+      ├── rtc.c
+      ├── rtc.h
+      ├── sdcard.c
+      ├── sdcard.h
+      ├── serial.c
+      ├── serial.h
+      ├── ssd1289.c
+      ├── ssd1289.h
+      ├── stm3210c_eval_lcd.c
+      ├── stm3210c_eval_lcd.h
+      ├── stm3210e_eval_lcd.c
+      ├── stm3210e_eval_lcd.h
+      ├── touch.c
+      ├── touch.h
+      ├── usart.c
+      └── usart.h
+
+      
+
+
+   d. compile the project for debug and release
+
+   for debug:
+
+   cd the project root directory
+   run "scons" and "scons -j 4"
+
+   for release:
+
+   set environment variable RTT_BUILD=release
+   cd the project root directory
+   run "scons" and "scons -j 4"
+
+2. debug and program
+   
+   a. for program:
+
+   install openocd for debug and enable jlink
+   link jlink to the board
+   cd the project root directory
+   run "
+   
+   sudo /usr/local/bin/openocd -f yuettak_stm32_f1_interface.cfg -f yuettak_stm32_f103_board.cfg
+
+   telnet localhost 4444
+   {
+	halt
+	flash write_image erase $PROJECT.elf
+	reset
+   }
+
+   "
+
+   b. for debug
+   
+   install openocd for debug and enable jlink
+   link jlink to the board
+   cd the project root directory
+   run "
+   
+   sudo /usr/local/bin/openocd -f yuettak_stm32_f1_interface.cfg -f yuettak_stm32_f103_board.cfg
+
+   telnet localhost 4444
+   {
+	halt
+	flash write_image erase $PROJECT.elf
+	reset
+
+   }
+   open emacs and M-x gdb
+   /usr/local/gcc-arm-none-eabi-4_7-2013q1/bin/arm-none-eabi-gdb –annotate=3 -x gdb.init $PROJECT.elf
+   {
+   	target remote localhost:3333 
+   	monitor reset halt 
+	monitor wait_halt 
+	monitor sleep 100 
+	monitor poll 
+	monitor flash probe 0 
+	monitor flash write_image erase main.bin 0x08000000
+	monitor sleep 200 
+	monitor soft_reset_halt m
+	onitor wait_halt 
+	monitor poll 
+	thbreak main 
+	continue 
+   }
+   {
+	target remote localhost:3333 
+   	monitor reset halt
+	monitor load
+   	monitor soft_reset_halt
+	thbreak main 
+	continue 
+   }
+   {
+	target remote localhost:3333
+   	monitor reset
+	monitor halt
+	load
+	disconnect
+	target remote localhost:3333
+	monitor reset
+	monitor halt
+	
+   }
+
+   "

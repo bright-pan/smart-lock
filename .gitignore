@@ -1,0 +1,12 @@
+*~
+*#
+*.o
+*.axf
+*.map
+*.bin
+*.hex
+*.pyc
+*.elf
+*.out
+.sconsign.dblite
+build/
