@@ -9,4 +9,5 @@
 *.elf
 *.out
 .sconsign.dblite
+cscope*
 build/

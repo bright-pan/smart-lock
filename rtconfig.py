@@ -1,7 +1,7 @@
 import os
 
 
-PROJECT = 'rtthread'
+PROJECT = 'smart_lock'
 # toolchains options
 ARCH='arm'
 CPU='cortex-m3'

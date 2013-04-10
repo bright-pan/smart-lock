@@ -116,7 +116,7 @@
 
    }
    open emacs and M-x gdb
-   /usr/local/gcc-arm-none-eabi-4_7-2013q1/bin/arm-none-eabi-gdb –annotate=3 -x gdb.init $PROJECT.elf
+   /usr/local/gcc-arm-none-eabi-4_7-2013q1/bin/arm-none-eabi-gdb -i=mi smart_lock.elf
    {
    	target remote localhost:3333 
    	monitor reset halt 
@@ -126,8 +126,8 @@
 	monitor flash probe 0 
 	monitor flash write_image erase main.bin 0x08000000
 	monitor sleep 200 
-	monitor soft_reset_halt m
-	onitor wait_halt 
+	monitor soft_reset_halt 
+	monitor wait_halt 
 	monitor poll 
 	thbreak main 
 	continue 
