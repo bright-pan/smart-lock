@@ -9,7 +9,7 @@
 
    b. modify rtconfig.py for compile command and other variable
 
-      PROJECT = 'rtthread'      
+      PROJECT = 'smart_lock'      
       ARCH='arm'
       CPU='cortex-m3'
       
@@ -25,7 +25,8 @@
       ├── SConstruct
       ├── rtconfig.h
       ├── rtconfig.py
-      ├── yuettak_smart_lock.cfg
+      ├── yuettak_smart_lock_jlink.cfg
+      ├── yuettak_smart_lock_openjtag.cfg
       ├── stm32_rom.ld
       ├── gdb.init
       ├── stm32f10x_conf.h
@@ -81,14 +82,14 @@
 
 2. debug and program
    
-   a. for program:
+   a. for program(jlink):
 
    install openocd for debug and enable jlink
    link jlink to the board
    cd the project root directory
    run "
    
-   sudo /usr/local/bin/openocd -f yuettak_stm32_f1_interface.cfg -f yuettak_stm32_f103_board.cfg
+   sudo /usr/local/bin/openocd -f yuettak_smart_lock_jlink.cfg 
 
    telnet localhost 4444
    {
@@ -98,15 +99,30 @@
    }
 
    "
-
-   b. for debug
-   
+   b. for program(openocd):
    install openocd for debug and enable jlink
    link jlink to the board
    cd the project root directory
    run "
    
-   sudo /usr/local/bin/openocd -f yuettak_stm32_f1_interface.cfg -f yuettak_stm32_f103_board.cfg
+   sudo /usr/local/bin/openocd -f yuettak_smart_lock_openjtag.cfg
+
+   telnet localhost 4444
+   {
+	halt
+	flash write_image erase $PROJECT.elf
+	reset
+   }
+
+
+   b. for debug
+   
+   install openocd for debug and enable jlink or openjtag
+   link jlink to the board
+   cd the project root directory
+   run "
+   
+   sudo /usr/local/bin/openocd -f yuettak_smart_lock.cfg
 
    telnet localhost 4444
    {

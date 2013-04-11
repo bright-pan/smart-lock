@@ -55,20 +55,20 @@ if PLATFORM == 'gcc':
     OBJDUMP = PREFIX + 'objdump'
     OBJCPY = PREFIX + 'objcopy'
 
-    DEVICE = ' -mcpu=cortex-m3 -mthumb -ffunction-sections -fdata-sections'
-    CFLAGS = DEVICE
-    AFLAGS = ' -c' + DEVICE + ' -x assembler-with-cpp'
+    DEVICE = ' -mcpu=cortex-m3 -mthumb'
+    CFLAGS = ' -std=gnu99 -Wall -ffunction-sections -fdata-sections -fno-builtin' + DEVICE
+    AFLAGS = ' -c' + DEVICE
     
-    LFLAGS = DEVICE + ' -Wl,--gc-sections,-Map=' + PROJECT + '.map,-cref,-u,Reset_Handler -T stm32_rom.ld'
+    LFLAGS = DEVICE + ' -nostartfiles -flto -Wl,--gc-sections,-Map=' + PROJECT + '.map,-cref,-u,Reset_Handler -T stm32_rom.ld'
 
     CPATH = ''
     LPATH = ''
 
     if BUILD == 'debug':
-        CFLAGS += ' -std=gnu99 -Wall -O0 -gdwarf-2'
-        AFLAGS += ' -gdwarf-2'
+        CFLAGS += ' -O0 -g -gstabs+'
+        AFLAGS += ' -g -gstabs+'
     else:
-        CFLAGS += ' -std=gnu99 -Wall -O2'
+        CFLAGS += ' -O2 -flto'
 
     POST_ACTION = OBJCPY + ' -O binary $TARGET ' + PROJECT + '.bin\n' + OBJCPY + ' -O ihex $TARGET ' + PROJECT + '.hex\n' + SIZE + ' $TARGET \n' 
 
