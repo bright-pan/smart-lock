@@ -80,6 +80,10 @@
    cd the project root directory
    run "scons" and "scons -j 4"
 
+   e. clean the project
+   
+   run "scons -c"
+
 2. debug and program
    
    a. for program(jlink):
@@ -99,9 +103,10 @@
    }
 
    "
-   b. for program(openocd):
-   install openocd for debug and enable jlink
-   link jlink to the board
+   b. for program(openjtag):
+
+   install openocd for debug and enable openjtag
+   link openjtag to the board
    cd the project root directory
    run "
    
@@ -109,63 +114,40 @@
 
    telnet localhost 4444
    {
-	halt
-	flash write_image erase $PROJECT.elf
-	reset
+	newboot	
    }
 
+
+   "
 
    b. for debug
    
-   install openocd for debug and enable jlink or openjtag
-   link jlink to the board
+   install openocd for debug and enable openjtag
+   link openjtag to the board
    cd the project root directory
    run "
    
-   sudo /usr/local/bin/openocd -f yuettak_smart_lock.cfg
+   sudo /usr/local/bin/openocd -f yuettak_smart_lock_openjtag.cfg
 
    telnet localhost 4444
    {
-	halt
-	flash write_image erase $PROJECT.elf
-	reset
-
+	newboot
    }
    open emacs and M-x gdb
-   /usr/local/gcc-arm-none-eabi-4_7-2013q1/bin/arm-none-eabi-gdb -i=mi smart_lock.elf
-   {
-   	target remote localhost:3333 
-   	monitor reset halt 
-	monitor wait_halt 
-	monitor sleep 100 
-	monitor poll 
-	monitor flash probe 0 
-	monitor flash write_image erase main.bin 0x08000000
-	monitor sleep 200 
-	monitor soft_reset_halt 
-	monitor wait_halt 
-	monitor poll 
-	thbreak main 
-	continue 
-   }
-   {
-	target remote localhost:3333 
-   	monitor reset halt
-	monitor load
-   	monitor soft_reset_halt
-	thbreak main 
-	continue 
-   }
-   {
-	target remote localhost:3333
-   	monitor reset
-	monitor halt
-	load
-	disconnect
-	target remote localhost:3333
-	monitor reset
-	monitor halt
-	
-   }
+   /usr/local/gcc-arm-none-eabi-4_7-2013q1/bin/arm-none-eabi-gdb -i=mi smart_lock.elf -x gdb.init
 
+   gdb.init:
+   {
+	target remote localhost:3333
+	monitor init
+	monitor reset init
+	monitor sleep 200 
+	monitor flash probe 0 
+	monitor sleep 200 
+	load
+	monitor reset halt
+	monitor poll
+	thbreak main 
+	continue 
+   }
    "
