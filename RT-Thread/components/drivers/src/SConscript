@@ -2,7 +2,7 @@ from building import *
 
 cwd = GetCurrentDir()
 src	= Glob('*.c')
-CPPPATH = [cwd + '/../include']
+CPPPATH = [cwd + '/../include'] + [cwd + '/../include/drivers']
 group = DefineGroup('DeviceDrivers', src, depend = ['RT_USING_DEVICE_IPC'], CPPPATH = CPPPATH)
 
 Return('group')

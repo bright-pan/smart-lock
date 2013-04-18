@@ -25,6 +25,7 @@
 #include "stm32f10x_it.h"
 #include <board.h>
 #include <rtthread.h>
+#include <rtdevice.h>
 
 /** @addtogroup Template_Project
   * @{
@@ -160,13 +161,13 @@ void DMA1_Channel2_IRQHandler(void)
 void USART1_IRQHandler(void)
 {
 #ifdef RT_USING_UART1
-    extern struct rt_device uart1_device;
-	extern void rt_hw_serial_isr(struct rt_device *device);
+    extern rt_serial_t serial_usart1;
+    extern void rt_hw_serial_isr(struct rt_serial_device *serial);
 
     /* enter interrupt */
     rt_interrupt_enter();
 
-    rt_hw_serial_isr(&uart1_device);
+    rt_hw_serial_isr(&serial_usart1);
 
     /* leave interrupt */
     rt_interrupt_leave();
@@ -183,13 +184,13 @@ void USART1_IRQHandler(void)
 void USART2_IRQHandler(void)
 {
 #ifdef RT_USING_UART2
-    extern struct rt_device uart2_device;
-	extern void rt_hw_serial_isr(struct rt_device *device);
+    extern rt_serial_t serial_usart2;
+    extern void rt_hw_serial_isr(struct rt_serial_device *serial);
 
     /* enter interrupt */
     rt_interrupt_enter();
 
-    rt_hw_serial_isr(&uart2_device);
+    rt_hw_serial_isr(&serial_usart2);
 
     /* leave interrupt */
     rt_interrupt_leave();
@@ -206,13 +207,13 @@ void USART2_IRQHandler(void)
 void USART3_IRQHandler(void)
 {
 #ifdef RT_USING_UART3
-    extern struct rt_device uart3_device;
-	extern void rt_hw_serial_isr(struct rt_device *device);
+    extern rt_serial_t serial_usart3;
+    extern void rt_hw_serial_isr(struct rt_serial_device *serial);
 
     /* enter interrupt */
     rt_interrupt_enter();
 
-    rt_hw_serial_isr(&uart3_device);
+    rt_hw_serial_isr(&serial_usart3);
 
     /* leave interrupt */
     rt_interrupt_leave();
