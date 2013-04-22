@@ -50,8 +50,11 @@ static struct rt_thread led_0_thread;
 static void led_0_thread_entry(void* parameter)
 {
   unsigned int count=0;
-
+  rt_device_t usart;
   rt_hw_led_init();
+  
+  usart = rt_device_find("uart1");
+
 
   while (1)
   {
@@ -59,6 +62,7 @@ static void led_0_thread_entry(void* parameter)
 #ifdef RT_USING_FINSH
     rt_kprintf("led on, count : %d\r\n",count);
 #endif
+    rt_device_write(usart,0,"led on",20);
     count++;
     rt_hw_led_on(0);
     rt_thread_delay( RT_TICK_PER_SECOND/2 ); /* sleep 0.5 second and switch to other thread */

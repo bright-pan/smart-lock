@@ -60,7 +60,7 @@
 /* Using Device System */
 #define RT_USING_DEVICE
 #define RT_USING_DEVICE_IPC
-#define RT_USING_UART1
+#define RT_USING_USART1
 #define RT_USING_SERIAL
 
 /* SECTION: Console options */
@@ -69,7 +69,7 @@
 #define RT_CONSOLEBUF_SIZE	128
 
 /* SECTION: finsh, a C-Express shell */
-#define RT_USING_FINSH
+//#define RT_USING_FINSH
 /* Using symbol table */
 #define FINSH_USING_SYMTAB
 #define FINSH_USING_DESCRIPTION
