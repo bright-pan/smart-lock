@@ -169,6 +169,9 @@ void rt_hw_timer_handler(void)
  */
 void rt_hw_board_init()
 {
+	extern void rt_hw_serialx_register1(void);
+	rt_device_t usart;
+	
 	/* NVIC Configuration */
 	NVIC_Configuration();
 
@@ -179,8 +182,8 @@ void rt_hw_board_init()
 	EXT_SRAM_Configuration();
 #endif
 
-	rt_hw_usart_init();
-	rt_console_set_device(CONSOLE_DEVICE);
+//	rt_hw_usart_init();
+		rt_console_set_device(CONSOLE_DEVICE);
 }
 
 /*@}*/

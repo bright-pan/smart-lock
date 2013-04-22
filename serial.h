@@ -1,7 +1,7 @@
 /*
  * File      : serial.h
  * This file is part of RT-Thread RTOS
- * COPYRIGHT (C) 2009 - 2010, RT-Thread Development Team
+ * COPYRIGHT (C) 2006 - 2012, RT-Thread Development Team
  *
  * The license and distribution terms for this file may be
  * found in the file LICENSE in this distribution or at
@@ -9,62 +9,125 @@
  *
  * Change Logs:
  * Date           Author       Notes
- * 2009-01-05     Bernard      first version
- * 2010-03-29     Bernard      remove interrupt tx and DMA rx mode.
+ * 2012-05-15     lgnq         first version.
+ * 2012-05-28     bernard      chage interfaces
  */
-#ifndef __RT_HW_SERIAL_H__
-#define __RT_HW_SERIAL_H__
 
-#include <rthw.h>
+#ifndef __SERIAL_H__
+#define __SERIAL_H__
+
 #include <rtthread.h>
+#include <rtdevice.h>
 
-/* STM32F10x library definitions */
-#include <stm32f10x.h>
+#define BAUD_RATE_4800                  4800
+#define BAUD_RATE_9600                  9600
+#define BAUD_RATE_115200                115200
 
-#define UART_RX_BUFFER_SIZE		64
-#define UART_TX_DMA_NODE_SIZE	4
+#define DATA_BITS_5                     5
+#define DATA_BITS_6                     6
+#define DATA_BITS_7                     7
+#define DATA_BITS_8                     8
+#define DATA_BITS_9                     9
 
-/* data node for Tx Mode */
-struct stm32_serial_data_node
+#define STOP_BITS_1                     0
+#define STOP_BITS_2                     1
+#define STOP_BITS_3                     2
+#define STOP_BITS_4                     3
+
+#define PARITY_NONE                     0
+#define PARITY_ODD                      1
+#define PARITY_EVEN                     2
+
+#define BIT_ORDER_LSB                   0
+#define BIT_ORDER_MSB                   1
+
+#define NRZ_NORMAL                      0       /* Non Return to Zero : normal mode */
+#define NRZ_INVERTED                    1       /* Non Return to Zero : inverted mode */
+
+#define UART_RX_BUFFER_SIZE             64
+#define UART_TX_BUFFER_SIZE             64
+#define SERIAL_RBUFFER_SIZE             64
+
+#define RT_DEVICE_CTRL_CONFIG           0x03    /* configure device */
+#define RT_DEVICE_CTRL_SET_INT          0x10    /* enable receive irq */
+#define RT_DEVICE_CTRL_CLR_INT          0x11    /* disable receive irq */
+#define RT_DEVICE_CTRL_GET_INT          0x12
+
+#define RT_SERIAL_RX_INT                0x01
+#define RT_SERIAL_TX_INT                0x02
+
+#define RT_SERIAL_ERR_OVERRUN           0x01
+#define RT_SERIAL_ERR_FRAMING           0x02
+#define RT_SERIAL_ERR_PARITY            0x03
+
+#define RT_SERIAL_TX_DATAQUEUE_SIZE     40
+#define RT_SERIAL_TX_DATAQUEUE_LWM      30
+
+/* Default config for serial_configure structure */
+#define RT_SERIAL_CONFIG_DEFAULT           \
+{                                          \
+    BAUD_RATE_115200, /* 115200 bits/s */  \
+    DATA_BITS_8,      /* 8 databits */     \
+    STOP_BITS_1,      /* 1 stopbit */      \
+    PARITY_NONE,      /* No parity  */     \
+    BIT_ORDER_LSB,    /* LSB first sent */ \
+    NRZ_NORMAL,       /* Normal mode */    \
+    0                                      \
+}
+
+struct serial_ringbuffer
 {
-	rt_uint8_t *data_ptr;
-	rt_size_t  data_size;
-	struct stm32_serial_data_node *next, *prev;
+    rt_uint8_t  buffer[SERIAL_RBUFFER_SIZE];
+    rt_uint16_t put_index, get_index;
 };
-struct stm32_serial_dma_tx
+
+struct serial_configure
 {
-	/* DMA Channel */
-	DMA_Channel_TypeDef* dma_channel;
-
-	/* data list head and tail */
-	struct stm32_serial_data_node *list_head, *list_tail;
-
-	/* data node memory pool */
-	struct rt_mempool data_node_mp;
-	rt_uint8_t data_node_mem_pool[UART_TX_DMA_NODE_SIZE *
-		(sizeof(struct stm32_serial_data_node) + sizeof(void*))];
+    rt_uint32_t baud_rate;
+    rt_uint32_t data_bits               :4;
+    rt_uint32_t stop_bits               :2;
+    rt_uint32_t parity                  :2;
+    rt_uint32_t bit_order               :1;
+    rt_uint32_t invert                  :1;
+    rt_uint32_t reserved                :20;
 };
-
-struct stm32_serial_int_rx
+struct rt_serial_device
 {
-	rt_uint8_t  rx_buffer[UART_RX_BUFFER_SIZE];
-	rt_uint32_t read_index, save_index;
-};
+    struct rt_device          parent;
 
-struct stm32_serial_device
+    const struct rt_uart_ops *ops;
+    struct serial_configure   config;
+
+    /* rx structure */
+    struct serial_ringbuffer *int_rx;
+    /* tx structure */
+    struct serial_ringbuffer *int_tx;
+
+    struct rt_data_queue      tx_dq;              /* tx dataqueue */
+    
+    volatile rt_bool_t        dma_flag;           /* dma transfer flag */
+};
+typedef struct rt_serial_device rt_serial_t;
+
+/**
+ * uart operators
+ */
+struct rt_uart_ops
 {
-	USART_TypeDef* uart_device;
+    rt_err_t (*configure)(struct rt_serial_device *serial, struct serial_configure *cfg);
+    rt_err_t (*control)(struct rt_serial_device *serial, int cmd, void *arg);
 
-	/* rx structure */
-	struct stm32_serial_int_rx* int_rx;
+    int (*putc)(struct rt_serial_device *serial, char c);
+    int (*getc)(struct rt_serial_device *serial);
 
-	/* tx structure */
-	struct stm32_serial_dma_tx* dma_tx;
+    rt_size_t (*dma_transmit)(struct rt_serial_device *serial, const char *buf, rt_size_t size);
 };
 
-rt_err_t rt_hw_serial_register(rt_device_t device, const char* name, rt_uint32_t flag, struct stm32_serial_device *serial);
-
-void rt_hw_serial_isr(rt_device_t device);
-void rt_hw_serial_dma_tx_isr(rt_device_t device);
+void rt_hw_serial_isr(struct rt_serial_device *serial);
+void rt_hw_serial_dma_tx_isr(struct rt_serial_device *serial);
+rt_err_t rt_hw_serial_register(struct rt_serial_device *serial,
+                               const char              *name,
+                               rt_uint32_t              flag,
+                               void                    *data);
 
 #endif
