@@ -25,7 +25,7 @@
 #include "stm32f10x_it.h"
 #include <board.h>
 #include <rtthread.h>
-#include <rtdevice.h>
+#include "serial.h"
 
 /** @addtogroup Template_Project
   * @{
@@ -128,27 +128,25 @@ void SysTick_Handler(void)
 * Output         : None
 * Return         : None
 *******************************************************************************/
-void DMA1_Channel2_IRQHandler(void)
+void DMA1_Channel4_IRQHandler(void)
 {
-#ifdef RT_USING_UART3
-    extern struct rt_device uart3_device;
-	extern void rt_hw_serial_dma_tx_isr(struct rt_device *device);
+	extern struct rt_serial_device	serial1_device;
+	extern void rt_hw_serial_dma_tx_isr(struct rt_serial_device *serial);
 
-    /* enter interrupt */
-    rt_interrupt_enter();
+	/* enter interrupt */
+	rt_interrupt_enter();
 
-    if (DMA_GetITStatus(DMA1_IT_TC2))
-    {
-        /* transmission complete, invoke serial dma tx isr */
-        rt_hw_serial_dma_tx_isr(&uart3_device);
-    }
+	if (DMA_GetITStatus(DMA1_IT_TC4))
+	{
+	    /* transmission complete, invoke serial dma tx isr */
+	    rt_hw_serial_dma_tx_isr(&serial1_device);
+	}
 
-    /* clear DMA flag */
-    DMA_ClearFlag(DMA1_FLAG_TC2 | DMA1_FLAG_TE2);
+	/* clear DMA flag */
+	DMA_ClearFlag(DMA1_FLAG_TC4| DMA1_FLAG_TE4);
 
-    /* leave interrupt */
-    rt_interrupt_leave();
-#endif
+	/* leave interrupt */
+	rt_interrupt_leave();
 }
 
 /*******************************************************************************
@@ -160,18 +158,16 @@ void DMA1_Channel2_IRQHandler(void)
 *******************************************************************************/
 void USART1_IRQHandler(void)
 {
-#ifdef RT_USING_UART1
-    extern rt_serial_t serial_usart1;
-    extern void rt_hw_serial_isr(struct rt_serial_device *serial);
+	extern struct rt_serial_device	serial1_device;
+	extern void rt_hw_serial_isr(struct rt_serial_device *serial);
 
-    /* enter interrupt */
-    rt_interrupt_enter();
+	/* enter interrupt */
+	rt_interrupt_enter();
 
-    rt_hw_serial_isr(&serial_usart1);
+	rt_hw_serial_isr(&serial1_device);
 
-    /* leave interrupt */
-    rt_interrupt_leave();
-#endif
+	/* leave interrupt */
+	rt_interrupt_leave();
 }
 
 /*******************************************************************************
@@ -183,18 +179,16 @@ void USART1_IRQHandler(void)
 *******************************************************************************/
 void USART2_IRQHandler(void)
 {
-#ifdef RT_USING_UART2
-    extern rt_serial_t serial_usart2;
-    extern void rt_hw_serial_isr(struct rt_serial_device *serial);
+	extern struct rt_serial_device	serial2_device;
+	extern void rt_hw_serial_isr(struct rt_serial_device *serial);
 
-    /* enter interrupt */
-    rt_interrupt_enter();
+	/* enter interrupt */
+	rt_interrupt_enter();
 
-    rt_hw_serial_isr(&serial_usart2);
+	rt_hw_serial_isr(&serial2_device);
 
-    /* leave interrupt */
-    rt_interrupt_leave();
-#endif
+	/* leave interrupt */
+	rt_interrupt_leave();
 }
 
 /*******************************************************************************
@@ -207,13 +201,13 @@ void USART2_IRQHandler(void)
 void USART3_IRQHandler(void)
 {
 #ifdef RT_USING_UART3
-    extern rt_serial_t serial_usart3;
-    extern void rt_hw_serial_isr(struct rt_serial_device *serial);
+    extern struct rt_device uart3_device;
+	extern void rt_hw_serial_isr(struct rt_device *device);
 
     /* enter interrupt */
     rt_interrupt_enter();
 
-    rt_hw_serial_isr(&serial_usart3);
+    rt_hw_serial_isr(&uart3_device);
 
     /* leave interrupt */
     rt_interrupt_leave();
