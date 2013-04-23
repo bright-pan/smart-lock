@@ -478,7 +478,7 @@ void rt_hw_serial1_register(void)
 
 #ifdef RT_USING_FINSH
 #include <finsh.h>
-static rt_uint8_t led_inited = 0;
+
 void usarts2(char *str)
 {
 	rt_device_t usart;

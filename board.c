@@ -169,8 +169,6 @@ void rt_hw_timer_handler(void)
  */
 void rt_hw_board_init()
 {
-	extern void rt_hw_serialx_register1(void);
-	rt_device_t usart;
 	
 	/* NVIC Configuration */
 	NVIC_Configuration();
@@ -182,20 +180,20 @@ void rt_hw_board_init()
 	EXT_SRAM_Configuration();
 #endif
 	  {
-	  	rt_device_t usart ;
-		extern void rt_hw_serial1_register(void);
-		extern void rt_hw_key1_register(void);		
-		extern void rt_hw_key2_register(void);
-
-		rt_hw_serial1_register();
-		usart = rt_device_find("uart1");
-		rt_device_init(usart);
-
-		rt_hw_key1_register();
-		rt_hw_key2_register();
-	  }
-//	rt_hw_usart_init();
-		rt_console_set_device(CONSOLE_DEVICE);
+			rt_device_t usart ;
+			extern void rt_hw_serial1_register(void);
+			extern void rt_hw_key1_register(void);		
+			extern void rt_hw_key2_register(void);
+			
+			rt_hw_serial1_register();
+			usart = rt_device_find("uart1");
+			rt_device_init(usart);
+			
+			rt_hw_key1_register();
+			rt_hw_key2_register();
+			}
+			//	rt_hw_usart_init();
+			rt_console_set_device(CONSOLE_DEVICE);
 }
 
 /*@}*/

@@ -26,6 +26,7 @@
 #include <board.h>
 #include <rtthread.h>
 #include "serial.h"
+#include "gpiodevice.h"
 
 /** @addtogroup Template_Project
   * @{
@@ -315,5 +316,27 @@ void EXTI4_IRQHandler(void)
   * @}
   */
 
+void EXTI9_5_IRQHandler(void)
+{
+	extern void rt_hw_gpio_isr(gpio_device *gpio);
+	
+	/* enter interrupt */
+	rt_interrupt_enter();
+	if(EXTI_GetITStatus(EXTI_Line5) == SET)
+	{
+		extern gpio_device key1_device;
+		
+		rt_hw_gpio_isr(&key1_device);
+		EXTI_ClearITPendingBit(EXTI_Line5);
+	}
+	if(EXTI_GetITStatus(EXTI_Line6) == SET)
+	{
+		extern gpio_device key2_device;
+		rt_hw_gpio_isr(&key2_device);
+		EXTI_ClearITPendingBit(EXTI_Line6);
+	}
+	/* leave interrupt */
+	rt_interrupt_leave();
+}
 
 /******************* (C) COPYRIGHT 2009 STMicroelectronics *****END OF FILE****/

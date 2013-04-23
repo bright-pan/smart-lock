@@ -2,7 +2,6 @@
 
 struct gpio_user_data
 {
-	const char						name[RT_NAME_MAX];
 	GPIO_TypeDef* 				gpiox;							//port
 	rt_uint16_t						gpio_pinx;					//pin
 	GPIOMode_TypeDef 		gpio_mode;				//mode
@@ -16,7 +15,7 @@ struct gpio_user_data
 	u8 						  			nvic_channel;
 	u8  									nvic_preemption_priority;
 	u8 									nvic_subpriority;
-	
+	const char						name[RT_NAME_MAX];
 };
 
 
@@ -36,7 +35,7 @@ rt_err_t stm32_gpio_configure(gpio_device *gpio)
 
 	RCC_APB2PeriphClockCmd(user->gpio_clock,ENABLE);
 
-	if(1 == gpio->isr_flag)
+	if(RT_DEVICE_FLAG_INT_RX & gpio->parent.flag)
 	{
 		EXTI_InitTypeDef exti_initstructure;
 		NVIC_InitTypeDef nvic_initstructure;
@@ -65,7 +64,7 @@ rt_err_t stm32_gpio_configure(gpio_device *gpio)
 }
 rt_err_t stm32_gpio_control(gpio_device *gpio, int cmd, void *arg)
 {
-	struct gpio_user_data* user = (struct gpio_user_data *)gpio->parent.user_data;
+//	struct gpio_user_data* user = (struct gpio_user_data *)gpio->parent.user_data;
 
 	return RT_EOK;
 }
@@ -107,11 +106,19 @@ struct rt_gpio_ops gpio_user_ops=
 
 
 
+rt_err_t key1_rx_ind(rt_device_t dev, rt_size_t size)
+{
+	rt_kprintf("key1 ok\n");
+	return RT_EOK;
+}
+
 rt_err_t key2_rx_ind(rt_device_t dev, rt_size_t size)
 {
 	rt_kprintf("key2 ok\n");
 	return RT_EOK;
 }
+
+
 
 
 /*********************************************************************************************************************************
@@ -124,12 +131,11 @@ gpio_device key1_device;
 
 struct gpio_user_data key1_user_data = 
 {
-	"key1",
 	GPIOE,
 	GPIO_Pin_5,
-	GPIO_Mode_IPU,
+	GPIO_Mode_IN_FLOATING,
 	GPIO_Speed_50MHz,
-	RCC_APB2Periph_GPIOE,
+	RCC_APB2Periph_GPIOE |RCC_APB2Periph_AFIO,
 	GPIO_PortSourceGPIOE,
 	GPIO_PinSource5,
 	EXTI_Line5,
@@ -137,7 +143,8 @@ struct gpio_user_data key1_user_data =
 	EXTI_Trigger_Falling,
 	EXTI9_5_IRQn,
 	1,
-	3
+	5,
+	"key1"
 };
 
 void rt_hw_key1_register(void)
@@ -145,18 +152,18 @@ void rt_hw_key1_register(void)
 	rt_device_t key;
 	
 	key1_device.ops = &gpio_user_ops;
-	key1_device.isr_flag = 1;
 
-	rt_hw_gpio_register(&key1_device,key1_user_data.name,RT_DEVICE_FLAG_RDWR |RT_DEVICE_FLAG_INT_RX| RT_DEVICE_FLAG_STREAM,&key1_user_data);
+	rt_hw_gpio_register(&key1_device,key1_user_data.name,RT_DEVICE_FLAG_RDWR |RT_DEVICE_FLAG_INT_RX,&key1_user_data);
 
 	key = rt_device_find("key1");
 	
 	rt_device_init(key);
+	
+	rt_device_set_rx_indicate(key,key1_rx_ind);
 }
 
 struct gpio_user_data key2_user_data = 
 {
-	"key2",
 	GPIOE,
 	GPIO_Pin_6,
 	GPIO_Mode_IN_FLOATING,
@@ -169,17 +176,17 @@ struct gpio_user_data key2_user_data =
 	EXTI_Trigger_Falling,
 	EXTI9_5_IRQn,
 	1,
-	4
+	4,
+	"key2"
 };
 
 gpio_device key2_device;
 void rt_hw_key2_register(void)
 {
-	rt_device_t key;
+	rt_device_t key = RT_NULL;
 	key2_device.ops = &gpio_user_ops;
-	key2_device.isr_flag = 1;
 
-	rt_hw_gpio_register(&key2_device,key2_user_data.name,RT_DEVICE_FLAG_RDWR |RT_DEVICE_FLAG_INT_RX| RT_DEVICE_FLAG_STREAM,&key2_user_data);
+	rt_hw_gpio_register(&key2_device,key2_user_data.name,RT_DEVICE_FLAG_RDWR |RT_DEVICE_FLAG_INT_RX,&key2_user_data);
 
 	key = rt_device_find("key2");
 	
@@ -206,17 +213,25 @@ void rt_hw_key2_register(void)
 #include <finsh.h>
 
 
-void key(u8 str[])
+void key(u8 num)
 {
-	rt_device_t led;
+	rt_device_t led = RT_NULL;
 	u8 dat = 0;
 
-	led = rt_device_find(str);
+	if(num == 1)
+	{
+		led = rt_device_find("key1");
+	}
+	if(num == 2)
+	{
+		led = rt_device_find("key2");
+	}
+	
 	
 	rt_device_read(led,0,&dat,0);
 	rt_kprintf("key2 = 0x%x",dat);
 }
-FINSH_FUNCTION_EXPORT(key, key())
+FINSH_FUNCTION_EXPORT(key, key(n) key1>>n=1 key2>>=2)
 #endif
 
 
