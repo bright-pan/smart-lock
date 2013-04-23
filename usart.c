@@ -453,7 +453,7 @@ void rt_hw_serial1_register(void)
 	serial1_device.ops = &serial_ops;
 
 	rt_hw_serial_register(&serial1_device, usart1_device.name,
-	RT_DEVICE_FLAG_RDWR | RT_DEVICE_FLAG_INT_RX | RT_DEVICE_FLAG_DMA_TX,
+	RT_DEVICE_FLAG_RDWR | RT_DEVICE_FLAG_INT_RX | RT_DEVICE_FLAG_STREAM,
 	&usart1_device);
 }
 
