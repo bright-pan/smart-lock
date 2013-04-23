@@ -128,10 +128,39 @@ void SysTick_Handler(void)
  * Output         : None
  * Return         : None
  *******************************************************************************/
+void DMA1_Channel2_IRQHandler(void)
+{
+#ifdef RT_USING_USART3
+  extern struct rt_serial_device serial_device_usart3;
+  extern void rt_hw_serial_dma_tx_isr(struct rt_serial_device *serial);
+
+  /* enter interrupt */
+  rt_interrupt_enter();
+
+  if (DMA_GetITStatus(DMA1_IT_TC2))
+  {
+    /* transmission complete, invoke serial dma tx isr */
+    rt_hw_serial_dma_tx_isr(&serial_device_usart3);
+  }
+
+  /* clear DMA flag */
+  DMA_ClearFlag(DMA1_FLAG_TC2| DMA1_FLAG_TE2);
+
+  /* leave interrupt */
+  rt_interrupt_leave();
+#endif
+}
+/*******************************************************************************
+ * Function Name  : DMA1_Channel4_IRQHandler
+ * Description    : This function handles DMA1 Channel 2 interrupt request.
+ * Input          : None
+ * Output         : None
+ * Return         : None
+ *******************************************************************************/
 void DMA1_Channel4_IRQHandler(void)
 {
 #ifdef RT_USING_USART1
-  extern struct rt_serial_device	serial_device_usart1;
+  extern struct rt_serial_device serial_device_usart1;
   extern void rt_hw_serial_dma_tx_isr(struct rt_serial_device *serial);
 
   /* enter interrupt */
@@ -150,6 +179,35 @@ void DMA1_Channel4_IRQHandler(void)
   rt_interrupt_leave();
 #endif
 }
+/*******************************************************************************
+ * Function Name  : DMA1_Channel7_IRQHandler
+ * Description    : This function handles DMA1 Channel 2 interrupt request.
+ * Input          : None
+ * Output         : None
+ * Return         : None
+ *******************************************************************************/
+void DMA1_Channel7_IRQHandler(void)
+{
+#ifdef RT_USING_USART2
+  extern struct rt_serial_device serial_device_usart2;
+  extern void rt_hw_serial_dma_tx_isr(struct rt_serial_device *serial);
+
+  /* enter interrupt */
+  rt_interrupt_enter();
+
+  if (DMA_GetITStatus(DMA1_IT_TC7))
+  {
+    /* transmission complete, invoke serial dma tx isr */
+    rt_hw_serial_dma_tx_isr(&serial_device_usart2);
+  }
+
+  /* clear DMA flag */
+  DMA_ClearFlag(DMA1_FLAG_TC7| DMA1_FLAG_TE7);
+
+  /* leave interrupt */
+  rt_interrupt_leave();
+#endif
+}
 
 /*******************************************************************************
  * Function Name  : USART1_IRQHandler
@@ -161,7 +219,7 @@ void DMA1_Channel4_IRQHandler(void)
 void USART1_IRQHandler(void)
 {
 #ifdef RT_USING_USART1
-  extern struct rt_serial_device	serial_device_usart1;
+  extern struct rt_serial_device serial_device_usart1;
   extern void rt_hw_serial_isr(struct rt_serial_device *serial);
 
   /* enter interrupt */
@@ -184,7 +242,7 @@ void USART1_IRQHandler(void)
 void USART2_IRQHandler(void)
 {
 #ifdef RT_USING_USART2
-  extern struct rt_serial_device	serial_device_usart2;
+  extern struct rt_serial_device serial_device_usart2;
   extern void rt_hw_serial_isr(struct rt_serial_device *serial);
 
   /* enter interrupt */
