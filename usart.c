@@ -115,6 +115,8 @@ rt_serial_t serial_device_usart1 =
   .config = RT_SERIAL_CONFIG_DEFAULT,
 };
 
+
+
 #endif
 
 #ifdef RT_USING_USART2
@@ -217,12 +219,12 @@ static void RCC_Configuration(struct rt_serial_device *serial)
 
 static void GPIO_Configuration(struct rt_serial_device *serial)
 {
+  GPIO_InitTypeDef GPIO_InitStructure;
   /*
   struct serial_user_data *user_data;
   user_data = serial->parent.user_data;
   */
 #ifdef RT_USING_USART1
-  GPIO_InitTypeDef GPIO_InitStructure;
   /* Configure USART1 Rx (PA.10) as input floating */
   GPIO_InitStructure.GPIO_Pin = USART1_GPIO_RX;
   GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN_FLOATING;
@@ -236,7 +238,6 @@ static void GPIO_Configuration(struct rt_serial_device *serial)
 #endif
 
 #ifdef RT_USING_USART2
-  GPIO_InitTypeDef GPIO_InitStructure;
   /* Configure USART2 Rx as input floating */
   GPIO_InitStructure.GPIO_Pin = USART2_GPIO_RX;
   GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN_FLOATING;
@@ -250,7 +251,6 @@ static void GPIO_Configuration(struct rt_serial_device *serial)
 #endif
 
 #ifdef RT_USING_USART3
-    GPIO_InitTypeDef GPIO_InitStructure;
   /* Configure USART3 Rx as input floating */
   GPIO_InitStructure.GPIO_Pin = USART3_GPIO_RX;
   GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN_FLOATING;
@@ -266,12 +266,12 @@ static void GPIO_Configuration(struct rt_serial_device *serial)
 
 static void NVIC_Configuration(struct rt_serial_device *serial)
 {
+  NVIC_InitTypeDef NVIC_InitStructure;
   /*
   struct serial_user_data *user_data;
   user_data = serial->parent.user_data;
   */
 #ifdef RT_USING_USART1
-  NVIC_InitTypeDef NVIC_InitStructure;
   /* Enable the USART1 Interrupt */
   if ((serial->parent.flag & RT_DEVICE_FLAG_INT_RX) | (serial->parent.flag & RT_DEVICE_FLAG_INT_TX))
   {
@@ -305,7 +305,6 @@ static void NVIC_Configuration(struct rt_serial_device *serial)
 #endif
 
 #ifdef RT_USING_USART2
-  NVIC_InitTypeDef NVIC_InitStructure;
   if ((serial->parent.flag & RT_DEVICE_FLAG_INT_RX) | (serial->parent.flag & RT_DEVICE_FLAG_INT_TX))
   {
     NVIC_InitStructure.NVIC_IRQChannel = USART2_IRQn;
@@ -327,7 +326,6 @@ static void NVIC_Configuration(struct rt_serial_device *serial)
 #endif
 
 #ifdef RT_USING_USART3
-  NVIC_InitTypeDef NVIC_InitStructure;
   if ((serial->parent.flag & RT_DEVICE_FLAG_INT_RX) | (serial->parent.flag & RT_DEVICE_FLAG_INT_TX))
   {
     NVIC_InitStructure.NVIC_IRQChannel = USART3_IRQn;
@@ -351,13 +349,12 @@ static void NVIC_Configuration(struct rt_serial_device *serial)
 
 static void DMA_Configuration(struct rt_serial_device *serial)
 {
-
   struct serial_user_data *user_data;
-  user_data = serial->parent.user_data;
+  user_data = serial->parent.user_data;  
 
-#if defined (RT_USING_USART1)
   DMA_InitTypeDef DMA_InitStructure;
-
+  
+#if defined (RT_USING_USART1)
   /* fill init structure */
   if (serial->parent.flag & RT_DEVICE_FLAG_DMA_TX)
   {  
@@ -385,7 +382,6 @@ static void DMA_Configuration(struct rt_serial_device *serial)
   }
 #endif
 #if defined (RT_USING_USART3)
-  DMA_InitTypeDef DMA_InitStructure;
 
   /* fill init structure */
   if (serial->parent.flag & RT_DEVICE_FLAG_DMA_TX)
@@ -431,7 +427,7 @@ static int usart_ops_putc(struct rt_serial_device *serial, char c)
   
   user_data = serial->parent.user_data;
   USART_SendData(user_data->usart, c);  
-  while (USART_GetFlagStatus(user_data->usart, USART_FLAG_TXE) == RESET)
+  while (USART_GetFlagStatus(user_data->usart, USART_FLAG_TC) != SET)
   {
     ;
   }
@@ -580,7 +576,7 @@ static rt_err_t usart_ops_configure(struct rt_serial_device *serial, struct seri
   USART_ClockInitStructure.USART_CPOL = USART_CPOL_Low;
   USART_ClockInitStructure.USART_CPHA = USART_CPHA_2Edge;
   USART_ClockInitStructure.USART_LastBit = USART_LastBit_Disable;
-  USART_Init(USART1, &USART_InitStructure);
+  USART_Init(user_data->usart, &USART_InitStructure);
   USART_ClockInit(user_data->usart, &USART_ClockInitStructure);
 
   /* register uart1 */
@@ -592,6 +588,7 @@ static rt_err_t usart_ops_configure(struct rt_serial_device *serial, struct seri
   {
     /* enable interrupt */
     USART_ITConfig(user_data->usart, USART_IT_RXNE, ENABLE);
+    USART_ITConfig(user_data->usart, USART_IT_ERR, ENABLE);
   }
   
   if (serial->parent.flag & RT_DEVICE_FLAG_DMA_TX)
@@ -615,32 +612,57 @@ void rt_hw_usart_init()
   /* register uart1 */
 #ifdef RT_USING_USART1
 
-  rt_hw_serial_register(&serial_device_usart1, "uart1",
+  rt_hw_serial_register(&serial_device_usart1, "usart1",
                         RT_DEVICE_FLAG_RDWR | RT_DEVICE_FLAG_INT_RX | RT_DEVICE_FLAG_STREAM,
                         &usart1_user_data);
-#ifdef RT_USING_FINSH
-  rt_kprintf("register serial_device_usart1 <uart1>\n");
-#endif
+  rt_kprintf("register serial_device_usart1 <usart1>\n");
 #endif
   /* register uart2 */
 #ifdef RT_USING_USART2
   rt_hw_serial_register(&serial_device_usart2, "usart2",
-                        RT_DEVICE_FLAG_RDWR | RT_DEVICE_FLAG_INT_RX | RT_DEVICE_FLAG_DMA_TX,
+                        RT_DEVICE_FLAG_RDWR | RT_DEVICE_FLAG_INT_RX | RT_DEVICE_FLAG_STREAM,
                         &usart2_user_data);
-#ifndef RT_USING_FINSH
   rt_kprintf("register serial_device_usart2 <usart2>\n");
-#endif
 #endif
   /* register uart3 */
 #ifdef RT_USING_USART3
   rt_hw_serial_register(&serial_device_usart3, "usart3",
                         RT_DEVICE_FLAG_RDWR | RT_DEVICE_FLAG_INT_RX | RT_DEVICE_FLAG_DMA_TX,
                         &usart3_user_data);
-#ifndef RT_USING_FINSH
   rt_kprintf("register serial_device_usart3 <usart3>\n");
 #endif
-#endif
 }
+
+void serial_device_usart_isr(struct rt_serial_device *serial)
+{
+  struct serial_user_data *user_data;  
+  user_data = serial->parent.user_data;
+  
+  if(USART_GetFlagStatus(user_data->usart, USART_FLAG_ORE) != RESET)
+  {//同  @arg USART_IT_ORE_ER : OverRun Error interrupt if the EIE bit is set  
+
+    USART_ReceiveData(user_data->usart); //取出来扔掉
+    USART_ClearFlag(user_data->usart, USART_FLAG_ORE);
+  }
+
+  if(USART_GetFlagStatus(user_data->usart, USART_FLAG_NE) != RESET)
+  {//同  @arg USART_IT_NE     : Noise Error interrupt
+    USART_ClearFlag(user_data->usart, USART_FLAG_NE);
+  }
+
+
+  if(USART_GetFlagStatus(user_data->usart, USART_FLAG_FE) != RESET)
+  {//同   @arg USART_IT_FE     : Framing Error interrupt
+    USART_ClearFlag(user_data->usart, USART_FLAG_FE);
+  }
+
+  if(USART_GetFlagStatus(user_data->usart, USART_FLAG_PE) != RESET)
+  {//同  @arg USART_IT_PE     : Parity Error interrupt
+    USART_ClearFlag(user_data->usart, USART_FLAG_PE);
+  }
+  rt_hw_serial_isr(serial);
+}
+
 
 #ifdef RT_USING_FINSH
 #include <finsh.h>
@@ -650,7 +672,7 @@ void usart1(rt_int8_t cmd, rt_int8_t *str)
 {
   rt_device_t usart;
 
-  usart = rt_device_find("uart1");
+  usart = rt_device_find("usart1");
   if (usart != RT_NULL)
   {
     if (cmd == 0)

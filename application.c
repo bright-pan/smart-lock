@@ -51,11 +51,10 @@ static void led_0_thread_entry(void* parameter)
 {
   unsigned int count=0;
   rt_hw_led_init();
-  
   while (1)
   {
     /* led1 on */
-#ifdef RT_USING_FINSH
+#ifndef RT_USING_FINSH
     rt_kprintf("led on, count : %d\r\n",count);
 #endif
     count++;
@@ -63,7 +62,7 @@ static void led_0_thread_entry(void* parameter)
     rt_thread_delay( RT_TICK_PER_SECOND/2 ); /* sleep 0.5 second and switch to other thread */
 
     /* led1 off */
-#ifdef RT_USING_FINSH
+#ifndef RT_USING_FINSH
     rt_kprintf("led off\r\n");
 #endif
     rt_hw_led_off(0);
@@ -82,7 +81,7 @@ static void led_1_thread_entry(void* parameter)
   while (1)
   {
     /* led1 on */
-#ifdef RT_USING_FINSH
+#ifndef RT_USING_FINSH
     rt_kprintf("led on, count : %d\r\n",count);
 #endif
     count++;
@@ -90,7 +89,7 @@ static void led_1_thread_entry(void* parameter)
     rt_thread_delay( RT_TICK_PER_SECOND/2 ); /* sleep 0.5 second and switch to other thread */
 
     /* led1 off */
-#ifdef RT_USING_FINSH
+#ifndef RT_USING_FINSH
     rt_kprintf("led off\r\n");
 #endif
     rt_hw_led_off(1);
@@ -115,8 +114,9 @@ void rt_producer_thread_entry(void* parameter) {
     rt_sem_take(&sem_empty, RT_WAITING_FOREVER);
     rt_sem_take(&sem_lock, RT_WAITING_FOREVER);
     array[set%MAX_SEM] = cnt + 1;
-
+#ifndef RT_USING_FINSH
     rt_kprintf("the producer generates a number: %d\n", array[set%MAX_SEM]);
+#endif
     set++;
     rt_sem_release(&sem_lock);
     rt_sem_release(&sem_full);
@@ -124,12 +124,13 @@ void rt_producer_thread_entry(void* parameter) {
                
     rt_thread_delay(200);
   }
+#ifndef RT_USING_FINSH
   rt_kprintf("the producer exit!\n");
+#endif
 }
 
 void rt_consumer_thread_entry(void* parameter) {
   
-  rt_uint32_t no = (rt_uint32_t)parameter;
   rt_uint32_t sum;
 
   while (1) {
@@ -137,7 +138,9 @@ void rt_consumer_thread_entry(void* parameter) {
           
     rt_sem_take(&sem_lock, RT_WAITING_FOREVER);
     sum += array[get%MAX_SEM];
+#ifndef RT_USING_FINSH
     rt_kprintf("the consumer [%d] get a number: %d\n", no, array[set%MAX_SEM]);
+#endif
     get++;
     rt_sem_release(&sem_lock);
           
@@ -146,9 +149,10 @@ void rt_consumer_thread_entry(void* parameter) {
       break;
     rt_thread_delay(10);
   }
-  
+#ifndef RT_USING_FINSH  
   rt_kprintf("the consumer[%d] sum is %d \n", no, sum);
   rt_kprintf("the producer exit!\n");
+#endif
 }
 
 
@@ -241,7 +245,7 @@ int rt_application_init()
      
   rt_err_t result;
 
-  /* init led_0_thread */
+  /*
   result = rt_thread_init(&led_0_thread,
                           "led_0",
                           led_0_thread_entry, RT_NULL,
@@ -250,7 +254,7 @@ int rt_application_init()
     rt_thread_startup(&led_0_thread);
   }
 
-  /* init led_1_thread */
+
   led_1_thread = rt_thread_create("led_1",
                                   led_1_thread_entry, RT_NULL,
                                   512, 20, 5);
@@ -282,6 +286,7 @@ int rt_application_init()
   if (consumer_thread != RT_NULL) {
     rt_thread_startup(consumer_thread);
   }
+  */
      
   /* init init_thread */
 #if (RT_THREAD_PRIORITY_MAX == 32)

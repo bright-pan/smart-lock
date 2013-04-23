@@ -8,7 +8,4 @@
 #include <rthw.h>
 #include <rtthread.h>
 
-void rt_hw_serial1_register(void);
-void rt_hw_serial2_register(void);
-
 #endif
