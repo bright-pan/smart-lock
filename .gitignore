@@ -8,12 +8,24 @@
 *.pyc
 *.elf
 *.out
+*.ewp
+*.init
+*.txt
+*.bat
 .sconsign.dblite
 cscope*
 build/
 /project_rtthread-stm32.dep
 /project.uvgui.Administrator
-/project.uvopt
+/project.uvoptj
 /obj
-
+/JLinkSettings.ini
 /project.uvgui_Administrator.bak
+/JLink Regs CM3.txt
+/JLinkLog.txt
+/project.uvopt
+/yuettak_smart_lock_jlink.cfg
+/yuettak_smart_lock_openjtag.cfg
+/template.uvproj
+/template.Uv2
+/README
