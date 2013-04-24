@@ -325,9 +325,10 @@ static void NVIC_Configuration(struct rt_serial_device *serial)
 
 static void DMA_Configuration(struct rt_serial_device *serial)
 {
+  DMA_InitTypeDef DMA_InitStructure;
   struct serial_user_data *user_data;
   user_data = serial->parent.user_data;
-  DMA_InitTypeDef DMA_InitStructure;
+
   
 #if defined (RT_USING_USART1)
   /* fill init structure */
@@ -452,12 +453,13 @@ static rt_size_t usart_ops_dma_transmit(struct rt_serial_device *serial, const c
 
 static rt_err_t usart_ops_configure(struct rt_serial_device *serial, struct serial_configure *cfg)
 {
+  USART_InitTypeDef USART_InitStructure;
+  USART_ClockInitTypeDef USART_ClockInitStructure;
+
   struct serial_user_data *user_data;
   
   user_data = serial->parent.user_data;
 
-  USART_InitTypeDef USART_InitStructure;
-  USART_ClockInitTypeDef USART_ClockInitStructure;
 
   RCC_Configuration(serial);
 
