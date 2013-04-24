@@ -12,6 +12,7 @@
 *.init
 *.txt
 *.bat
+*.ini
 .sconsign.dblite
 cscope*
 build/
