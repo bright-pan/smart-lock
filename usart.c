@@ -196,7 +196,7 @@ int stm32_serial_get_char(struct rt_serial_device *serial)
 
  rt_err_t stm32_serial_control(struct rt_serial_device *serial, int cmd, void *arg)
  {
-	FunctionalState 	NewState;
+	FunctionalState 	newstate = ENABLE;
 	 
 	struct serial_user_data *user = (struct serial_user_data *)serial->parent.user_data;
 
@@ -204,12 +204,12 @@ int stm32_serial_get_char(struct rt_serial_device *serial)
 	{
 		case RT_DEVICE_CTRL_SET_INT:
 		{
-			NewState = ENABLE;
+			newstate = ENABLE;
 			break;
 		}
 		case RT_DEVICE_CTRL_CLR_INT:
 		{
-			NewState = DISABLE;
+			newstate = DISABLE;
 			break;
 		}
 		default:
@@ -220,12 +220,12 @@ int stm32_serial_get_char(struct rt_serial_device *serial)
 
 	if(*(rt_uint32_t *)arg & RT_SERIAL_RX_INT)
 	{
-		USART_ITConfig(user->uart_device, USART_IT_RXNE, NewState);
+		USART_ITConfig(user->uart_device, USART_IT_RXNE, newstate);
 
 	}
 	else if(*(rt_uint32_t *)arg & RT_SERIAL_TX_INT)
 	{
-		USART_ITConfig(user->uart_device, USART_IT_TC, NewState);
+		USART_ITConfig(user->uart_device, USART_IT_TC, newstate);
 	}
 	
 	return RT_EOK;

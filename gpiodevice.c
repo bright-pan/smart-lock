@@ -41,6 +41,7 @@ static rt_err_t rt_gpio_open(struct rt_device *dev,rt_uint16_t oflag)
 
 	RT_ASSERT(dev != RT_NULL);
 	gpio = (gpio_device *)dev;
+
 	if(dev->flag & RT_DEVICE_FLAG_INT_RX) //interrupt intpur
 	{
 		int_flags |= RT_DEVICE_FLAG_INT_RX;
@@ -115,30 +116,34 @@ static rt_err_t rt_gpio_control(struct rt_device *dev,
                                   rt_uint8_t        cmd,
                                   void             *args)
 {
-    gpio_device *gpio = RT_NULL;
+  gpio_device *gpio = RT_NULL;
 
-    RT_ASSERT(dev != RT_NULL);
-    gpio = (gpio_device *)dev;
+  RT_ASSERT(dev != RT_NULL);
+  gpio = (gpio_device *)dev;
 
-    switch (cmd)
-    {
-    case RT_DEVICE_CTRL_SUSPEND:
-        /* suspend device */
-        dev->flag |= RT_DEVICE_FLAG_SUSPENDED;
-        break;
-
-    case RT_DEVICE_CTRL_RESUME:
-        /* resume device */
-        dev->flag &= ~RT_DEVICE_FLAG_SUSPENDED;
-        break;
-
-    case RT_DEVICE_CTRL_CONFIG:
-        /* configure device */
-        gpio->ops->configure(gpio);
-        break;
-    }
-
-    return RT_EOK;
+	switch (cmd)
+	{
+		case RT_DEVICE_CTRL_SUSPEND:
+		{
+		/* suspend device */
+		dev->flag |= RT_DEVICE_FLAG_SUSPENDED;
+		break;
+		}
+		case RT_DEVICE_CTRL_RESUME:
+		{
+		/* resume device */
+		dev->flag &= ~RT_DEVICE_FLAG_SUSPENDED;
+		break;
+		}
+		case RT_DEVICE_CTRL_CONFIG:
+		{
+		/* configure device */
+		 gpio->ops->configure(gpio);
+		 break;
+		}    
+	}
+	
+	return RT_EOK;
 }
 
 /*
@@ -150,25 +155,24 @@ rt_err_t rt_hw_gpio_register(gpio_device *gpio,
                                void                    *data)
 {
 	struct rt_device *device = RT_NULL;
-    RT_ASSERT(gpio != RT_NULL);
-
-    device = &(gpio->parent);						
-
-    device->type        = RT_Device_Class_Char;
-    device->rx_indicate = RT_NULL;
-    device->tx_complete = RT_NULL;
-
-    device->init 		= rt_gpio_init;
-    device->open   = rt_gpio_open;
-    device->close 	= rt_gpio_close;
-    device->read    = rt_gpio_read;
-    device->write    = rt_gpio_write;
-    device->control    	= rt_gpio_control;
-    device->user_data   = data;
-
-    /* register a character device */
-    return rt_device_register(device, name, flag);
-    	
+	RT_ASSERT(gpio != RT_NULL);
+	
+	device = &(gpio->parent);						
+	
+	device->type        = RT_Device_Class_Char;
+	device->rx_indicate = RT_NULL;
+	device->tx_complete = RT_NULL;
+	
+	device->init 		= rt_gpio_init;
+	device->open   = rt_gpio_open;
+	device->close 	= rt_gpio_close;
+	device->read    = rt_gpio_read;
+	device->write    = rt_gpio_write;
+	device->control    	= rt_gpio_control;
+	device->user_data   = data;
+	
+	/* register a character device */
+	return rt_device_register(device, name, flag);
 }
 
 /*

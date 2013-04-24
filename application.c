@@ -243,14 +243,14 @@ int rt_application_init()
   rt_err_t result;
 
   /* init led_0_thread */
-/*  result = rt_thread_init(&led_0_thread,
+  result = rt_thread_init(&led_0_thread,
                           "led_0",
                           led_0_thread_entry, RT_NULL,
                           (rt_uint8_t*)&led_stack[0], sizeof(led_stack), 20, 5);
   if (result == RT_EOK) {
     rt_thread_startup(&led_0_thread);
   }
-*/
+
   /* init led_1_thread */
   led_1_thread = rt_thread_create("led_1",
                                   led_1_thread_entry, RT_NULL,

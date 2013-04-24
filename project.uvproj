@@ -445,6 +445,16 @@
               <FileType>1</FileType>
               <FilePath>.\RT-Thread\components\drivers\src\ringbuffer.c</FilePath>
             </File>
+            <File>
+              <FileName>gpiodevice.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\gpiodevice.c</FilePath>
+            </File>
+            <File>
+              <FileName>gpiopin.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\gpiopin.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
