@@ -15,6 +15,7 @@
 
 #include "usart.h"
 #include <rtdevice.h>
+#include <serial.h>
 #include <stm32f10x_dma.h>
 
 /*
@@ -34,12 +35,14 @@
  */
 
 
+
 struct serial_user_data
 {
   USART_TypeDef *usart;
   DMA_Channel_TypeDef *usart_tx_dma_channel;
   DMA_Channel_TypeDef *usart_rx_dma_channel;
 };
+
 
 #define USART1_DR_Base  0x40013804
 #define USART2_DR_Base  0x40004404
@@ -92,31 +95,20 @@ struct rt_uart_ops usart_ops =
   usart_ops_dma_transmit,
   
 };
+struct serial_configure serial_device_default_config = RT_SERIAL_CONFIG_DEFAULT;
 
 #ifdef RT_USING_USART1
-
-
-
 struct serial_user_data usart1_user_data = 
 {
   USART1,
   USART1_TX_DMA,
   USART1_RX_DMA,
 };
+
 struct serial_ringbuffer usart1_int_rx;
 struct serial_ringbuffer usart1_int_tx;
 
-
-rt_serial_t serial_device_usart1 =
-{
-  .ops = &usart_ops,
-  .int_rx = &usart1_int_rx,
-  .int_rx = &usart1_int_tx,
-  .config = RT_SERIAL_CONFIG_DEFAULT,
-};
-
-
-
+rt_serial_t serial_device_usart1;
 #endif
 
 #ifdef RT_USING_USART2
@@ -129,14 +121,7 @@ struct serial_user_data usart2_user_data =
 struct serial_ringbuffer usart2_int_rx;
 struct serial_ringbuffer usart2_int_tx;
 
-
-rt_serial_t serial_device_usart2 =
-{
-  .ops = &usart_ops,
-  .int_rx = &usart2_int_rx,
-  .int_rx = &usart2_int_tx,
-  .config = RT_SERIAL_CONFIG_DEFAULT,
-};
+rt_serial_t serial_device_usart2;
 
 #endif
 
@@ -150,14 +135,7 @@ struct serial_user_data usart3_user_data =
 struct serial_ringbuffer usart3_int_rx;
 struct serial_ringbuffer usart3_int_tx;
 
-
-rt_serial_t serial_device_usart3 =
-{
-  .ops = &usart_ops,
-  .int_rx = &usart3_int_rx,
-  .int_rx = &usart3_int_tx,
-  .config = RT_SERIAL_CONFIG_DEFAULT,
-};
+rt_serial_t serial_device_usart3;
 
 #endif
 
@@ -167,8 +145,6 @@ static void RCC_Configuration(struct rt_serial_device *serial)
   struct serial_user_data *user_data;
   user_data = serial->parent.user_data;
   */
-  
-
 #ifdef RT_USING_USART1
   RCC_APB2PeriphClockCmd(RCC_APB2Periph_AFIO, ENABLE);
   /* Enable USART1 and GPIOA clocks */
@@ -350,8 +326,7 @@ static void NVIC_Configuration(struct rt_serial_device *serial)
 static void DMA_Configuration(struct rt_serial_device *serial)
 {
   struct serial_user_data *user_data;
-  user_data = serial->parent.user_data;  
-
+  user_data = serial->parent.user_data;
   DMA_InitTypeDef DMA_InitStructure;
   
 #if defined (RT_USING_USART1)
@@ -410,6 +385,7 @@ static void DMA_Configuration(struct rt_serial_device *serial)
   }
 #endif
 }
+
 static rt_err_t usart_ops_control(struct rt_serial_device *serial, int cmd, void *arg)
 {
   
@@ -600,9 +576,6 @@ static rt_err_t usart_ops_configure(struct rt_serial_device *serial, struct seri
   return RT_EOK;
 }
 
-
-
-
 /*
  * Init all related hardware in here
  * rt_hw_serial_init() will register all supported USART device
@@ -611,6 +584,12 @@ void rt_hw_usart_init()
 {
   /* register uart1 */
 #ifdef RT_USING_USART1
+  
+
+  serial_device_usart1.ops = &usart_ops;
+  serial_device_usart1.int_rx = &usart1_int_rx;
+  serial_device_usart1.int_tx = &usart1_int_tx;
+  serial_device_usart1.config = serial_device_default_config;
 
   rt_hw_serial_register(&serial_device_usart1, "usart1",
                         RT_DEVICE_FLAG_RDWR | RT_DEVICE_FLAG_INT_RX | RT_DEVICE_FLAG_STREAM,
@@ -619,6 +598,10 @@ void rt_hw_usart_init()
 #endif
   /* register uart2 */
 #ifdef RT_USING_USART2
+  serial_device_usart2.ops = &usart_ops;
+  serial_device_usart2.int_rx = &usart2_int_rx;
+  serial_device_usart2.int_tx = &usart2_int_tx;
+  serial_device_usart2.config = serial_device_default_config;
   rt_hw_serial_register(&serial_device_usart2, "usart2",
                         RT_DEVICE_FLAG_RDWR | RT_DEVICE_FLAG_INT_RX | RT_DEVICE_FLAG_STREAM,
                         &usart2_user_data);
@@ -626,6 +609,10 @@ void rt_hw_usart_init()
 #endif
   /* register uart3 */
 #ifdef RT_USING_USART3
+  serial_device_usart3.ops = &usart_ops;
+  serial_device_usart3.int_rx = &usart3_int_rx;
+  serial_device_usart3.int_tx = &usart3_int_tx;
+  serial_device_usart3.config = serial_device_default_config;
   rt_hw_serial_register(&serial_device_usart3, "usart3",
                         RT_DEVICE_FLAG_RDWR | RT_DEVICE_FLAG_INT_RX | RT_DEVICE_FLAG_DMA_TX,
                         &usart3_user_data);
@@ -637,11 +624,11 @@ void serial_device_usart_isr(struct rt_serial_device *serial)
 {
   struct serial_user_data *user_data;  
   user_data = serial->parent.user_data;
-  
-  if(USART_GetFlagStatus(user_data->usart, USART_FLAG_ORE) != RESET)
-  {//同  @arg USART_IT_ORE_ER : OverRun Error interrupt if the EIE bit is set  
 
-    USART_ReceiveData(user_data->usart); //取出来扔掉
+  if(USART_GetFlagStatus(user_data->usart, USART_FLAG_ORE) != RESET)
+  {
+
+    USART_ReceiveData(user_data->usart);
     USART_ClearFlag(user_data->usart, USART_FLAG_ORE);
   }
 

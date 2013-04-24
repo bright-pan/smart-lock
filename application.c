@@ -60,7 +60,6 @@ static void led_0_thread_entry(void* parameter)
     count++;
     rt_hw_led_on(0);
     rt_thread_delay( RT_TICK_PER_SECOND/2 ); /* sleep 0.5 second and switch to other thread */
-
     /* led1 off */
 #ifndef RT_USING_FINSH
     rt_kprintf("led off\r\n");
@@ -85,9 +84,9 @@ static void led_1_thread_entry(void* parameter)
     rt_kprintf("led on, count : %d\r\n",count);
 #endif
     count++;
+    
     rt_hw_led_on(1);
     rt_thread_delay( RT_TICK_PER_SECOND/2 ); /* sleep 0.5 second and switch to other thread */
-
     /* led1 off */
 #ifndef RT_USING_FINSH
     rt_kprintf("led off\r\n");
@@ -105,6 +104,7 @@ struct rt_semaphore sem_lock;
 struct rt_semaphore sem_empty, sem_full;
 
 rt_uint32_t set, get;
+
 
 void rt_producer_thread_entry(void* parameter) {
   
@@ -135,7 +135,7 @@ void rt_consumer_thread_entry(void* parameter) {
 
   while (1) {
     rt_sem_take(&sem_full, RT_WAITING_FOREVER);
-          
+
     rt_sem_take(&sem_lock, RT_WAITING_FOREVER);
     sum += array[get%MAX_SEM];
 #ifndef RT_USING_FINSH
