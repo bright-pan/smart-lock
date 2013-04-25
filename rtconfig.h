@@ -59,7 +59,10 @@
 /* SECTION: Device System */
 /* Using Device System */
 #define RT_USING_DEVICE
-#define RT_USING_UART1
+#define RT_USING_DEVICE_IPC
+#define RT_USING_USART1
+#define RT_USING_USART2
+#define RT_USING_SERIAL
 
 /* SECTION: Console options */
 #define RT_USING_CONSOLE

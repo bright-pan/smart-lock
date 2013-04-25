@@ -3,7 +3,7 @@ Import('RTT_ROOT')
 from building import *
 
 src_bsp = ['application.c', 'startup.c', 'board.c', 'stm32f10x_it.c']
-src_drv = ['rtc.c', 'usart.c', 'serial.c', 'led.c']
+src_drv = ['rtc.c', 'usart.c', 'led.c', 'gpio.c', 'gpio_pin.c']
 
 if GetDepend('RT_USING_DFS'):
 	if rtconfig.STM32_TYPE == 'STM32F10X_HD':

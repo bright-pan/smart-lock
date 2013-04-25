@@ -53,11 +53,11 @@ void rt_hw_board_init(void);
 #if STM32_CONSOLE_USART == 0
 #define CONSOLE_DEVICE "no"
 #elif STM32_CONSOLE_USART == 1
-#define CONSOLE_DEVICE "uart1"
+#define CONSOLE_DEVICE "usart1"
 #elif STM32_CONSOLE_USART == 2
-#define CONSOLE_DEVICE "uart2"
+#define CONSOLE_DEVICE "usart2"
 #elif STM32_CONSOLE_USART == 3
-#define CONSOLE_DEVICE "uart3"
+#define CONSOLE_DEVICE "usart3"
 #endif
 
 void rt_hw_usart_init(void);
@@ -69,6 +69,10 @@ void rt_hw_msd_init(void);
 /* ETH interface init function */
 void rt_hw_enc28j60_init(void);
 void rt_hw_dm9000_init(void);
+
+/* key device init function */
+void rt_hw_key1_register(void);
+void rt_hw_key2_register(void);
 
 #endif
 
