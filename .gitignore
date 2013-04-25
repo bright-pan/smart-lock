@@ -8,17 +8,25 @@
 *.pyc
 *.elf
 *.out
+*.bat
+*.sh
+*.init
+*.txt
+*.ini
+*.bak
 .sconsign.dblite
 cscope*
 build/
 /project_rtthread-stm32.dep
 /project.uvgui.Administrator
 /project.uvopt
+
 /obj
 
 /project.uvgui_Administrator.bak
-
+/README
 /GPATH
 /GRTAGS
 /GTAGS
 /gtags.files
+/doc
