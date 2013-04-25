@@ -126,13 +126,16 @@ rt_uint8_t stm32_gpio_intput(gpio_device *gpio)
   rt_uint8_t data;
 
   /* not is read mode */
-  if((user->gpio_mode != GPIO_Mode_IN_FLOATING) || (user->gpio_mode != GPIO_Mode_IPD) 
-     ||(user->gpio_mode != GPIO_Mode_IPU))
+  if((user->gpio_mode == GPIO_Mode_IN_FLOATING) || (user->gpio_mode == GPIO_Mode_IPD) 
+     ||(user->gpio_mode == GPIO_Mode_IPU))
   {
-    return 0xff;
+    data = GPIO_ReadInputDataBit(user->gpiox,user->gpio_pinx);
   }
-  data = GPIO_ReadInputDataBit(user->gpiox,user->gpio_pinx);
-
+  else
+  {
+    data =  0xff;
+  }
+   
   return data;
 }
 

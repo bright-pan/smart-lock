@@ -446,14 +446,14 @@
               <FilePath>.\RT-Thread\components\drivers\src\ringbuffer.c</FilePath>
             </File>
             <File>
-              <FileName>gpiodevice.c</FileName>
+              <FileName>gpio.c</FileName>
               <FileType>1</FileType>
-              <FilePath>.\gpiodevice.c</FilePath>
+              <FilePath>.\gpio.c</FilePath>
             </File>
             <File>
-              <FileName>gpiopin.c</FileName>
+              <FileName>gpio_pin.c</FileName>
               <FileType>1</FileType>
-              <FilePath>.\gpiopin.c</FilePath>
+              <FilePath>.\gpio_pin.c</FilePath>
             </File>
           </Files>
         </Group>
