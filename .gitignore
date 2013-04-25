@@ -8,12 +8,7 @@
 *.pyc
 *.elf
 *.out
-*.bat
-*.sh
-*.init
-*.txt
-*.ini
-*.bak
+
 .sconsign.dblite
 cscope*
 build/
@@ -24,10 +19,21 @@ build/
 /obj
 
 /project.uvgui_Administrator.bak
-/project_uvopt.bak
-/README
+/template_RT-Thread STM32.dep
+/template.uvproj
+/template.uvopt
+/template.Uv2.bak
+/template.ewp
 /GPATH
 /GRTAGS
 /GTAGS
 /gtags.files
-/doc
+/JLink Regs CM3.txt
+/JLinkLog.txt
+/JLinkSettings.ini
+/Smart_Lock_MDK_Project.uvopt
+/Smart_Lock_MDK_Project_rtthread-stm32.dep
+/Smart_Lock_MDK_Project_uvproj.bak
+/project_uvproj.bak
+/project_uvopt.bak
+/delete_bat_file.bat
