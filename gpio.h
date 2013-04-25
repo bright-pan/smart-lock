@@ -32,7 +32,7 @@ typedef struct gpio_device
 {
   struct rt_device parent;
   const struct rt_gpio_ops *ops;
-  rt_uint8_t isr_flag;	
+  rt_uint8_t pin_value;
 }gpio_device;
 
 /*		
@@ -41,7 +41,7 @@ typedef struct gpio_device
 struct rt_gpio_ops
 {
   rt_err_t (*configure)(gpio_device *gpio);
-  rt_err_t (*control)(gpio_device *gpio, int cmd, void *arg);
+  rt_err_t (*control)(gpio_device *gpio, rt_uint8_t cmd, void *arg);
   void  (*out)(gpio_device *gpio, rt_uint8_t c);
   rt_uint8_t (*intput)(gpio_device *gpio);
 };

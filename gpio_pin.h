@@ -24,4 +24,5 @@
 void rt_hw_key1_register(void);
 void rt_hw_key2_register(void);
 
+void rt_hw_led1_register(void);
 #endif

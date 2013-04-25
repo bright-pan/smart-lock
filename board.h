@@ -16,6 +16,9 @@
 #ifndef __BOARD_H__
 #define __BOARD_H__
 
+#include "usart.h"
+#include "gpio_pin.h"
+
 /* board configuration */
 // <o> SDCard Driver <1=>SDIO sdcard <0=>SPI MMC card
 // 	<i>Default: 1
@@ -60,8 +63,6 @@ void rt_hw_board_init(void);
 #define CONSOLE_DEVICE "usart3"
 #endif
 
-void rt_hw_usart_init(void);
-
 /* SD Card init function */
 void rt_hw_sdcard_init(void);
 void rt_hw_msd_init(void);
@@ -69,10 +70,6 @@ void rt_hw_msd_init(void);
 /* ETH interface init function */
 void rt_hw_enc28j60_init(void);
 void rt_hw_dm9000_init(void);
-
-/* key device init function */
-void rt_hw_key1_register(void);
-void rt_hw_key2_register(void);
 
 #endif
 

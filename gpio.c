@@ -34,13 +34,14 @@ static rt_err_t rt_gpio_init(struct rt_device *dev)
     {
       result = gpio->ops->configure(gpio);
     }
-    if (result == RT_EOK)
+    if (result != RT_EOK)
     {
-      /* set activated */
-      dev->flag |= RT_DEVICE_FLAG_ACTIVATED;	
-    }	
+      return result;
+    }
+    /* set activated */
+    dev->flag |= RT_DEVICE_FLAG_ACTIVATED;
   }
-  return RT_EOK;
+  return result;
 }
 /*
  * gpio open
@@ -96,11 +97,11 @@ static rt_size_t rt_gpio_read(struct rt_device *dev,
                               rt_size_t         size )
 {
   gpio_device *gpio = RT_NULL;
-
   RT_ASSERT(dev != RT_NULL);
-  gpio = (gpio_device *)dev;
 
+  gpio = (gpio_device *)dev;
   *(rt_uint8_t *)buffer = gpio->ops->intput(gpio);
+
   return RT_EOK;
 }
 /*
@@ -150,9 +151,8 @@ static rt_err_t rt_gpio_control(struct rt_device *dev,
         /* configure device */
         gpio->ops->configure(gpio);
         break;
-      }    
+      }
   }
-	
   return RT_EOK;
 }
 
@@ -194,9 +194,10 @@ void rt_hw_gpio_isr(gpio_device *gpio)
   /* interrupt mode receive */
   RT_ASSERT(gpio->parent.flag & RT_DEVICE_FLAG_INT_RX);
 
+  gpio->pin_value = gpio->ops->intput(gpio);
   if(gpio->parent.rx_indicate != RT_NULL)
   {
-    gpio->parent.rx_indicate(&gpio->parent, 1);
+    gpio->parent.rx_indicate(&(gpio->parent), 1);
   }
 }
 
