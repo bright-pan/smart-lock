@@ -187,6 +187,8 @@ void rt_hw_board_init()
   rt_hw_key2_register();
   /* led device register */
   rt_hw_led1_register();
+  /* pwm device register */
+  rt_hw_pwm1_register();
 }
 
 /*@}*/

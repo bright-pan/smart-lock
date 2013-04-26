@@ -152,6 +152,12 @@ static rt_err_t rt_gpio_control(struct rt_device *dev,
         gpio->ops->configure(gpio);
         break;
       }
+    default:
+      {
+        /* configure device */
+        gpio->ops->control(gpio, cmd, args);
+        break;
+      }
   }
   return RT_EOK;
 }
