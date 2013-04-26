@@ -27,6 +27,8 @@
 #include <dfs_elm.h>
 /* dfs Filesystem APIs */
 #include <dfs_fs.h>
+
+#include "spiflash.h"
 #endif
 
 #ifdef RT_USING_LWIP
@@ -167,9 +169,9 @@ void rt_init_thread_entry(void* parameter)
 #ifdef RT_USING_DFS_ELMFAT
     /* init the elm chan FatFs filesystam*/
     elm_init();
-
+	rt_spi_flash_init();
     /* mount sd card fat partition 1 as root directory */
-    if (dfs_mount("sd0", "/", "elm", 0, 0) == 0)
+    if (dfs_mount("w25", "/", "elm", 0, 0) == 0)
     {
       rt_kprintf("File System initialized!\n");
     }

@@ -294,7 +294,7 @@ void SDIO_IRQHandler(void)
   rt_interrupt_enter();
 
   /* Process All SDIO Interrupt Sources */
-  SD_ProcessIRQSrc();
+//  SD_ProcessIRQSrc();
 
   /* leave interrupt */
   rt_interrupt_leave();
