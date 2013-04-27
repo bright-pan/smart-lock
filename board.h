@@ -18,6 +18,8 @@
 
 #include "usart.h"
 #include "gpio_pin.h"
+#include "gpio_exti.h"
+#include "gpio_pwm.h"
 
 /* board configuration */
 // <o> SDCard Driver <1=>SDIO sdcard <0=>SPI MMC card

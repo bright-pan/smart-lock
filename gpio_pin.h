@@ -9,6 +9,7 @@
  * Modify:
  *
  * 2013-04-25 Bright Pan <loststriker@gmail.com>
+ * 2013-04-27 Bright Pan <loststriker@gmail.com>
  *
  * Copyright (C) 2013 Yuettak Co.,Ltd
  ********************************************************************/
@@ -20,9 +21,6 @@
 #include <rtthread.h>
 #include "stm32f10x.h"
 #include "gpio.h"
-
-void rt_hw_key1_register(void);
-void rt_hw_key2_register(void);
 
 void rt_hw_led1_register(void);
 

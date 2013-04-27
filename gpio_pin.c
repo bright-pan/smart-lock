@@ -9,12 +9,12 @@
  * Modify:
  *
  * 2013-04-25 Bright Pan <loststriker@gmail.com>
+ * 2013-04-27 Bright Pan <loststriker@gmail.com>
  *
  * Copyright (C) 2013 Yuettak Co.,Ltd
  ********************************************************************/
 
 #include "gpio_pin.h"
-#include "stm32f10x_conf.h"
 
 struct gpio_pin_user_data
 {
@@ -24,12 +24,8 @@ struct gpio_pin_user_data
   GPIOMode_TypeDef gpio_mode;//mode
   GPIOSpeed_TypeDef gpio_speed;//speed
   rt_uint32_t gpio_clock;//clock
-  rt_uint8_t gpio_port_source;
-  rt_uint8_t gpio_pin_source;
+  rt_uint8_t gpio_default_output;
 };
-
-
-
 /*
  * gpio pin ops configure
  */
@@ -42,6 +38,14 @@ rt_err_t gpio_pin_configure(gpio_device *gpio)
   gpio_initstructure.GPIO_Mode = user->gpio_mode;
   gpio_initstructure.GPIO_Pin = user->gpio_pinx;
   gpio_initstructure.GPIO_Speed = user->gpio_speed;
+  if (user->gpio_default_output)
+  {
+    GPIO_SetBits(user->gpiox,user->gpio_pinx);
+  }
+  else
+  {
+    GPIO_ResetBits(user->gpiox,user->gpio_pinx);
+  }
   GPIO_Init(user->gpiox,&gpio_initstructure);
 
   return RT_EOK;
@@ -99,51 +103,6 @@ struct rt_gpio_ops gpio_pin_user_ops=
   gpio_pin_intput
 };
 
-struct gpio_pin_user_data key1_user_data = 
-{	
-  "key1" ,
-  GPIOE,
-  GPIO_Pin_5,
-  GPIO_Mode_IN_FLOATING,
-  GPIO_Speed_50MHz,
-  RCC_APB2Periph_GPIOE,
-  GPIO_PortSourceGPIOE,
-  GPIO_PinSource5,
-};
-gpio_device key1_device;
-
-void rt_hw_key1_register(void)
-{
-  gpio_device *key_device = &key1_device;
-  struct gpio_pin_user_data *key_user_data = &key1_user_data;
-
-  key_device->ops = &gpio_pin_user_ops;
-  rt_hw_gpio_register(key_device,key_user_data->name, (RT_DEVICE_FLAG_RDWR), key_user_data);
-}
-
-struct gpio_pin_user_data key2_user_data = 
-{
-  "key2",
-  GPIOE,
-  GPIO_Pin_6,
-  GPIO_Mode_IN_FLOATING,
-  GPIO_Speed_50MHz,
-  RCC_APB2Periph_GPIOE,
-  GPIO_PortSourceGPIOE,
-  GPIO_PinSource6,
-};
-gpio_device key2_device;
-
-void rt_hw_key2_register(void)
-{
-  gpio_device *key_device = &key2_device;
-  struct gpio_pin_user_data *key_user_data = &key2_user_data;
-
-  key_device->ops = &gpio_pin_user_ops;
-  
-  rt_hw_gpio_register(key_device,key_user_data->name, (RT_DEVICE_FLAG_RDWR), key_user_data);
-}
-
 struct gpio_pin_user_data led1_user_data = 
 {
   "led1",
@@ -152,8 +111,7 @@ struct gpio_pin_user_data led1_user_data =
   GPIO_Mode_Out_PP,
   GPIO_Speed_50MHz,
   RCC_APB2Periph_GPIOC,
-  GPIO_PortSourceGPIOC,
-  GPIO_PinSource4,
+  1,
 };
 gpio_device led1_device;
 
@@ -162,8 +120,7 @@ void rt_hw_led1_register(void)
   gpio_device *led_device = &led1_device;
   struct gpio_pin_user_data *led_user_data = &led1_user_data;
 
-  led_device->ops = &gpio_pin_user_ops;
-  
+  led_device->ops = &gpio_pin_user_ops;  
   rt_hw_gpio_register(led_device,led_user_data->name, (RT_DEVICE_FLAG_RDWR), led_user_data);
 }
 
@@ -186,24 +143,4 @@ void led1(const rt_uint8_t dat)
   }
 }	
 FINSH_FUNCTION_EXPORT(led1, led1[0 1])
-
-void key(rt_int8_t num)
-{
-  rt_device_t key = RT_NULL;
-  rt_int8_t dat = 0;
-
-  if(num == 1)
-  {
-    key = rt_device_find("key1");
-    rt_device_read(key,0,&dat,0);
-    rt_kprintf("key1 = 0x%x\n",dat);
-  }
-  if(num == 2)
-  {
-    key = rt_device_find("key2");
-    rt_device_read(key,0,&dat,0);
-    rt_kprintf("key2 = 0x%x\n",dat);
-  }
-}
-FINSH_FUNCTION_EXPORT(key, key[1 2] = x)
 #endif
