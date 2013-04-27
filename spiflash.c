@@ -135,13 +135,33 @@ struct flash_device
 
 
 struct flash_device	w25q16_device;
-#define 	RT_SPI_SEND_THEN_RECV(a,b)  rt_spi_send_then_recv(w25q16_device.spi_device,(a),(b),)
 
+
+u8 spi_flash_write_read_byte(struct rt_spi_device *device,const u8 data)
+{
+	u8 value;
+	struct rt_spi_message message;
+	struct rt_spi_message *message1;
+
+	message.cs_release = 0;
+	message.cs_take = 0;
+	message.length = 1;
+	message.next = RT_NULL;
+	message.recv_buf = &value;
+	message.send_buf = &data;
+
+
+	message1 = rt_spi_transfer_message(device,&message);
+
+	value = *(u8 *)(message1->recv_buf);
+	
+	return value;
+}
 void spi_flash_write_enable(struct rt_spi_device *device )
 {
   	rt_spi_take(device);
 
-	rt_spi_sendrecv8(device,W25X_WriteEnable);
+	spi_flash_write_read_byte(device,W25X_WriteEnable);
 
 	rt_spi_release(device);
   
@@ -152,11 +172,11 @@ void spi_flash_wait_write_end(struct rt_spi_device *device)
 	
 	rt_spi_take(device);
 
-	rt_spi_sendrecv8(device,W25X_ReadStatusReg);
+	spi_flash_write_read_byte(device,W25X_ReadStatusReg);
 	
   do
   {
-    flash_status = rt_spi_sendrecv8(device,Dummy_Byte);	 
+    flash_status = spi_flash_write_read_byte(device,Dummy_Byte);	 
   }
   while ((flash_status& WIP_Flag) == SET); 
 
@@ -170,13 +190,13 @@ void spi_flash_sector_erase(struct rt_spi_device *device,u32 SectorAddr)
 
   rt_spi_take(device);
 
-  rt_spi_sendrecv8(device,W25X_SectorErase);
+  spi_flash_write_read_byte(device,W25X_SectorErase);
 
-  rt_spi_sendrecv8(device,(SectorAddr & 0xFF0000) >> 16);
+  spi_flash_write_read_byte(device,(SectorAddr & 0xFF0000) >> 16);
 
-  rt_spi_sendrecv8(device,(SectorAddr & 0xFF00) >> 8);
+  spi_flash_write_read_byte(device,(SectorAddr & 0xFF00) >> 8);
 
-  rt_spi_sendrecv8(device,SectorAddr & 0xFF);
+  spi_flash_write_read_byte(device,SectorAddr & 0xFF);
 
   rt_spi_release(device);
   
@@ -189,7 +209,7 @@ void spi_flash_chip_erase(struct rt_spi_device *device)
 
 	rt_spi_take(device);
 
-	rt_spi_sendrecv8(device,W25X_ChipErase);
+	spi_flash_write_read_byte(device,W25X_ChipErase);
 
 	rt_spi_release(device);
 
@@ -202,13 +222,13 @@ void spi_flash_page_write(struct rt_spi_device *device,const u8* pBuffer, u32 Wr
 
   rt_spi_take(device);
 
-  rt_spi_sendrecv8(device,W25X_PageProgram);
+  spi_flash_write_read_byte(device,W25X_PageProgram);
 
-  rt_spi_sendrecv8(device,(WriteAddr & 0xFF0000) >> 16);
+  spi_flash_write_read_byte(device,(WriteAddr & 0xFF0000) >> 16);
 
-  rt_spi_sendrecv8(device,(WriteAddr & 0xFF00) >> 8);
+  spi_flash_write_read_byte(device,(WriteAddr & 0xFF00) >> 8);
   
-  rt_spi_sendrecv8(device,WriteAddr & 0xFF);
+  spi_flash_write_read_byte(device,WriteAddr & 0xFF);
 
   if(NumByteToWrite > SPI_FLASH_PerWritePageSize)
   {
@@ -217,7 +237,7 @@ void spi_flash_page_write(struct rt_spi_device *device,const u8* pBuffer, u32 Wr
 
   while (NumByteToWrite--)
   {
-    rt_spi_sendrecv8(device,*pBuffer);
+    spi_flash_write_read_byte(device,*pBuffer);
     pBuffer++;
   }
   rt_spi_release(device);
@@ -299,17 +319,17 @@ void spi_flash_buffer_read(struct rt_spi_device *device,u8* pBuffer, u32 ReadAdd
 {
   rt_spi_take(device);
 
-  rt_spi_send_then_recv(device,W25X_ReadData);
+  spi_flash_write_read_byte(device,W25X_ReadData);
 
-  rt_spi_sendrecv8(device,(ReadAddr & 0xFF0000) >> 16);
+  spi_flash_write_read_byte(device,(ReadAddr & 0xFF0000) >> 16);
 
-  rt_spi_sendrecv8(device,(ReadAddr& 0xFF00) >> 8);
+  spi_flash_write_read_byte(device,(ReadAddr& 0xFF00) >> 8);
 
-  rt_spi_sendrecv8(device,ReadAddr & 0xFF);
+  spi_flash_write_read_byte(device,ReadAddr & 0xFF);
 
   while (NumByteToRead--) 
   {
-    *pBuffer = rt_spi_sendrecv8(device,Dummy_Byte);
+    *pBuffer = spi_flash_write_read_byte(device,Dummy_Byte);
     pBuffer++;
   }
   rt_spi_release(device);
@@ -497,7 +517,7 @@ FINSH_FUNCTION_EXPORT(flashsectore,flashsectore(Sectore_Addr)--Sectore_Erase);
 * Output         : None
 * Return         : None
 *******************************************************************************/
-void SPI_Flash_Write_NoCheck(const u8* pBuffer,u32 WriteAddr,u16 NumByteToWrite)   
+void spi_flash_write_nocheck(const u8* pBuffer,u32 WriteAddr,u16 NumByteToWrite)   
 { 			 		 
 	u16 pageremain;	   
 	pageremain=256-WriteAddr%256; //单页剩余的字节数		 	    
@@ -517,6 +537,7 @@ void SPI_Flash_Write_NoCheck(const u8* pBuffer,u32 WriteAddr,u16 NumByteToWrite)
 		}
 	};	    
 } 
+FINSH_FUNCTION_EXPORT(spi_flash_write_nocheck,spi_flash_write_nocheck(pBuffer,WriteAddr,NumByteToWrite));
 
 #endif
 

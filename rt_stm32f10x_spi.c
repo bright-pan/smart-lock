@@ -8,7 +8,7 @@ static struct rt_spi_ops stm32_spi_ops =
     configure,
     xfer
 };
-#define USING_SPI1
+
 #ifdef USING_SPI1
 static struct stm32_spi_bus stm32_spi_bus_1;
 #endif /* #ifdef USING_SPI1 */
@@ -248,7 +248,7 @@ static rt_uint32_t xfer(struct rt_spi_device* device, struct rt_spi_message* mes
                 while (SPI_I2S_GetFlagStatus(SPI, SPI_I2S_FLAG_TXE) == RESET);
                 // Send the byte
                 SPI_I2S_SendData(SPI, data);
-
+					
                 //Wait until a data is received
                 while (SPI_I2S_GetFlagStatus(SPI, SPI_I2S_FLAG_RXNE) == RESET);
                 // Get the received data
@@ -278,7 +278,7 @@ static rt_uint32_t xfer(struct rt_spi_device* device, struct rt_spi_message* mes
                 while (SPI_I2S_GetFlagStatus(SPI, SPI_I2S_FLAG_TXE) == RESET);
                 // Send the byte
                 SPI_I2S_SendData(SPI, data);
-
+		
                 //Wait until a data is received
                 while (SPI_I2S_GetFlagStatus(SPI, SPI_I2S_FLAG_RXNE) == RESET);
                 // Get the received data
