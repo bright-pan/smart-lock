@@ -1,5 +1,5 @@
 /*********************************************************************
- * Filename:      gpio_pwm.h
+ * Filename:      gpio_adc.h
  * 
  * Description:    
  *
@@ -11,7 +11,7 @@
  * Copyright (C) 2013 Yuettak Co.,Ltd
  ********************************************************************/
 
-#ifndef _GPIO_PWM_H_
+#ifndef _GPIO_ADC_H_
 #define _GPIO_PWM_H_
 
 #include <rthw.h>
@@ -19,10 +19,11 @@
 #include <stm32f10x.h>
 #include "gpio.h"
 
-#define RT_DEVICE_CTRL_SEND_PULSE       0x14    /* enable receive irq */
-#define RT_DEVICE_CTRL_SET_PULSE_COUNTS 0x15    /* disable receive irq */
-#define RT_DEVICE_FLAG_PWM_TX           0x1000 /* flag mask for gpio pwm mode */
 
-void rt_hw_pwm1_register(void);
+#define RT_DEVICE_CTRL_ENABLE_CONVERT    0x14    /* enable adc convert */
+#define RT_DEVICE_CTRL_DISABLE_CONVERT   0x15    /* disable adc convert */
+#define RT_DEVICE_CTRL_GET_CONVERT_VALUE 0x16    /* get adc converted value */
+
+void rt_hw_adc11_register(void);
 
 #endif

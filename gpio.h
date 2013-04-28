@@ -24,10 +24,6 @@
 #define RT_DEVICE_CTRL_CONFIG           0x03    /* configure device */
 #define RT_DEVICE_CTRL_SET_INT          0x10    /* enable receive irq */
 #define RT_DEVICE_CTRL_CLR_INT          0x11    /* disable receive irq */
-
-#define RT_DEVICE_CTRL_SEND_PULSE       0x14    /* enable receive irq */
-#define RT_DEVICE_CTRL_SET_PULSE_COUNTS 0x15    /* disable receive irq */
-#define RT_DEVICE_FLAG_PWM_TX           0x1000 /* flag mask for gpio pwm mode */
 /*		
  *	gpio_device data stuct
  */

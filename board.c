@@ -189,6 +189,8 @@ void rt_hw_board_init()
   rt_hw_led1_register();
   /* pwm device register */
   rt_hw_pwm1_register();
+  /* adc device register */
+  rt_hw_adc11_register();
 }
 
 /*@}*/

@@ -235,14 +235,36 @@ void key(rt_int8_t num)
   if(num == 1)
   {
     key = rt_device_find("key1");
-    rt_device_read(key,0,&dat,0);
-    rt_kprintf("key1 = 0x%x\n",dat);
+    if (key != RT_NULL)
+    {
+      rt_device_read(key,0,&dat,0);
+#ifdef RT_USING_FINSH
+      rt_kprintf("key1 = 0x%x\n",dat);
+#endif      
+    }
+    else
+    {
+#ifdef RT_USING_FINSH
+      rt_kprintf("the device is not found!\n");
+#endif
+    }
   }
   if(num == 2)
   {
     key = rt_device_find("key2");
-    rt_device_read(key,0,&dat,0);
-    rt_kprintf("key2 = 0x%x\n",dat);
+    if (key != RT_NULL)
+    {
+      rt_device_read(key,0,&dat,0);
+#ifdef RT_USING_FINSH
+      rt_kprintf("key2 = 0x%x\n",dat);
+#endif      
+    }
+    else
+    {
+#ifdef RT_USING_FINSH
+      rt_kprintf("the device is not found!\n");
+#endif
+    }
   }
 }
 FINSH_FUNCTION_EXPORT(key, key[1 2] = x)

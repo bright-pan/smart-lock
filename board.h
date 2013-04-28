@@ -20,6 +20,7 @@
 #include "gpio_pin.h"
 #include "gpio_exti.h"
 #include "gpio_pwm.h"
+#include "gpio_adc.h"
 
 /* board configuration */
 // <o> SDCard Driver <1=>SDIO sdcard <0=>SPI MMC card
