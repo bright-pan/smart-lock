@@ -8,7 +8,7 @@ static struct rt_spi_ops stm32_spi_ops =
     configure,
     xfer
 };
-
+#define USING_SPI1
 #ifdef USING_SPI1
 static struct stm32_spi_bus stm32_spi_bus_1;
 #endif /* #ifdef USING_SPI1 */

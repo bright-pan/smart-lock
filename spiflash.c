@@ -63,10 +63,10 @@
 
 struct rt_spi_configuration spi1_configuer= 
 {
-	RT_SPI_MODE_3 | RT_SPI_MSB,
+	RT_SPI_MODE_MASK,
 	8,
 	0,
-	18000000
+	72000000/8
 };
 
 
@@ -141,20 +141,14 @@ u8 spi_flash_write_read_byte(struct rt_spi_device *device,const u8 data)
 {
 	u8 value;
 	struct rt_spi_message message;
-	struct rt_spi_message *message1;
 
-	message.cs_release = 0;
-	message.cs_take = 0;
 	message.length = 1;
 	message.next = RT_NULL;
 	message.recv_buf = &value;
 	message.send_buf = &data;
 
+	rt_spi_transfer_message(device,&message);
 
-	message1 = rt_spi_transfer_message(device,&message);
-
-	value = *(u8 *)(message1->recv_buf);
-	
 	return value;
 }
 void spi_flash_write_enable(struct rt_spi_device *device )
@@ -185,8 +179,6 @@ void spi_flash_wait_write_end(struct rt_spi_device *device)
 void spi_flash_sector_erase(struct rt_spi_device *device,u32 SectorAddr)
 {
   spi_flash_write_enable(device);
-  
-  spi_flash_wait_write_end(device);			//test
 
   rt_spi_take(device);
 
@@ -346,6 +338,7 @@ static rt_err_t rt_flash_init(rt_device_t dev)
 	if(flash->spi_device != RT_NULL)
 	{
 		rt_spi_configure(flash->spi_device,&spi1_configuer);
+		flash->spi_device->bus->ops->configure(flash->spi_device,&flash->spi_device->config);
 	}
 	
 	return RT_EOK;
@@ -418,6 +411,8 @@ rt_err_t rt_flash_register(const char * flash_device_name, const char * spi_devi
     w25q16_device.geometry.sector_count = 512;
     w25q16_device.geometry.block_size = 4096;
 
+    w25q16_device.max_clock = 10;
+
     w25q16_device.parent.init    		= rt_flash_init;
     w25q16_device.parent.open    	= rt_flash_open;
     w25q16_device.parent.close   	= rt_flash_close;
@@ -431,7 +426,7 @@ rt_err_t rt_flash_register(const char * flash_device_name, const char * spi_devi
     w25q16_device.parent.tx_complete = RT_NULL;
 
     result = rt_device_register(&w25q16_device.parent, flash_device_name,
-                                RT_DEVICE_FLAG_RDWR | RT_DEVICE_FLAG_REMOVABLE | RT_DEVICE_FLAG_STANDALONE);
+                                RT_DEVICE_FLAG_RDWR  | RT_DEVICE_FLAG_STANDALONE);
 
     return result;	
 }
@@ -507,6 +502,11 @@ void flashsectore(u32 size)
 FINSH_FUNCTION_EXPORT(flashsectore,flashsectore(Sectore_Addr)--Sectore_Erase);
 
 
+void flashchip(u32 size)
+{
+	spi_flash_chip_erase(w25q16_device.spi_device);
+}
+FINSH_FUNCTION_EXPORT(flashchip,flashchip()--Sectore_Erase);
 
 /*******************************************************************************
 * Function Name  : SPI_Flash_Write_NoCheck
