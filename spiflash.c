@@ -30,14 +30,14 @@
 #define SPI1_CS_PORT										GPIOA
 #define SPI1_CS_CLOCK									RCC_APB2Periph_GPIOA
 
-#define SPI1_BUS_NAME									("spi1")
-#define SPI1_CS_NAME										("flash")
-#define FLASH_DEVICE_NAME							("w25")
 
+
+
+/* Private define ------------------------------------------------------------*/
 #define SPI_FLASH_PageSize      					256
 #define SPI_FLASH_PerWritePageSize      	256
 
-/* Private define ------------------------------------------------------------*/
+
 #define W25X_WriteEnable		     		 				0x06 
 #define W25X_WriteDisable		      					0x04 
 #define W25X_ReadStatusReg		    				0x05 
@@ -59,72 +59,20 @@
 #define Dummy_Byte                						0xFF  //moke needful read clock
 
 
+/********************************************* spi devie data struct **********************************/
+#ifdef USING_SPI1
+static struct stm32_spi_bus stm32_spi_bus_1;
+#endif 
 
+#ifdef USING_SPI2
+static struct stm32_spi_bus stm32_spi_bus_2;
+#endif
 
-struct rt_spi_configuration spi1_configuer= 
-{
-	RT_SPI_MODE_MASK,
-	8,
-	0,
-	72000000/8
-};
+#ifdef USING_SPI3
+static struct stm32_spi_bus stm32_spi_bus_3;
+#endif
 
-
-
-
-void rt_hw_spi_init(void)
-{
-	{
-		static struct stm32_spi_bus stm32_spi;				
-		GPIO_InitTypeDef gpio_initstructure;
-
-		RCC_APB2PeriphClockCmd(SPI1_APB2_CLOCK | SPI1_CS_CLOCK,ENABLE);
-
-		gpio_initstructure.GPIO_Mode = GPIO_Mode_AF_PP;
-		gpio_initstructure.GPIO_Speed = GPIO_Speed_50MHz;
-		gpio_initstructure.GPIO_Pin = SPI1_MISO_PIN | SPI1_MOSI_PIN | SPI1_SCK_PIN;
-		GPIO_Init(SPI1_GPIO_PORT,&gpio_initstructure);
-
-		stm32_spi_register(SPI1,&stm32_spi,SPI1_BUS_NAME);
-	}
-
-	{
-		static struct rt_spi_device spi_device;        
-		static struct stm32_spi_cs  spi_cs;	
-
-		GPIO_InitTypeDef	gpio_initstructure;
-
-		gpio_initstructure.GPIO_Speed = GPIO_Speed_50MHz;        
-		gpio_initstructure.GPIO_Mode = GPIO_Mode_Out_PP;        /* spi21: PG10 */        
-		
-		spi_cs.GPIOx = SPI1_CS_PORT;        
-		spi_cs.GPIO_Pin = SPI1_CS_PIN;     
-		
-		RCC_APB2PeriphClockCmd(SPI1_CS_CLOCK, ENABLE);        
-		
-		gpio_initstructure.GPIO_Pin = spi_cs.GPIO_Pin;        
-		
-		GPIO_SetBits(spi_cs.GPIOx, spi_cs.GPIO_Pin);     
-		
-		GPIO_Init(spi_cs.GPIOx, &gpio_initstructure);     
-
-		rt_spi_bus_attach_device(&spi_device,SPI1_CS_NAME, SPI1_BUS_NAME, (void*)&spi_cs);
-		
-	}
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
+/* flash device */
 struct flash_device 
 {
 	struct rt_device                			parent;      /**< RT-Thread device struct */
@@ -133,25 +81,74 @@ struct flash_device
 	uint32_t                        				max_clock;   /**< MAX SPI clock */
 };
 
-
+/*spi device*/
 struct flash_device	w25q16_device;
 
+/*******************************************************************************
+* Function Name  : rt_hw_spi_init
+* Description    : register spi bus and register spi cs device
+*                  
+* Input				: None
+* Output			: None
+* Return         	: None
+*******************************************************************************/
+void rt_hw_spi_init(void)
+{
+	/*		initialization SPI Bus device		 */
+	{		
+		GPIO_InitTypeDef 							gpio_initstructure;
 
-u8 spi_flash_write_read_byte(struct rt_spi_device *device,const u8 data)
+		RCC_APB2PeriphClockCmd(SPI1_APB2_CLOCK | SPI1_CS_CLOCK,ENABLE);
+
+		gpio_initstructure.GPIO_Mode = GPIO_Mode_AF_PP;
+		gpio_initstructure.GPIO_Speed = GPIO_Speed_50MHz;
+		gpio_initstructure.GPIO_Pin = SPI1_MISO_PIN | SPI1_MOSI_PIN | SPI1_SCK_PIN;
+		GPIO_Init(SPI1_GPIO_PORT,&gpio_initstructure);
+		/*		register spi bus device */
+		stm32_spi_register(SPI1,&stm32_spi_bus_1,SPI1_BUS_NAME);
+	}
+	/*		initialization SPI CS device 		 */
+	{
+		static struct rt_spi_device 		spi_device;        
+		static struct stm32_spi_cs  		spi_cs;	
+		GPIO_InitTypeDef						gpio_initstructure;
+   
+		/*		configure CS clock port pin		*/
+		spi_cs.GPIOx = SPI1_CS_PORT;        
+		spi_cs.GPIO_Pin = SPI1_CS_PIN;     
+		RCC_APB2PeriphClockCmd(SPI1_CS_CLOCK, ENABLE);        
+		
+		gpio_initstructure.GPIO_Mode = GPIO_Mode_Out_PP;    
+		gpio_initstructure.GPIO_Pin = spi_cs.GPIO_Pin;        
+		gpio_initstructure.GPIO_Speed = GPIO_Speed_50MHz; 
+		GPIO_SetBits(spi_cs.GPIOx, spi_cs.GPIO_Pin);     
+		
+		GPIO_Init(spi_cs.GPIOx, &gpio_initstructure);     
+		/* 	add cs devie go to spi bus devie	*/
+		rt_spi_bus_attach_device(&spi_device,SPI1_CS_NAME, SPI1_BUS_NAME, (void*)&spi_cs);
+		
+	}
+}
+
+
+/******************************************** flash device drive function ******************************/
+
+static u8 spi_flash_write_read_byte(struct rt_spi_device *device,const u8 data)
 {
 	u8 value;
 	struct rt_spi_message message;
 
 	message.length = 1;
-	message.next = RT_NULL;
 	message.recv_buf = &value;
 	message.send_buf = &data;
-
+	message.cs_release = 0;
+	message.cs_take = 0;
+	message.next = RT_NULL;
 	rt_spi_transfer_message(device,&message);
 
 	return value;
 }
-void spi_flash_write_enable(struct rt_spi_device *device )
+static void spi_flash_write_enable(struct rt_spi_device *device )
 {
   	rt_spi_take(device);
 
@@ -160,7 +157,7 @@ void spi_flash_write_enable(struct rt_spi_device *device )
 	rt_spi_release(device);
   
 }
-void spi_flash_wait_write_end(struct rt_spi_device *device)
+static void spi_flash_wait_write_end(struct rt_spi_device *device)
 {
 	u8 flash_status;
 	
@@ -195,7 +192,7 @@ void spi_flash_sector_erase(struct rt_spi_device *device,u32 SectorAddr)
   spi_flash_wait_write_end(device);
 }
 
-void spi_flash_chip_erase(struct rt_spi_device *device)
+static void spi_flash_chip_erase(struct rt_spi_device *device)
 {
 	spi_flash_write_enable(device);
 
@@ -208,7 +205,7 @@ void spi_flash_chip_erase(struct rt_spi_device *device)
 	spi_flash_wait_write_end(device);
 }
 
-void spi_flash_page_write(struct rt_spi_device *device,const u8* pBuffer, u32 WriteAddr, u16 NumByteToWrite)
+static void spi_flash_page_write(struct rt_spi_device *device,const u8* pBuffer, u32 WriteAddr, u16 NumByteToWrite)
 {
   spi_flash_write_enable(device);
 
@@ -237,7 +234,7 @@ void spi_flash_page_write(struct rt_spi_device *device,const u8* pBuffer, u32 Wr
   spi_flash_wait_write_end(device);
 }
 
-void spi_flash_buffer_write(struct rt_spi_device *device,const u8* pBuffer, u32 WriteAddr, u16 NumByteToWrite)
+static void spi_flash_buffer_write(struct rt_spi_device *device,const u8* pBuffer, u32 WriteAddr, u16 NumByteToWrite)
 {
 	u8 NumOfPage = 0, NumOfSingle = 0, Addr = 0, count = 0, temp = 0;
 	
@@ -307,7 +304,7 @@ void spi_flash_buffer_write(struct rt_spi_device *device,const u8* pBuffer, u32 
   }
 }
 
-void spi_flash_buffer_read(struct rt_spi_device *device,u8* pBuffer, u32 ReadAddr, u16 NumByteToRead)
+static void spi_flash_buffer_read(struct rt_spi_device *device,u8* pBuffer, u32 ReadAddr, u16 NumByteToRead)
 {
   rt_spi_take(device);
 
@@ -331,13 +328,17 @@ void spi_flash_buffer_read(struct rt_spi_device *device,u8* pBuffer, u32 ReadAdd
 
 
 
+
+
+/**************************************** spi flash resiger function **********************************/
+
 static rt_err_t rt_flash_init(rt_device_t dev)
 {
 	struct flash_device* flash = (struct flash_device *)dev;	
 
-	if(flash->spi_device != RT_NULL)
+	if(flash->spi_device->bus->owner != flash->spi_device)
 	{
-		rt_spi_configure(flash->spi_device,&spi1_configuer);
+//		rt_spi_configure(flash->spi_device,&spi1_configuer);
 		flash->spi_device->bus->ops->configure(flash->spi_device,&flash->spi_device->config);
 	}
 	
@@ -355,12 +356,19 @@ static rt_err_t rt_flash_close(rt_device_t dev)
 
 static rt_size_t rt_flash_read(rt_device_t dev, rt_off_t pos, void* buffer, rt_size_t size)
 {
-	spi_flash_buffer_read(w25q16_device.spi_device,buffer,pos*4096,size*4096);
+	struct flash_device* flash = (struct flash_device *)dev;	
+	
+	spi_flash_buffer_read(flash->spi_device,buffer,pos*4096,size*4096);
+	
 	return size;
 }
+
 static rt_size_t rt_flash_write(rt_device_t dev, rt_off_t pos,const void* buffer, rt_size_t size)
 {
-	spi_flash_buffer_write(w25q16_device.spi_device,buffer,pos*4096,size*4096);
+	struct flash_device* flash = (struct flash_device *)dev;	
+	
+	spi_flash_buffer_write(flash->spi_device,buffer,pos*4096,size*4096);
+	
 	return size;
 }
 
@@ -388,8 +396,15 @@ static rt_err_t rt_flash_control(rt_device_t dev, rt_uint8_t cmd, void *args)
 
 rt_err_t rt_flash_register(const char * flash_device_name, const char * spi_device_name)
 {
-    rt_err_t result = RT_EOK;
-    struct rt_spi_device * spi_device;
+	rt_err_t result = RT_EOK;
+	struct rt_spi_device * spi_device;
+	struct rt_spi_configuration spi1_configuer= 
+	{
+		RT_SPI_MODE_MASK,										//spi clock and data mode set
+		8,																			//data width
+		0,																			//reserved
+		72000000/4														//MAX frequency 18MHz
+	};
 
     spi_device = (struct rt_spi_device *)rt_device_find(spi_device_name);
     if(spi_device == RT_NULL)
@@ -403,15 +418,16 @@ rt_err_t rt_flash_register(const char * flash_device_name, const char * spi_devi
     }
     rt_memset(&w25q16_device, 0, sizeof(w25q16_device));
     w25q16_device.spi_device = spi_device;
-
-    /* register sdcard device */
+	w25q16_device.max_clock = 10;
+	w25q16_device.spi_device->config = spi1_configuer;
+    /* register flash device */
     w25q16_device.parent.type    = RT_Device_Class_Block;
 
     w25q16_device.geometry.bytes_per_sector = 4096;
     w25q16_device.geometry.sector_count = 512;
     w25q16_device.geometry.block_size = 4096;
 
-    w25q16_device.max_clock = 10;
+   
 
     w25q16_device.parent.init    		= rt_flash_init;
     w25q16_device.parent.open    	= rt_flash_open;
@@ -502,42 +518,104 @@ void flashsectore(u32 size)
 FINSH_FUNCTION_EXPORT(flashsectore,flashsectore(Sectore_Addr)--Sectore_Erase);
 
 
-void flashchip(u32 size)
+void flashchipe(u32 size)
 {
 	spi_flash_chip_erase(w25q16_device.spi_device);
 }
-FINSH_FUNCTION_EXPORT(flashchip,flashchip()--Sectore_Erase);
+FINSH_FUNCTION_EXPORT(flashchipe,flashchipe()--chip_Erase);
 
-/*******************************************************************************
-* Function Name  : SPI_Flash_Write_NoCheck
-* Description    : Not check write address to flash write 256byte
-*                  
-*                   
-* Input         	 : pBuffer:data buffer WriteAddr:write address NumByteToWrite:byte num < 256
-* Output         : None
-* Return         : None
-*******************************************************************************/
+
 void spi_flash_write_nocheck(const u8* pBuffer,u32 WriteAddr,u16 NumByteToWrite)   
 { 			 		 
 	u16 pageremain;	   
-	pageremain=256-WriteAddr%256; //单页剩余的字节数		 	    
-	if(NumByteToWrite<=pageremain)pageremain=NumByteToWrite;//不大于256个字节
+	pageremain=256-WriteAddr%256; 
+	
+	if(NumByteToWrite<=pageremain)
+	{
+		pageremain=NumByteToWrite;
+	}
 	while(1)
 	{	   
 		spi_flash_page_write(w25q16_device.spi_device,pBuffer,WriteAddr,pageremain);
-		if(NumByteToWrite==pageremain)break;//写入结束了
-	 	else //NumByteToWrite>pageremain
+		if(NumByteToWrite==pageremain)
+		{
+			break;
+		}
+			else
 		{
 			pBuffer+=pageremain;
 			WriteAddr+=pageremain;	
 
-			NumByteToWrite-=pageremain;			  //减去已经写入了的字节数
-			if(NumByteToWrite>256)pageremain=256; //一次可以写入256个字节
-			else pageremain=NumByteToWrite; 	  //不够256个字节了
+			NumByteToWrite-=pageremain;			 
+			if(NumByteToWrite>256)pageremain=256;
+			else pageremain=NumByteToWrite; 	 
 		}
 	};	    
 } 
-FINSH_FUNCTION_EXPORT(spi_flash_write_nocheck,spi_flash_write_nocheck(pBuffer,WriteAddr,NumByteToWrite));
+u8 SPI_FLASH_BUF[4097];
+void flashwrite(const u8* pBuffer,u32 WriteAddr,u16 NumByteToWrite)   
+{ 
+	u32 secpos;
+	u16 secoff;
+	u16 secremain;	   
+ 	u16 i;    
+
+	secpos=WriteAddr / 4096;
+	secoff=WriteAddr % 4096;
+	secremain=4096-secoff;
+
+	if(NumByteToWrite<=secremain)
+	{
+		secremain=NumByteToWrite;
+	}
+	while(1) 
+	{	
+		spi_flash_write_nocheck(SPI_FLASH_BUF,secpos*4096,4096);
+		for(i=0;i<secremain;i++)
+		{
+			if(SPI_FLASH_BUF[secoff+i]!=0XFF)
+			{
+				break;
+			}
+		}
+		if(i<secremain)
+		{
+			spi_flash_sector_erase(w25q16_device.spi_device,secpos);
+			for(i=0;i<secremain;i++)	   
+			{
+				SPI_FLASH_BUF[i+secoff]=pBuffer[i];	  
+			}
+			spi_flash_write_nocheck(SPI_FLASH_BUF,secpos*4096,4096);
+		}
+		else 
+		{
+			spi_flash_write_nocheck(pBuffer,WriteAddr,secremain); 		 
+		}
+		if(NumByteToWrite==secremain)
+		{
+			break;
+		}
+		else
+		{
+			secpos++;
+			secoff=0;
+
+		   	pBuffer+=secremain; 
+			WriteAddr+=secremain;
+		   	NumByteToWrite-=secremain;				
+			if(NumByteToWrite>4096)
+			{
+				secremain=4096;
+			}
+			else
+			{
+				secremain=NumByteToWrite; 
+			}		
+		}	 
+	};	 	 
+}
+
+FINSH_FUNCTION_EXPORT(flashwrite,flashwrite(pBuffer,writeaddr,size)--wirte data go to flash);
 
 #endif
 

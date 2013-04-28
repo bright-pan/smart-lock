@@ -1,25 +1,32 @@
-#include "rt_stm32f10x_spi.h"
+/*********************************************************************
+ * Filename:    spibus.c
+ *
+ * Description:    This file  complete spi bus configure and
+ *						   spi cs device regiser function
+ *						   
+ * Author:        wangzw <wangzw@yuettak.com>
+ * Created at:    2013-04-27 9:00:00
+ *                
+ * Modify:
+ *
+ * 
+ *
+ * Copyright (C) 2013 Yuettak Co.,Ltd
+ ********************************************************************/
+#include "spibus.h"
+
+
 
 static rt_err_t configure(struct rt_spi_device* device, struct rt_spi_configuration* configuration);
 static rt_uint32_t xfer(struct rt_spi_device* device, struct rt_spi_message* message);
+
 
 static struct rt_spi_ops stm32_spi_ops =
 {
     configure,
     xfer
 };
-#define USING_SPI1
-#ifdef USING_SPI1
-static struct stm32_spi_bus stm32_spi_bus_1;
-#endif /* #ifdef USING_SPI1 */
 
-#ifdef USING_SPI2
-static struct stm32_spi_bus stm32_spi_bus_2;
-#endif /* #ifdef USING_SPI2 */
-
-#ifdef USING_SPI3
-static struct stm32_spi_bus stm32_spi_bus_3;
-#endif /* #ifdef USING_SPI3 */
 
 //------------------ DMA ------------------
 #ifdef SPI_USE_DMA

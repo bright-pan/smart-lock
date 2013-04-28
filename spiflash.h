@@ -15,7 +15,13 @@
  ********************************************************************/
 #ifndef	__SPIFLASH_H__
 #define		__SPIFLASH_H__
-#include "rt_stm32f10x_spi.h"
+#include "spibus.h"
+
+#define SPI1_BUS_NAME									("spi1")
+#define SPI1_CS_NAME										("flash")
+#define FLASH_DEVICE_NAME							("w25")
+
+#define USING_SPI1												//spi1 bus 
 
 void rt_spi_flash_init(void);
 

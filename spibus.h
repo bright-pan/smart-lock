@@ -1,11 +1,24 @@
-#ifndef STM32_SPI_H_INCLUDED
-#define STM32_SPI_H_INCLUDED
+/*********************************************************************
+ * Filename:    spibus.h
+ *
+ * Description:    This file  complete spi bus configure and
+ *						   spi cs device regiser requisite declare
+ *						   
+ * Author:        wangzw <wangzw@yuettak.com>
+ * Created at:    2013-04-27 9:00:00
+ *                
+ * Modify:
+ *
+ * 
+ *
+ * Copyright (C) 2013 Yuettak Co.,Ltd
+ ********************************************************************/
+#ifndef	__SPIBUS_H__
+#define		__SPIBUS_H__
 
 #include <rtdevice.h>
-
 #include "stm32f10x.h"
 #include "stm32f10x_spi.h"
-
 #include "board.h"
 
 //#define SPI_USE_DMA
