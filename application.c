@@ -243,6 +243,8 @@ void rt_init_thread_entry(void* parameter)
     rtgui_system_server_init();
   }
 #endif /* #ifdef RT_USING_RTGUI */
+filesystem_test();
+
 }
 
 int rt_application_init()

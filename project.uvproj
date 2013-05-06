@@ -465,6 +465,11 @@
               <FileType>1</FileType>
               <FilePath>.\spibus.c</FilePath>
             </File>
+            <File>
+              <FileName>filetest.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\filetest.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>

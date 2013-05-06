@@ -27,7 +27,7 @@ static struct rt_spi_ops stm32_spi_ops =
     xfer
 };
 
-
+//#define SPI_USE_DMA
 //------------------ DMA ------------------
 #ifdef SPI_USE_DMA
 static uint8_t dummy = 0xFF;
