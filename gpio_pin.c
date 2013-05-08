@@ -123,10 +123,50 @@ void rt_hw_led1_register(void)
   led_device->ops = &gpio_pin_user_ops;  
   rt_hw_gpio_register(led_device,led_user_data->name, (RT_DEVICE_FLAG_RDWR), led_user_data);
 }
+/* gsm power device */
+struct gpio_pin_user_data gsm_power_user_data = 
+{
+  DEVICE_NAME_GSM_POWER,
+  GPIOD,
+  GPIO_Pin_0,
+  GPIO_Mode_Out_PP,
+  GPIO_Speed_50MHz,
+  RCC_APB2Periph_GPIOD,
+  1,
+};
+gpio_device gsm_power_device;
+void rt_hw_gsm_power_register(void)
+{
+  gpio_device *gpio_device = &gsm_power_device;
+  struct gpio_pin_user_data *gpio_user_data = &gsm_power_user_data;
+
+  gpio_device->ops = &gpio_pin_user_ops;
+  rt_hw_gpio_register(gpio_device, gpio_user_data->name, (RT_DEVICE_FLAG_RDWR), gpio_user_data);
+}
+/* gsm status device */
+struct gpio_pin_user_data gsm_status_user_data = 
+{
+  DEVICE_NAME_GSM_STATUS,
+  GPIOD,
+  GPIO_Pin_7,
+  GPIO_Mode_IN_FLOATING,
+  GPIO_Speed_50MHz,
+  RCC_APB2Periph_GPIOD,
+  1,
+};
+gpio_device gsm_status_device;
+void rt_hw_gsm_status_register(void)
+{
+  gpio_device *gpio_device = &gsm_status_device;
+  struct gpio_pin_user_data *gpio_user_data = &gsm_status_user_data;
+
+  gpio_device->ops = &gpio_pin_user_ops;
+  rt_hw_gpio_register(gpio_device, gpio_user_data->name, (RT_DEVICE_FLAG_RDWR), gpio_user_data);
+}
+
 
 #ifdef RT_USING_FINSH
 #include <finsh.h>
-
 void led1(const rt_uint8_t dat)
 {
   rt_device_t led = RT_NULL;
@@ -141,6 +181,38 @@ void led1(const rt_uint8_t dat)
     rt_kprintf("the device is not found!\n");
 #endif
   }
-}	
+}
 FINSH_FUNCTION_EXPORT(led1, led1[0 1])
+void gsm_power(const rt_uint8_t dat)
+{
+  rt_device_t device = RT_NULL;
+  device = rt_device_find(DEVICE_NAME_GSM_POWER);
+  if (device != RT_NULL)
+  {
+    rt_device_write(device,0,&dat,0);
+  }
+  else
+  {
+#ifdef RT_USING_FINSH
+    rt_kprintf("the gpio device %s is not found!\n", DEVICE_NAME_GSM_POWER);
+#endif
+  }
+}	
+FINSH_FUNCTION_EXPORT(gsm_power, gsm_power[0 1])
+void gsm_status(const rt_uint8_t dat)
+{
+  rt_device_t device = RT_NULL;
+  device = rt_device_find(DEVICE_NAME_GSM_STATUS);
+  if (device != RT_NULL)
+  {
+    rt_device_write(device,0,&dat,0);
+  }
+  else
+  {
+#ifdef RT_USING_FINSH
+    rt_kprintf("the gpio device %s is not found!\n", DEVICE_NAME_GSM_STATUS);
+#endif
+  }
+}	
+FINSH_FUNCTION_EXPORT(gsm_status, gsm_status[0 1])
 #endif

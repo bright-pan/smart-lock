@@ -182,11 +182,15 @@ void rt_hw_board_init()
   rt_hw_usart_init();
   rt_console_set_device(CONSOLE_DEVICE);
 
+  /* gsm usart device register */
+  rt_hw_gsm_usart_init();
   /* key device register */
   rt_hw_lk_shell_register();
   rt_hw_key2_register();
-  /* led device register */
+  /* gpio pin device register */
   rt_hw_led1_register();
+  rt_hw_gsm_power_register();
+  rt_hw_gsm_status_register();
   /* pwm device register */
   rt_hw_pwm1_register();
   /* adc device register */

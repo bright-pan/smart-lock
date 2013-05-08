@@ -22,6 +22,11 @@
 #include "stm32f10x.h"
 #include "gpio.h"
 
+#define DEVICE_NAME_GSM_POWER "g_power"
+#define DEVICE_NAME_GSM_STATUS "g_stat"
+
 void rt_hw_led1_register(void);
+void rt_hw_gsm_power_register(void);
+void rt_hw_gsm_status_register(void);
 
 #endif
