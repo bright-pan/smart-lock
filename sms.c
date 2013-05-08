@@ -35,7 +35,7 @@ void sms_mail_process_thread_entry(void *parameter)
                         RT_WAITING_FOREVER);
     if (result == RT_EOK)
     {
-      rt_kprintf("process sms mail , mail - %d, %x\n", sms_mail_buf->time, sms_mail_buf->alarm_type);
+      rt_kprintf("receive sms mail < time: %d alarm_type: %d >\n", sms_mail_buf->time, sms_mail_buf->alarm_type);
     }
     else
     {
