@@ -242,18 +242,16 @@ void USART1_IRQHandler(void)
  *******************************************************************************/
 void USART2_IRQHandler(void)
 {
-#ifdef RT_USING_USART2
-  extern struct rt_serial_device serial_device_usart2;
-  extern void serial_device_usart_isr(struct rt_serial_device *serial);
+  extern struct rt_serial_device gsm_usart_device;
+  extern void gsm_usart_device_isr(struct rt_serial_device *serial);
 
   /* enter interrupt */
   rt_interrupt_enter();
 
-  serial_device_usart_isr(&serial_device_usart2);
+  gsm_usart_device_isr(&gsm_usart_device);
   
   /* leave interrupt */
   rt_interrupt_leave();
-#endif
 }
 
 /*******************************************************************************
