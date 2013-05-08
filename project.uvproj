@@ -207,13 +207,13 @@
             <hadIRAM2>0</hadIRAM2>
             <hadIROM2>0</hadIROM2>
             <StupSel>8</StupSel>
-            <useUlib>0</useUlib>
+            <useUlib>1</useUlib>
             <EndSel>0</EndSel>
             <uLtcg>0</uLtcg>
             <RoSelD>3</RoSelD>
             <RwSelD>3</RwSelD>
             <CodeSel>0</CodeSel>
-            <OptFeed>0</OptFeed>
+            <OptFeed>1</OptFeed>
             <NoZi1>0</NoZi1>
             <NoZi2>0</NoZi2>
             <NoZi3>0</NoZi3>
@@ -469,6 +469,16 @@
               <FileName>filetest.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\filetest.c</FilePath>
+            </File>
+            <File>
+              <FileName>camera.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\camera.c</FilePath>
+            </File>
+            <File>
+              <FileName>photograph.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\photograph.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -799,6 +809,36 @@
               <FileName>dfs_elm.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\RT-Thread\components\dfs\filesystems\elmfat\dfs_elm.c</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>z</GroupName>
+          <Files>
+            <File>
+              <FileName>rz.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\RT-Thread\components\utilities\zmodem\rz.c</FilePath>
+            </File>
+            <File>
+              <FileName>sz.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\RT-Thread\components\utilities\zmodem\sz.c</FilePath>
+            </File>
+            <File>
+              <FileName>zcore.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\RT-Thread\components\utilities\zmodem\zcore.c</FilePath>
+            </File>
+            <File>
+              <FileName>zdevice.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\RT-Thread\components\utilities\zmodem\zdevice.c</FilePath>
+            </File>
+            <File>
+              <FileName>zstart.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\RT-Thread\components\utilities\zmodem\zstart.c</FilePath>
             </File>
           </Files>
         </Group>

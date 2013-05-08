@@ -220,12 +220,12 @@ void USART1_IRQHandler(void)
 {
 #ifdef RT_USING_USART1
   extern struct rt_serial_device serial_device_usart1;
-  extern void serial_device_usart_isr(struct rt_serial_device *serial);
+  extern void rt_hw_serial_isr(struct rt_serial_device *serial);
 
   /* enter interrupt */
   rt_interrupt_enter();
 
-  serial_device_usart_isr(&serial_device_usart1);
+  rt_hw_serial_isr(&serial_device_usart1);
   
   /* leave interrupt */
   rt_interrupt_leave();
@@ -243,12 +243,12 @@ void USART2_IRQHandler(void)
 {
 #ifdef RT_USING_USART2
   extern struct rt_serial_device serial_device_usart2;
-  extern void serial_device_usart_isr(struct rt_serial_device *serial);
+  extern void rt_hw_serial_isr(struct rt_serial_device *serial);
 
   /* enter interrupt */
   rt_interrupt_enter();
 
-  serial_device_usart_isr(&serial_device_usart2);
+  rt_hw_serial_isr(&serial_device_usart2);
   
   /* leave interrupt */
   rt_interrupt_leave();
@@ -266,12 +266,12 @@ void USART3_IRQHandler(void)
 {
 #ifdef RT_USING_USART3
   extern struct rt_serial_device serial_device_usart3;
-  extern void serial_device_usart_isr(struct rt_serial_device *serial);
+  extern void rt_hw_serial_isr(struct rt_serial_device *serial);
 
   /* enter interrupt */
   rt_interrupt_enter();
 
-  serial_device_usart_isr(&serial_device_usart3);
+  rt_hw_serial_isr(&serial_device_usart3);
   
   /* leave interrupt */
   rt_interrupt_leave();

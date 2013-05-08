@@ -98,7 +98,7 @@ struct rt_uart_ops usart_ops =
 struct serial_configure serial_device_default_config = RT_SERIAL_CONFIG_DEFAULT;
 struct serial_configure serial_device_usart2_config = 
 {
-	9600, /* 115200 bits/s */  \
+	38400, /* 115200 bits/s */  \
 	DATA_BITS_8,			/* 8 databits */		 \
 	STOP_BITS_1,			/* 1 stopbit */ 		 \
 	PARITY_NONE,			/* No parity	*/		 \
@@ -612,9 +612,9 @@ void rt_hw_usart_init()
   serial_device_usart2.ops = &usart_ops;
   serial_device_usart2.int_rx = &usart2_int_rx;
   serial_device_usart2.int_tx = &usart2_int_tx;
-  serial_device_usart2.config = serial_device_usart2_config;
+  serial_device_usart2.config = serial_device_default_config;
   rt_hw_serial_register(&serial_device_usart2, "usart2",
-                        RT_DEVICE_FLAG_RDWR | RT_DEVICE_FLAG_INT_RX | RT_DEVICE_FLAG_STREAM,
+                        RT_DEVICE_FLAG_RDWR | RT_DEVICE_FLAG_INT_RX,
                         &usart2_user_data);
   rt_kprintf("register serial_device_usart2 <usart2>\n");
 #endif
@@ -631,6 +631,7 @@ void rt_hw_usart_init()
 #endif
 }
 
+/*
 void serial_device_usart_isr(struct rt_serial_device *serial)
 {
   struct serial_user_data *user_data;  
@@ -660,7 +661,7 @@ void serial_device_usart_isr(struct rt_serial_device *serial)
   }
   rt_hw_serial_isr(serial);
 }
-
+*/
 
 #ifdef RT_USING_FINSH
 #include <finsh.h>

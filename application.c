@@ -45,6 +45,8 @@
 #endif
 
 #include "led.h"
+#include "photograph.h"
+
 
 ALIGN(RT_ALIGN_SIZE)
 static rt_uint8_t led_stack[ 512 ];
@@ -243,7 +245,15 @@ void rt_init_thread_entry(void* parameter)
     rtgui_system_server_init();
   }
 #endif /* #ifdef RT_USING_RTGUI */
-filesystem_test();
+//filesystem_test();
+{
+	extern void camera_test(void);
+	extern void photograph_thread_init(void);
+	
+	camera_test();
+	photograph_thread_init();
+}
+
 
 }
 
