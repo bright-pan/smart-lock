@@ -21,6 +21,10 @@
 #include "gpio_exti.h"
 #include "gpio_pwm.h"
 #include "gpio_adc.h"
+#include "alarm.h"
+#include "sms.h"
+#include "gprs.h"
+#include "local.h"
 
 /* board configuration */
 // <o> SDCard Driver <1=>SDIO sdcard <0=>SPI MMC card

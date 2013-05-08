@@ -139,23 +139,41 @@ struct rt_gpio_ops gpio_exti_user_ops=
   gpio_exti_intput
 };
 
-rt_err_t key1_rx_ind(rt_device_t dev, rt_size_t size)
+rt_err_t lk_shell_rx_ind(rt_device_t dev, rt_size_t size)
 {
+  ALARM_MAIL_TYPEDEF buf;
+  rt_device_t device;
+  rt_err_t result;
   gpio_device *gpio = RT_NULL;
   RT_ASSERT(dev != RT_NULL);
   gpio = (gpio_device *)dev;
 
   rt_kprintf("key1 ok, value is 0x%x\n", gpio->pin_value);
+
+  /* malloc a buff for process mail */
+
+  
+  device = rt_device_find("rtc");
+  if (device != RT_NULL)
+  {
+    rt_device_control(device, RT_DEVICE_CTRL_RTC_GET_TIME, &(buf.time));
+  }
+  buf.alarm_type = ALARM_TYPE_LK_SHELL;
+  buf.alarm_process_flag = ALARM_PROCESS_FLAG_SMS | ALARM_PROCESS_FLAG_GPRS | ALARM_PROCESS_FLAG_LOCAL;
+
+  result = rt_mq_send(alarm_mq, &buf, sizeof(ALARM_MAIL_TYPEDEF));
+  if (result == -RT_EFULL)
+  {
+    rt_kprintf("alarm_mq is full!!!");
+  }
   return RT_EOK;
 }
 
+gpio_device lk_shell_device;
 
-
-gpio_device key1_device;
-
-struct gpio_exti_user_data key1_user_data = 
-{	
-  "key1" ,
+struct gpio_exti_user_data lk_shell_user_data = 
+{
+  DEVICE_NAME_LOCK_SHELL,
   GPIOE,
   GPIO_Pin_5,
   GPIO_Mode_IN_FLOATING,
@@ -169,18 +187,81 @@ struct gpio_exti_user_data key1_user_data =
   EXTI9_5_IRQn,
   1,
   5,
-  key1_rx_ind,
+  lk_shell_rx_ind,
 };
 
-void rt_hw_key1_register(void)
+void rt_hw_lk_shell_register(void)
 {
-  gpio_device *key_device = &key1_device;
-  struct gpio_exti_user_data *key_user_data = &key1_user_data;
+  gpio_device *gpio_device = &lk_shell_device;
+  struct gpio_exti_user_data *gpio_user_data = &lk_shell_user_data;
 
-  key_device->ops = &gpio_exti_user_ops;
+  gpio_device->ops = &gpio_exti_user_ops;
   
-  rt_hw_gpio_register(key_device,key_user_data->name, (RT_DEVICE_FLAG_RDWR | RT_DEVICE_FLAG_INT_RX), key_user_data);
-  rt_device_set_rx_indicate((rt_device_t)key_device,key_user_data->gpio_exti_rx_indicate);
+  rt_hw_gpio_register(gpio_device, gpio_user_data->name, (RT_DEVICE_FLAG_RDWR | RT_DEVICE_FLAG_INT_RX), gpio_user_data);
+  rt_device_set_rx_indicate((rt_device_t)gpio_device, gpio_user_data->gpio_exti_rx_indicate);
+}
+
+
+rt_err_t lk_temp_rx_ind(rt_device_t dev, rt_size_t size)
+{
+  ALARM_MAIL_TYPEDEF buf;
+  rt_device_t device;
+  rt_err_t result;
+  gpio_device *gpio = RT_NULL;
+  RT_ASSERT(dev != RT_NULL);
+  gpio = (gpio_device *)dev;
+
+  rt_kprintf("key1 ok, value is 0x%x\n", gpio->pin_value);
+
+  /* malloc a buff for process mail */
+
+  
+  device = rt_device_find("rtc");
+  if (device != RT_NULL)
+  {
+    rt_device_control(device, RT_DEVICE_CTRL_RTC_GET_TIME, &(buf.time));
+  }
+  buf.alarm_type = ALARM_TYPE_LK_TEMPERATRUE;
+  buf.alarm_process_flag = ALARM_PROCESS_FLAG_SMS | ALARM_PROCESS_FLAG_GPRS | ALARM_PROCESS_FLAG_LOCAL;
+
+  result = rt_mq_send(alarm_mq, &buf, sizeof(ALARM_MAIL_TYPEDEF));
+  if (result == -RT_EFULL)
+  {
+    rt_kprintf("alarm_mq is full!!!");
+  }
+  return RT_EOK;
+}
+
+gpio_device lk_temp_device;
+
+struct gpio_exti_user_data lk_temp_user_data = 
+{
+  DEVICE_NAME_LOCK_TEMPERATRUE,
+  GPIOE,
+  GPIO_Pin_5,
+  GPIO_Mode_IN_FLOATING,
+  GPIO_Speed_50MHz,
+  RCC_APB2Periph_GPIOE | RCC_APB2Periph_AFIO,
+  GPIO_PortSourceGPIOE,
+  GPIO_PinSource5,
+  EXTI_Line5,
+  EXTI_Mode_Interrupt,
+  EXTI_Trigger_Falling,
+  EXTI9_5_IRQn,
+  1,
+  5,
+  lk_temp_rx_ind,
+};
+
+void rt_hw_lk_temp_register(void)
+{
+  gpio_device *gpio_device = &lk_temp_device;
+  struct gpio_exti_user_data *gpio_user_data = &lk_temp_user_data;
+
+  gpio_device->ops = &gpio_exti_user_ops;
+  
+  rt_hw_gpio_register(gpio_device, gpio_user_data->name, (RT_DEVICE_FLAG_RDWR | RT_DEVICE_FLAG_INT_RX), gpio_user_data);
+  rt_device_set_rx_indicate((rt_device_t)gpio_device, gpio_user_data->gpio_exti_rx_indicate);
 }
 
 rt_err_t key2_rx_ind(rt_device_t dev, rt_size_t size)

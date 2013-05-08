@@ -18,8 +18,16 @@
 #include <rtthread.h>
 #include <stm32f10x.h>
 #include "gpio.h"
+#include "alarm.h"
 
-void rt_hw_key1_register(void);
+#define DEVICE_NAME_LOCK_SHELL "lk_shell"// length <= 8
+#define DEVICE_NAME_LOCK_TEMPERATRUE "lk_temp"
+#define DEVICE_NAME_LOCK_GATE "lk_gate"
+#define DEVICE_NAME_LOCK_PLUGIN "lk_plug"
+#define DEVICE_NAME_CAMERA_COVER "cm_cover"
+
+void rt_hw_lk_shell_register(void);
+void rt_hw_lk_temp_register(void);
 void rt_hw_key2_register(void);
 
 #endif

@@ -388,9 +388,9 @@ void EXTI9_5_IRQHandler(void)
   rt_interrupt_enter();
   if(EXTI_GetITStatus(EXTI_Line5) == SET)
   {
-    extern gpio_device key1_device;
+    extern gpio_device lk_shell_device;
 		
-    rt_hw_gpio_isr(&key1_device);
+    rt_hw_gpio_isr(&lk_shell_device);
     EXTI_ClearITPendingBit(EXTI_Line5);
   }
   if(EXTI_GetITStatus(EXTI_Line6) == SET)
