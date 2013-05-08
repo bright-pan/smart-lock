@@ -33,11 +33,12 @@ void gprs_mail_process_thread_entry(void *parameter)
     /* mail receive ok */
     if (result == RT_EOK)
     {
-      rt_kprintf("process gprs mail , mail - %d, %x\n", gprs_mail_buf->time, gprs_mail_buf->alarm_type);
+      rt_kprintf("receive gprs mail < time: %d alarm_type: %d >\n", gprs_mail_buf->time, gprs_mail_buf->alarm_type);
     }
     else
     {
       /* mail receive error */
     }
   }
+  rt_free(gprs_mail_buf);
 }

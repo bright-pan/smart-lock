@@ -38,5 +38,6 @@ void local_mail_process_thread_entry(void *parameter)
       /* receive mail error */
     }
   }
+  rt_free(local_mail_buf);
   
 }
