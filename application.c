@@ -250,7 +250,7 @@ void rt_init_thread_entry(void* parameter)
 	extern void camera_test(void);
 	extern void photograph_thread_init(void);
 	
-	camera_test();
+//	camera_test();
 	photograph_thread_init();
 }
 

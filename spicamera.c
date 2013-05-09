@@ -1,1 +1,8 @@
+#include "spicamera.h"
+
+
+
+
+
+
 

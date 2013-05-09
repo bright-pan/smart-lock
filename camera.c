@@ -1,3 +1,20 @@
+/*********************************************************************
+ * Filename:    camera.c
+ *
+ * Description:    usart camera test code
+ *						  
+ *						   
+ * Author:        wangzw <wangzw@yuettak.com>
+ * Created at:    2013-05-8 9:00:00
+ *                
+ * Modify:
+ *
+ * 
+ *
+ * Copyright (C) 2013 Yuettak Co.,Ltd
+ ********************************************************************/
+
+
 #include "camera.h"
 #include <dfs_init.h>
 /* dfs filesystem:ELM filesystem init */
@@ -220,7 +237,7 @@ void camera_test(void)
 	id = rt_thread_create("camera",camera_test_thread,RT_NULL,1024*4,29,10);
 	if(id != RT_NULL)
 	{
-	//	rt_thread_startup(id);
+		rt_thread_startup(id);
 	}
 }
 

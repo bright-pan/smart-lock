@@ -1,45 +1,252 @@
----- 1200 匹配 (41 in 27 文件) ----
-A00141.html (e:\code\smartlock\rt-thread\components\net\uip\doc\html):<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="g763f12007aad8cc0e483bf50f8a8d9b4"></a><!-- doxytag: member="uip-conf.h::UIP_CONF_UDP" ref="g763f12007aad8cc0e483bf50f8a8d9b4" args="" -->
-A00141.html (e:\code\smartlock\rt-thread\components\net\uip\doc\html):#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="a00153.html#g763f12007aad8cc0e483bf50f8a8d9b4">UIP_CONF_UDP</a></td></tr>
-A00153.html (e:\code\smartlock\rt-thread\components\net\uip\doc\html):<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="g763f12007aad8cc0e483bf50f8a8d9b4"></a><!-- doxytag: member="uipopt::UIP_CONF_UDP" ref="g763f12007aad8cc0e483bf50f8a8d9b4" args="" -->
-A00153.html (e:\code\smartlock\rt-thread\components\net\uip\doc\html):#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="a00153.html#g763f12007aad8cc0e483bf50f8a8d9b4">UIP_CONF_UDP</a></td></tr>
-A00201.html (e:\code\smartlock\rt-thread\components\net\uip\doc\html):<a name="l01200"></a>01200 <span class="comment">     either this packet is an old duplicate, or this is a SYN packet</span>
-A00202.html (e:\code\smartlock\rt-thread\components\net\uip\doc\html):<a name="l01200"></a>01200 <span class="comment"> */</span>
-A00207.html (e:\code\smartlock\rt-thread\components\net\uip\doc\html):<a name="l00128"></a><a class="code" href="a00153.html#g763f12007aad8cc0e483bf50f8a8d9b4">00128</a> <span class="preprocessor">#define UIP_CONF_UDP             0</span>
-All_74.js (e:\code\smartlock\rt-thread\documentation\html\search):  ['type',['type',['../structrt__object.html#a87fff935df5a56027657597120071149',1,'rt_object::type()'],['../structrt__object__information.html#ade4fad90f69638200ccb2cbcc9f8e298',1,'rt_object_information::type()'],['../structrt__thread.html#a9e66117dc5b76db6d0d78aa3077b57da',1,'rt_thread::type()'],['../structrt__device.html#a0b8dba8f32d49291b85e54d13520b871',1,'rt_device::type()']]]
-Config.h (e:\code\smartlock\rt-thread\libcpu\ppc\ppc405\include):    {300, 600, 1200, 2400, 4800, 9600, 19200, 38400, 57600, 115200, 230400}
-Config.h (e:\code\smartlock\rt-thread\libcpu\ppc\ppc405\include):#define CONFIG_SYS_BASE_BAUD		691200
-Config.h (e:\code\smartlock\rt-thread\libcpu\ppc\ppc405\include):#define CONFIG_SYS_FLASH_ERASE_TOUT	120000	/* Timeout for Flash Erase (in ms)	*/
-Crc32.h (e:\code\smartlock\rt-thread\components\external\libz):    0x9c2d1b27UL, 0xdd1c003eUL, 0x120098b9UL, 0x533183a0UL, 0x9062ae8bUL,
-Cyg_type.h (e:\code\smartlock\rt-thread\components\dfs\filesystems\jffs2\cyg\infra):#define CYG_INIT_INTERRUPTS             12000
-Dfs_def.h (e:\code\smartlock\rt-thread\components\dfs\include):#define DFS_S_IFLNK              0120000
-Fs-ecos.c (e:\code\smartlock\rt-thread\components\dfs\filesystems\jffs2\src)://		return jmode | 0120000;
-Fs-ecos.c (e:\code\smartlock\rt-thread\components\dfs\filesystems\jffs2\src)://	case 0120000:                       prife
-Functions.html (e:\code\smartlock\rt-thread\documentation\html):: <a class="el" href="structrt__object.html#a87fff935df5a56027657597120071149">rt_object</a>
-Functions_vars.html (e:\code\smartlock\rt-thread\documentation\html):: <a class="el" href="structrt__object.html#a87fff935df5a56027657597120071149">rt_object</a>
-Globals_0x75.html (e:\code\smartlock\rt-thread\components\net\uip\doc\html):: <a class="el" href="a00153.html#g763f12007aad8cc0e483bf50f8a8d9b4">uip-conf.h</a><li>UIP_CONF_UDP_CHECKSUMS
-Globals_defs_0x75.html (e:\code\smartlock\rt-thread\components\net\uip\doc\html):: <a class="el" href="a00153.html#g763f12007aad8cc0e483bf50f8a8d9b4">uip-conf.h</a><li>UIP_CONF_UDP_CHECKSUMS
-Lzodefs.h (e:\code\smartlock\rt-thread\components\external\lzo):#if 0 && (LZO_CC_MSC && (_MSC_VER >= 1200)) && !defined(_MSC_FULL_VER)
-Lzodefs.h (e:\code\smartlock\rt-thread\components\external\lzo):#elif (LZO_CC_MSC && (_MSC_VER >= 1200))
-Lzodefs.h (e:\code\smartlock\rt-thread\components\external\lzo):#elif (LZO_CC_MSC && (_MSC_VER >= 1200))
-Lzodefs.h (e:\code\smartlock\rt-thread\components\external\lzo):#elif (LZO_CC_MSC && (_MSC_VER >= 1200)) && defined(__cplusplus)
-Md5.c (e:\code\smartlock\rt-thread\components\net\lwip-1.3.2\src\netif\ppp):  FF ( d, a, b, c, in[ 5], S12, UL(1200080426)); /* 6 */
-Md5.c (e:\code\smartlock\rt-thread\components\net\lwip\src\netif\ppp):  FF ( d, a, b, c, in[ 5], S12, UL(1200080426)); /* 6 */
-Minilzo.c (e:\code\smartlock\rt-thread\components\external\lzo):#if 0 && (LZO_CC_MSC && (_MSC_VER >= 1200)) && !defined(_MSC_FULL_VER)
-Minilzo.c (e:\code\smartlock\rt-thread\components\external\lzo):#elif (LZO_CC_MSC && (_MSC_VER >= 1200))
-Minilzo.c (e:\code\smartlock\rt-thread\components\external\lzo):#elif (LZO_CC_MSC && (_MSC_VER >= 1200))
-Minilzo.c (e:\code\smartlock\rt-thread\components\external\lzo):#elif (LZO_CC_MSC && (_MSC_VER >= 1200)) && defined(__cplusplus)
-Stm32f10x.h (e:\code\smartlock\libraries\cmsis\cm3\devicesupport\st\stm32f10x):  #define ETH_DMABMR_RDP_4xPBL_64Beat  ((uint32_t)0x01200000)  /* maximum number of beats to be transferred in one RxDMA transaction is 64 */
-Stm32f10x_can.h (e:\code\smartlock\libraries\stm32f10x_stdperiph_driver\inc):#define CAN_FLAG_FMP0              ((uint32_t)0x12000003) /*!< FIFO 0 Message Pending Flag */
-Stm32f10x_i2c.h (e:\code\smartlock\libraries\stm32f10x_stdperiph_driver\inc):#define  I2C_EVENT_SLAVE_GENERALCALLADDRESS_MATCHED        ((uint32_t)0x00120000)  /* GENCALL and BUSY flags */
-Structrt__object.html (e:\code\smartlock\rt-thread\documentation\html):<tr><td class="memItemLeft" align="right" valign="top"><a class="el" href="group___basic_def.html#ga585e2ad0fbab0f83817cb61373465df6">rt_uint8_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structrt__object.html#a87fff935df5a56027657597120071149">type</a></td></tr>
-Structrt__object.html (e:\code\smartlock\rt-thread\documentation\html):<a class="anchor" id="a87fff935df5a56027657597120071149"></a><!-- doxytag: member="rt_object::type" ref="a87fff935df5a56027657597120071149" args="" -->
-Structrt__object.html (e:\code\smartlock\rt-thread\documentation\html):          <td class="memname"><a class="el" href="group___basic_def.html#ga585e2ad0fbab0f83817cb61373465df6">rt_uint8_t</a> <a class="el" href="structrt__object.html#a87fff935df5a56027657597120071149">rt_object::type</a></td>
-Structrt__object.js (e:\code\smartlock\rt-thread\documentation\html):    [ "type", "structrt__object.html#a87fff935df5a56027657597120071149", null ],
-System_clock.c (e:\code\smartlock\rt-thread\libcpu\arm\s3c24x0):#define CONFIG_SYS_CLK_FREQ	12000000	// Fin = 12.00MHz
-System_clock.c (e:\code\smartlock\rt-thread\libcpu\arm\s3c24x0):#if CONFIG_SYS_CLK_FREQ == 12000000
-Toc.xml (e:\code\smartlock\rt-thread\documentation\html):        <topic label="type" href="structrt__object.html#a87fff935df5a56027657597120071149"/>
-Variables_74.js (e:\code\smartlock\rt-thread\documentation\html\search):  ['type',['type',['../structrt__object.html#a87fff935df5a56027657597120071149',1,'rt_object::type()'],['../structrt__object__information.html#ade4fad90f69638200ccb2cbcc9f8e298',1,'rt_object_information::type()'],['../structrt__thread.html#a9e66117dc5b76db6d0d78aa3077b57da',1,'rt_thread::type()'],['../structrt__device.html#a0b8dba8f32d49291b85e54d13520b871',1,'rt_device::type()']]]
----- 1200 搜索遇到错误 (1) ----
-以下1个文件不能被处理：
-E:\code\smartlock\JLinkLog.txt : 文件打不开。
+---- malloc 匹配 (254 in 78 文件) ----
+Adk.c (e:\code\smartlock\rt-thread\components\drivers\usb\usbhost\class):    adkinst = rt_malloc(sizeof(struct uadkinst));
+Alarm.c (e:\code\smartlock\rt-thread\components\drivers\rtc):    alarm = rt_malloc(sizeof(struct rt_alarm));
+Auth_none.c (e:\code\smartlock\rt-thread\components\dfs\filesystems\nfs\rpc):		ap = (struct authnone_private *) rt_malloc (sizeof(*ap));
+Block_dev.c (e:\code\smartlock\rt-thread\components\drivers\sdio):	sector = (rt_uint8_t *) rt_malloc(SECTOR_SIZE);
+Block_dev.c (e:\code\smartlock\rt-thread\components\drivers\sdio):			blk_dev = rt_malloc(sizeof(struct mmcsd_blk_device));
+Block_dev.c (e:\code\smartlock\rt-thread\components\drivers\sdio):				rt_kprintf("mmcsd:malloc mem failde\n");
+Build.c (e:\code\smartlock\rt-thread\components\dfs\filesystems\jffs2\src):#include <linux/vmalloc.h>
+Build.c (e:\code\smartlock\rt-thread\components\dfs\filesystems\jffs2\src):		c->blocks = vmalloc(sizeof(struct jffs2_eraseblock) * c->nr_blocks);
+Build.c (e:\code\smartlock\rt-thread\components\dfs\filesystems\jffs2\src):		c->blocks = kmalloc(sizeof(struct jffs2_eraseblock) * c->nr_blocks, GFP_KERNEL);
+Cdc_vcom.c (e:\code\smartlock\rt-thread\components\drivers\usb\usbdevice\class):    eps = rt_malloc(sizeof(struct cdc_eps));
+Clnt_udp.c (e:\code\smartlock\rt-thread\components\dfs\filesystems\nfs\rpc):	cl = (CLIENT *) rt_malloc (sizeof(CLIENT));
+Clnt_udp.c (e:\code\smartlock\rt-thread\components\dfs\filesystems\nfs\rpc):	cu = (struct cu_data *) rt_malloc (sizeof(*cu) + sendsz + recvsz);
+Compr.c (e:\code\smartlock\rt-thread\components\dfs\filesystems\jffs2\src):                output_buf = kmalloc(*cdatalen,GFP_KERNEL);
+Compr.c (e:\code\smartlock\rt-thread\components\dfs\filesystems\jffs2\src):                                tmp_buf = kmalloc(orig_dlen,GFP_KERNEL);
+Compr.c (e:\code\smartlock\rt-thread\components\dfs\filesystems\jffs2\src):        act_buf = buf = kmalloc(JFFS2_STAT_BUF_SIZE,GFP_KERNEL);
+Compr.c (e:\code\smartlock\rt-thread\components\dfs\filesystems\jffs2\src):        act_buf = buf = kmalloc(JFFS2_STAT_BUF_SIZE,GFP_KERNEL);
+Compr.h (e:\code\smartlock\rt-thread\components\dfs\filesystems\jffs2\src):#include <linux/vmalloc.h>
+Compr_zlib.c (e:\code\smartlock\rt-thread\components\dfs\filesystems\jffs2\src):#include <linux/vmalloc.h>
+Compr_zlib.c (e:\code\smartlock\rt-thread\components\dfs\filesystems\jffs2\src):	def_strm.workspace = vmalloc(zlib_deflate_workspacesize());
+Compr_zlib.c (e:\code\smartlock\rt-thread\components\dfs\filesystems\jffs2\src):	inf_strm.workspace = vmalloc(zlib_inflate_workspacesize());
+Core.c (e:\code\smartlock\rt-thread\components\drivers\usb\usbdevice\core):    udevice = rt_malloc(sizeof(struct udevice));
+Core.c (e:\code\smartlock\rt-thread\components\drivers\usb\usbdevice\core):    cfg = rt_malloc(sizeof(struct uconfig));
+Core.c (e:\code\smartlock\rt-thread\components\drivers\usb\usbdevice\core):    intf = (uintf_t)rt_malloc(sizeof(struct uinterface)); 
+Core.c (e:\code\smartlock\rt-thread\components\drivers\usb\usbdevice\core):    setting = (ualtsetting_t)rt_malloc(sizeof(struct ualtsetting));
+Core.c (e:\code\smartlock\rt-thread\components\drivers\usb\usbdevice\core):    setting->desc = rt_malloc(desc_size);
+Core.c (e:\code\smartlock\rt-thread\components\drivers\usb\usbdevice\core):    cls = (uclass_t)rt_malloc(sizeof(struct uclass));
+Core.c (e:\code\smartlock\rt-thread\components\drivers\usb\usbdevice\core):    ep = (uep_t)rt_malloc(sizeof(struct uendpoint)); 
+Core.c (e:\code\smartlock\rt-thread\components\drivers\usb\usbhost\core):    uinst->cfg_desc = (ucfg_desc_t)rt_malloc(cfg_desc.wTotalLength);
+Core.c (e:\code\smartlock\rt-thread\components\drivers\usb\usbhost\core):                (uifinst_t)rt_malloc(sizeof(struct uifinst));
+Dataqueue.c (e:\code\smartlock\rt-thread\components\drivers\src):    queue->queue = (struct rt_data_item *)rt_malloc(sizeof(struct rt_data_item) * size);
+Debug.c (e:\code\smartlock\rt-thread\components\dfs\filesystems\jffs2\src):	buf = kmalloc(len, GFP_KERNEL);
+Devfs.c (e:\code\smartlock\rt-thread\components\dfs\filesystems\devfs):		root_dirent = (struct device_dirent *)rt_malloc(sizeof(struct device_dirent) + 
+Dfs.c (e:\code\smartlock\rt-thread\components\dfs\src):        fullpath = rt_malloc(strlen(directory) + strlen(filename) + 2);
+Dfs_elm.c (e:\code\smartlock\rt-thread\components\dfs\filesystems\elmfat): * 2012-07-26     aozima       implement ff_memalloc and ff_memfree.
+Dfs_elm.c (e:\code\smartlock\rt-thread\components\dfs\filesystems\elmfat):	fat = (FATFS *)rt_malloc(sizeof(FATFS));
+Dfs_elm.c (e:\code\smartlock\rt-thread\components\dfs\filesystems\elmfat):		dir = (DIR *)rt_malloc(sizeof(DIR));
+Dfs_elm.c (e:\code\smartlock\rt-thread\components\dfs\filesystems\elmfat):	drivers_fn = rt_malloc(256);
+Dfs_elm.c (e:\code\smartlock\rt-thread\components\dfs\filesystems\elmfat):		dir = (DIR *)rt_malloc(sizeof(DIR));
+Dfs_elm.c (e:\code\smartlock\rt-thread\components\dfs\filesystems\elmfat):		fd = (FIL *)rt_malloc(sizeof(FIL));
+Dfs_elm.c (e:\code\smartlock\rt-thread\components\dfs\filesystems\elmfat):	fno.lfname = rt_malloc(256);
+Dfs_elm.c (e:\code\smartlock\rt-thread\components\dfs\filesystems\elmfat):	drivers_fn = rt_malloc(256);
+Dfs_elm.c (e:\code\smartlock\rt-thread\components\dfs\filesystems\elmfat):	drivers_oldfn = rt_malloc(256);
+Dfs_elm.c (e:\code\smartlock\rt-thread\components\dfs\filesystems\elmfat):	drivers_fn = rt_malloc(256);
+Dfs_elm.c (e:\code\smartlock\rt-thread\components\dfs\filesystems\elmfat):	file_info.lfname = rt_malloc(256);
+Dfs_elm.c (e:\code\smartlock\rt-thread\components\dfs\filesystems\elmfat):void* ff_memalloc (UINT size)
+Dfs_elm.c (e:\code\smartlock\rt-thread\components\dfs\filesystems\elmfat):    return rt_malloc(size);
+Dfs_file.c (e:\code\smartlock\rt-thread\components\dfs\src):    block_ptr = rt_malloc(BUF_SZ);
+Dfs_jffs2.c (e:\code\smartlock\rt-thread\components\dfs\filesystems\jffs2):	mte = rt_malloc(sizeof(struct cyg_mtab_entry));
+Dfs_jffs2.c (e:\code\smartlock\rt-thread\components\dfs\filesystems\jffs2):	jffs2_file = rt_malloc(sizeof(cyg_file));
+Dfs_jffs2.c (e:\code\smartlock\rt-thread\components\dfs\filesystems\jffs2):		fullname = rt_malloc(FILE_PATH_MAX);
+Dfs_nfs.c (e:\code\smartlock\rt-thread\components\dfs\filesystems\nfs):	dest->data.data_val = rt_malloc(dest->data.data_len);
+Dfs_nfs.c (e:\code\smartlock\rt-thread\components\dfs\filesystems\nfs):	init = path = rt_malloc(strlen(name)+1);
+Dfs_nfs.c (e:\code\smartlock\rt-thread\components\dfs\filesystems\nfs):	handle = rt_malloc(sizeof(nfs_fh3));
+Dfs_nfs.c (e:\code\smartlock\rt-thread\components\dfs\filesystems\nfs):	init = path = rt_malloc(strlen(name)+1);
+Dfs_nfs.c (e:\code\smartlock\rt-thread\components\dfs\filesystems\nfs):	handle = rt_malloc(sizeof(nfs_fh3));
+Dfs_nfs.c (e:\code\smartlock\rt-thread\components\dfs\filesystems\nfs):	nfs = (struct nfs_filesystem *)rt_malloc(sizeof(struct nfs_filesystem));
+Dfs_nfs.c (e:\code\smartlock\rt-thread\components\dfs\filesystems\nfs):		fp = rt_malloc(sizeof(nfs_file));
+Dfs_nfs.c (e:\code\smartlock\rt-thread\components\dfs\filesystems\nfs):	dir = rt_malloc(sizeof(nfs_dir));
+Dfs_posix.c (e:\code\smartlock\rt-thread\components\dfs\src):        t = (DIR *) rt_malloc(sizeof(DIR));
+Dfs_uffs.c (e:\code\smartlock\rt-thread\components\dfs\filesystems\uffs):		file_path = rt_malloc(FILE_PATH_MAX);
+Dfs_uffs.c (e:\code\smartlock\rt-thread\components\dfs\filesystems\uffs):	file_path = rt_malloc(FILE_PATH_MAX);
+Dir.txt (e:\code\smartlock\rt-thread\components\dfs\filesystems\jffs2\src):jffs2/src/malloc-ecos.c
+Erase.c (e:\code\smartlock\rt-thread\components\dfs\filesystems\jffs2\src):	instr = kmalloc(sizeof(struct erase_info) + sizeof(struct erase_priv_struct), GFP_KERNEL);
+Erase.c (e:\code\smartlock\rt-thread\components\dfs\filesystems\jffs2\src):		printk(KERN_WARNING "kmalloc for struct erase_info in jffs2_erase_block failed. Refiling block for later\n");
+Erase.c (e:\code\smartlock\rt-thread\components\dfs\filesystems\jffs2\src):	ebuf = kmalloc(PAGE_SIZE, GFP_KERNEL);
+Ff.c (e:\code\smartlock\rt-thread\components\dfs\filesystems\elmfat):#define INIT_BUF(dobj)		{ lfn = ff_memalloc((_MAX_LFN + 1) * 2); \
+Ff.h (e:\code\smartlock\rt-thread\components\dfs\filesystems\elmfat):void* ff_memalloc (UINT);			/* Allocate memory block */
+Ffconf.h (e:\code\smartlock\rt-thread\components\dfs\filesystems\elmfat):/  ff_memalloc() and ff_memfree() must be added to the project. */
+Fileio.h (e:\code\smartlock\rt-thread\components\dfs\filesystems\jffs2\cyg\fileio):#define UIO_SMALLIOV	8		/* 8 on stack, else malloc */
+Flashio.c (e:\code\smartlock\rt-thread\components\dfs\filesystems\jffs2\src):				// cop out and malloc
+Flashio.c (e:\code\smartlock\rt-thread\components\dfs\filesystems\jffs2\src):				ssize_t sizetomalloc = 0, totvecsize = 0;
+Flashio.c (e:\code\smartlock\rt-thread\components\dfs\filesystems\jffs2\src):				sizetomalloc = totvecsize + sizeof(int) - 1;
+Flashio.c (e:\code\smartlock\rt-thread\components\dfs\filesystems\jffs2\src):				sizetomalloc &= ~(sizeof(int) - 1);
+Flashio.c (e:\code\smartlock\rt-thread\components\dfs\filesystems\jffs2\src):				cbuf = (char *) rt_malloc(sizetomalloc);
+Flashio.c (e:\code\smartlock\rt-thread\components\dfs\filesystems\jffs2\src):				// malloc returns aligned memory
+Flashio.c (e:\code\smartlock\rt-thread\components\dfs\filesystems\jffs2\src):				//rt_kprintf("direct_write: offset %d, size %d\n", to, sizetomalloc);
+Flashio.c (e:\code\smartlock\rt-thread\components\dfs\filesystems\jffs2\src):				ret = jffs2_flash_write(c, to, sizetomalloc, &thislen,
+Fs-ecos.c (e:\code\smartlock\rt-thread\components\dfs\filesystems\jffs2\src):static unsigned char gc_buffer[PAGE_CACHE_SIZE];	//avoids malloc when user may be under memory pressure
+Fs-ecos.c (e:\code\smartlock\rt-thread\components\dfs\filesystems\jffs2\src):		jffs2_sb = rt_malloc(sizeof (struct super_block));
+Fs-ecos.c (e:\code\smartlock\rt-thread\components\dfs\filesystems\jffs2\src):		c->inocache_list = rt_malloc(sizeof(struct jffs2_inode_cache *) * INOCACHE_HASHSIZE);
+Fs-ecos.c (e:\code\smartlock\rt-thread\components\dfs\filesystems\jffs2\src):	inode = rt_malloc(sizeof (struct _inode));
+Fs-ecos.c (e:\code\smartlock\rt-thread\components\dfs\filesystems\jffs2\src):	D2(printf("malloc new_inode %x ####################################\n",
+Fs-ecos.c (e:\code\smartlock\rt-thread\components\dfs\filesystems\jffs2\src):	// Not cached, so malloc it
+Gc.c (e:\code\smartlock\rt-thread\components\dfs\filesystems\jffs2\src):	node = kmalloc(rawlen, GFP_KERNEL);
+Gc.c (e:\code\smartlock\rt-thread\components\dfs\filesystems\jffs2\src):		mdata = kmalloc(fn->size, GFP_KERNEL);
+Gc.c (e:\code\smartlock\rt-thread\components\dfs\filesystems\jffs2\src):			printk(KERN_WARNING "kmalloc of mdata failed in jffs2_garbage_collect_metadata()\n");
+Gc.c (e:\code\smartlock\rt-thread\components\dfs\filesystems\jffs2\src):		rd = kmalloc(rawlen, GFP_KERNEL);
+Gzio.c (e:\code\smartlock\rt-thread\components\dfs\filesystems\jffs2\cyg\compress\src):extern voidp  malloc OF((uInt size));
+Gzio.c (e:\code\smartlock\rt-thread\components\dfs\filesystems\jffs2\cyg\compress\src):#define ALLOC(size) malloc(size)
+Hub.c (e:\code\smartlock\rt-thread\components\drivers\usb\usbhost\core):    uhub = rt_malloc(sizeof(struct uhubinst));
+Infutil.h (e:\code\smartlock\rt-thread\components\dfs\filesystems\jffs2\cyg\compress\src):  inflate_huft *hufts;  /* single malloc for tree space */
+Ipc.c (e:\code\smartlock\rt-thread\src):    mb->msg_pool = rt_malloc(mb->size * sizeof(rt_uint32_t));
+Ipc.c (e:\code\smartlock\rt-thread\src):    mq->msg_pool = rt_malloc((mq->msg_size + sizeof(struct rt_mq_message))* mq->max_msgs);
+Kservice.c (e:\code\smartlock\rt-thread\src):    char *tmp = (char *)rt_malloc(len);
+Kservice.c (e:\code\smartlock\rt-thread\src):void* rt_malloc_align(rt_size_t size, rt_size_t align)
+Kservice.c (e:\code\smartlock\rt-thread\src):    ptr = rt_malloc(align_size);
+Kservice.c (e:\code\smartlock\rt-thread\src):RTM_EXPORT(rt_malloc_align);
+Kservice.c (e:\code\smartlock\rt-thread\src): * rt_malloc_align function and address is aligned.
+Malloc-ecos.c (e:\code\smartlock\rt-thread\components\dfs\filesystems\jffs2\src): * $Id: malloc-ecos.c,v 1.4 2003/11/26 15:55:35 dwmw2 Exp $
+Malloc-ecos.c (e:\code\smartlock\rt-thread\components\dfs\filesystems\jffs2\src):	return rt_malloc(sizeof(struct jffs2_full_dirent) + namesize);
+Malloc-ecos.c (e:\code\smartlock\rt-thread\components\dfs\filesystems\jffs2\src):	return rt_malloc(sizeof(struct jffs2_full_dnode));
+Malloc-ecos.c (e:\code\smartlock\rt-thread\components\dfs\filesystems\jffs2\src):	return rt_malloc(sizeof(struct jffs2_raw_dirent));
+Malloc-ecos.c (e:\code\smartlock\rt-thread\components\dfs\filesystems\jffs2\src):	return rt_malloc(sizeof(struct jffs2_raw_inode));
+Malloc-ecos.c (e:\code\smartlock\rt-thread\components\dfs\filesystems\jffs2\src):	return rt_malloc(sizeof(struct jffs2_tmp_dnode_info));
+Malloc-ecos.c (e:\code\smartlock\rt-thread\components\dfs\filesystems\jffs2\src):	return rt_malloc(sizeof(struct jffs2_node_frag));
+Malloc-ecos.c (e:\code\smartlock\rt-thread\components\dfs\filesystems\jffs2\src):	return rt_malloc(sizeof(struct jffs2_raw_node_ref));
+Malloc-ecos.c (e:\code\smartlock\rt-thread\components\dfs\filesystems\jffs2\src):	struct jffs2_inode_cache *ret = rt_malloc(sizeof(struct jffs2_inode_cache));
+Mem.c (e:\code\smartlock\rt-thread\src):static void (*rt_malloc_hook)(void *ptr, rt_size_t size);
+Mem.c (e:\code\smartlock\rt-thread\src):void rt_malloc_sethook(void (*hook)(void *ptr, rt_size_t size))
+Mem.c (e:\code\smartlock\rt-thread\src):    rt_malloc_hook = hook;
+Mem.c (e:\code\smartlock\rt-thread\src):void *rt_malloc(rt_size_t size)
+Mem.c (e:\code\smartlock\rt-thread\src):        RT_DEBUG_LOG(RT_DEBUG_MEM, ("malloc size %d, but align to %d\n",
+Mem.c (e:\code\smartlock\rt-thread\src):        RT_DEBUG_LOG(RT_DEBUG_MEM, ("malloc size %d\n", size));
+Mem.c (e:\code\smartlock\rt-thread\src):            RT_OBJECT_HOOK_CALL(rt_malloc_hook,
+Mem.c (e:\code\smartlock\rt-thread\src):RTM_EXPORT(rt_malloc);
+Mem.c (e:\code\smartlock\rt-thread\src): * @param rmem pointer to memory allocated by rt_malloc
+Mem.c (e:\code\smartlock\rt-thread\src):        return rt_malloc(newsize);
+Mem.c (e:\code\smartlock\rt-thread\src):    nmem = rt_malloc(newsize);
+Mem.c (e:\code\smartlock\rt-thread\src):    p = rt_malloc(count * size);
+Mem.c (e:\code\smartlock\rt-thread\src): * rt_malloc. The released memory block is taken back to system heap.
+Memheap.c (e:\code\smartlock\rt-thread\src):void *rt_malloc(rt_size_t size)
+Memheap.c (e:\code\smartlock\rt-thread\src):RTM_EXPORT(rt_malloc);
+Memheap.c (e:\code\smartlock\rt-thread\src):        return rt_malloc(newsize);
+Memheap.c (e:\code\smartlock\rt-thread\src):        nmem = (void*)rt_malloc(newsize);
+Memheap.c (e:\code\smartlock\rt-thread\src):    ptr = rt_malloc(total_size);
+Mempool.c (e:\code\smartlock\rt-thread\src):    mp->start_address = rt_malloc((block_size + sizeof(rt_uint8_t *)) *
+Mmcsd_core.c (e:\code\smartlock\rt-thread\components\drivers\sdio):	buf = (rt_uint32_t *)rt_malloc(16);
+Mmcsd_core.c (e:\code\smartlock\rt-thread\components\drivers\sdio):	buf = (rt_uint32_t*)rt_malloc(16);
+Mmcsd_core.c (e:\code\smartlock\rt-thread\components\drivers\sdio):	host = rt_malloc(sizeof(struct rt_mmcsd_host));
+Module.c (e:\code\smartlock\rt-thread\src):static void *rt_module_malloc_page(rt_size_t npages);
+Module.c (e:\code\smartlock\rt-thread\src):    module->module_space = rt_malloc(module_size);
+Module.c (e:\code\smartlock\rt-thread\src):        module->symtab = (struct rt_module_symtab *)rt_malloc
+Module.c (e:\code\smartlock\rt-thread\src):            module->symtab[count].name = rt_malloc(length);
+Module.c (e:\code\smartlock\rt-thread\src):    module->module_space = rt_malloc(module_size);
+Module.c (e:\code\smartlock\rt-thread\src):            (void *)rt_malloc(PAGE_COUNT_MAX * sizeof(struct rt_page_info));
+Module.c (e:\code\smartlock\rt-thread\src):    name = rt_malloc(size);
+Module.c (e:\code\smartlock\rt-thread\src):    buffer = (char *)rt_malloc(s.st_size);
+Module.c (e:\code\smartlock\rt-thread\src):static void *rt_module_malloc_page(rt_size_t npages)
+Module.c (e:\code\smartlock\rt-thread\src):    RT_DEBUG_LOG(RT_DEBUG_MODULE, ("rt_module_malloc_page 0x%x %d\n",
+Module.c (e:\code\smartlock\rt-thread\src): * by rt_malloc_page.
+Module.c (e:\code\smartlock\rt-thread\src): * rt_module_malloc - allocate memory block in free list
+Module.c (e:\code\smartlock\rt-thread\src):void *rt_module_malloc(rt_size_t size)
+Module.c (e:\code\smartlock\rt-thread\src):            RT_DEBUG_LOG(RT_DEBUG_MODULE, ("rt_module_malloc 0x%x, %d\n",
+Module.c (e:\code\smartlock\rt-thread\src):            RT_DEBUG_LOG(RT_DEBUG_MODULE, ("rt_module_malloc 0x%x, %d\n",
+Module.c (e:\code\smartlock\rt-thread\src):    if ((up = (struct rt_mem_head *)rt_module_malloc_page(npage)) == RT_NULL)
+Module.c (e:\code\smartlock\rt-thread\src):    return rt_module_malloc(size);
+Module.c (e:\code\smartlock\rt-thread\src):        return rt_module_malloc(size);
+Module.c (e:\code\smartlock\rt-thread\src):            if ((p = rt_module_malloc(size)) == RT_NULL)
+Msd.c (e:\code\smartlock):		sector = (rt_uint8_t*) rt_malloc (512);
+Mstorage.c (e:\code\smartlock\rt-thread\components\drivers\usb\usbdevice\class):    buffer = (rt_uint8_t*)rt_malloc(geometry.bytes_per_sector);
+Mstorage.c (e:\code\smartlock\rt-thread\components\drivers\usb\usbdevice\class):    eps = (mass_eps_t)rt_malloc(sizeof(struct mass_eps));
+Nodelist.h (e:\code\smartlock\rt-thread\components\dfs\filesystems\jffs2\src):/* malloc.c */
+Object.c (e:\code\smartlock\rt-thread\src):    object = (struct rt_object *)rt_malloc(information->object_size);
+Photograph.c (e:\code\smartlock):	picture_t picture_1 = malloc(sizeof(picture_1));
+Photograph.c (e:\code\smartlock):	picture_t picture_2 = malloc(sizeof(picture_1));
+Pipe.c (e:\code\smartlock\rt-thread\components\drivers\src):        rb_memptr = rt_malloc(size);
+Read.c (e:\code\smartlock\rt-thread\components\dfs\filesystems\jffs2\src):		readbuf = kmalloc(je32_to_cpu(ri->csize), GFP_KERNEL);
+Read.c (e:\code\smartlock\rt-thread\components\dfs\filesystems\jffs2\src):			decomprbuf = kmalloc(je32_to_cpu(ri->dsize), GFP_KERNEL);
+Readinode.c (e:\code\smartlock\rt-thread\components\dfs\filesystems\jffs2\src):				buf = kmalloc(je32_to_cpu(rd->csize), GFP_KERNEL);
+Readinode.c (e:\code\smartlock\rt-thread\components\dfs\filesystems\jffs2\src)://			f->target = kmalloc(je32_to_cpu(latest_node->csize) + 1, GFP_KERNEL);
+Readinode.c (e:\code\smartlock\rt-thread\components\dfs\filesystems\jffs2\src):	struct jffs2_inode_info *f = kmalloc(sizeof(*f), GFP_KERNEL);
+Rtthread.h (e:\code\smartlock\rt-thread\include):void *rt_malloc(rt_size_t nbytes);
+Rtthread.h (e:\code\smartlock\rt-thread\include):void *rt_malloc_align(rt_size_t size, rt_size_t align);
+Rtthread.h (e:\code\smartlock\rt-thread\include):void rt_malloc_sethook(void (*hook)(void *ptr, rt_uint32_t size));
+Rtthread.h (e:\code\smartlock\rt-thread\include):void *rt_module_malloc(rt_size_t size);
+Scan.c (e:\code\smartlock\rt-thread\components\dfs\filesystems\jffs2\src):		/* Respect kmalloc limitations */
+Scan.c (e:\code\smartlock\rt-thread\components\dfs\filesystems\jffs2\src):		flashbuf = kmalloc(buf_size, GFP_KERNEL);
+Sd.c (e:\code\smartlock\rt-thread\components\drivers\sdio):	buf = (rt_uint8_t*)rt_malloc(64);
+Sd.c (e:\code\smartlock\rt-thread\components\drivers\sdio):	card = rt_malloc(sizeof(struct rt_mmcsd_card));
+Sd.c (e:\code\smartlock\rt-thread\components\drivers\sdio):		rt_kprintf("malloc card failed\n");
+Sdcard.c (e:\code\smartlock):		sector = (rt_uint8_t*) rt_malloc (512);
+Sdio.c (e:\code\smartlock\rt-thread\components\drivers\sdio):		curr = rt_malloc(sizeof(struct rt_sdio_function_tuple) + tpl_link);
+Sdio.c (e:\code\smartlock\rt-thread\components\drivers\sdio):	func = rt_malloc(sizeof(struct rt_sdio_function));
+Sdio.c (e:\code\smartlock\rt-thread\components\drivers\sdio):		rt_kprintf("malloc rt_sdio_function failed\n");
+Sdio.c (e:\code\smartlock\rt-thread\components\drivers\sdio):	sc = rt_malloc(sizeof(struct sdio_card));
+Sdio.c (e:\code\smartlock\rt-thread\components\drivers\sdio):		rt_kprintf("malloc sdio card failed\n");
+Sdio.c (e:\code\smartlock\rt-thread\components\drivers\sdio):	card = rt_malloc(sizeof(struct rt_mmcsd_card));
+Sdio.c (e:\code\smartlock\rt-thread\components\drivers\sdio):		rt_kprintf("malloc card failed\n");
+Sdio.c (e:\code\smartlock\rt-thread\components\drivers\sdio):	card->sdio_function[0] = rt_malloc(sizeof(struct rt_sdio_function));
+Sdio.c (e:\code\smartlock\rt-thread\components\drivers\sdio):		rt_kprintf("malloc sdio_func0 failed\n");
+Sdio.c (e:\code\smartlock\rt-thread\components\drivers\sdio):	sd = rt_malloc(sizeof(struct sdio_driver));
+Sdio.c (e:\code\smartlock\rt-thread\components\drivers\sdio):		rt_kprintf("malloc sdio driver failed\n");
+Slab.c (e:\code\smartlock\rt-thread\src):static void (*rt_malloc_hook)(void *ptr, rt_size_t size);
+Slab.c (e:\code\smartlock\rt-thread\src):void rt_malloc_sethook(void (*hook)(void *ptr, rt_size_t size))
+Slab.c (e:\code\smartlock\rt-thread\src):    rt_malloc_hook = hook;
+Slab.c (e:\code\smartlock\rt-thread\src):RTM_EXPORT(rt_malloc_sethook);
+Slab.c (e:\code\smartlock\rt-thread\src): *    To operate as a drop-in replacement to the FreeBSD-4.x malloc() we
+Slab.c (e:\code\smartlock\rt-thread\src): *    + malloc(0) is allowed and returns non-RT_NULL (ahc driver)
+Slab.c (e:\code\smartlock\rt-thread\src):void *rt_malloc(rt_size_t size)
+Slab.c (e:\code\smartlock\rt-thread\src):        return rt_module_malloc(size);
+Slab.c (e:\code\smartlock\rt-thread\src):                     ("malloc a large memory 0x%x, page cnt %d, kup %d\n",
+Slab.c (e:\code\smartlock\rt-thread\src):    RT_DEBUG_LOG(RT_DEBUG_SLAB, ("try to malloc 0x%x on zone: %d\n", size, zi));
+Slab.c (e:\code\smartlock\rt-thread\src):    RT_OBJECT_HOOK_CALL(rt_malloc_hook, ((char *)chunk, size));
+Slab.c (e:\code\smartlock\rt-thread\src):RTM_EXPORT(rt_malloc);
+Slab.c (e:\code\smartlock\rt-thread\src):        return rt_malloc(size);
+Slab.c (e:\code\smartlock\rt-thread\src):        if ((nptr = rt_malloc(size)) == RT_NULL)
+Slab.c (e:\code\smartlock\rt-thread\src):        if ((nptr = rt_malloc(size)) == RT_NULL)
+Slab.c (e:\code\smartlock\rt-thread\src):    p = rt_malloc(count * size);
+Slab.c (e:\code\smartlock\rt-thread\src): * This function will release the previous allocated memory block by rt_malloc.
+Slab.c (e:\code\smartlock\rt-thread\src):     * with kernel_map here.  Hysteresis will be performed at malloc() time.
+Slab.h (e:\code\smartlock\rt-thread\components\dfs\filesystems\jffs2\kernel\linux):#define kmalloc(x, y) rt_malloc(x)
+Slab.h (e:\code\smartlock\rt-thread\components\dfs\filesystems\jffs2\kernel\linux):#define vmalloc(x) rt_malloc(x)
+Syscall.c (e:\code\smartlock\rt-thread\components\dfs\filesystems\elmfat\option):#include <malloc.h>		/* ANSI memory controls */
+Syscall.c (e:\code\smartlock\rt-thread\components\dfs\filesystems\elmfat\option):void* ff_memalloc (	/* Returns pointer to the allocated memory block */
+Syscall.c (e:\code\smartlock\rt-thread\components\dfs\filesystems\elmfat\option):	return malloc(size);
+Thread.c (e:\code\smartlock\rt-thread\src):    stack_start = (void *)rt_malloc(stack_size);
+Uffs_blockinfo.c (e:\code\smartlock\rt-thread\components\dfs\filesystems\uffs\src\uffs):		if (dev->mem.malloc) {
+Uffs_blockinfo.c (e:\code\smartlock\rt-thread\components\dfs\filesystems\uffs\src\uffs):			dev->mem.blockinfo_pool_buf = dev->mem.malloc(dev, size);
+Uffs_buf.c (e:\code\smartlock\rt-thread\components\dfs\filesystems\uffs\src\uffs):		if (dev->mem.malloc) {
+Uffs_buf.c (e:\code\smartlock\rt-thread\components\dfs\filesystems\uffs\src\uffs):			dev->mem.pagebuf_pool_buf = dev->mem.malloc(dev, size);
+Uffs_config.h (e:\code\smartlock\rt-thread\components\dfs\filesystems\uffs): * \note  using system platform's 'malloc' and 'free'.
+Uffs_config.h (e:\code\smartlock\rt-thread\components\dfs\filesystems\uffs\src\platform\posix): * \note  using system platform's 'malloc' and 'free'.
+Uffs_config.h (e:\code\smartlock\rt-thread\components\dfs\filesystems\uffs\src\platform\win32): * \note  using system platform's 'malloc' and 'free'.
+Uffs_fileem_share.c (e:\code\smartlock\rt-thread\components\dfs\filesystems\uffs\src\emu):	emu->em_monitor_page = (u8 *) malloc(sizeof(emu->em_monitor_page[0]) * total_pages);
+Uffs_fileem_share.c (e:\code\smartlock\rt-thread\components\dfs\filesystems\uffs\src\emu):	emu->em_monitor_spare = (u8 *) malloc(sizeof(emu->em_monitor_spare[0]) * total_pages);
+Uffs_fileem_share.c (e:\code\smartlock\rt-thread\components\dfs\filesystems\uffs\src\emu):	emu->em_monitor_block = (u32 *) malloc(sizeof(emu->em_monitor_block[0]) * attr->total_blocks);
+Uffs_flash.c (e:\code\smartlock\rt-thread\components\dfs\filesystems\uffs\src\uffs):		if (dev->mem.malloc) {
+Uffs_flash.c (e:\code\smartlock\rt-thread\components\dfs\filesystems\uffs\src\uffs):			dev->mem.spare_pool_buf = dev->mem.malloc(dev, UFFS_SPARE_BUFFER_SIZE);
+Uffs_mem.c (e:\code\smartlock\rt-thread\components\dfs\filesystems\uffs\src\uffs):static void * static_malloc(struct uffs_DeviceSt *dev, unsigned int size)
+Uffs_mem.c (e:\code\smartlock\rt-thread\components\dfs\filesystems\uffs\src\uffs):	allocator->malloc = static_malloc;
+Uffs_mem.h (e:\code\smartlock\rt-thread\components\dfs\filesystems\uffs\src\inc\uffs):	void * (*malloc)(struct uffs_DeviceSt *dev, unsigned int size); //!< allocate memory (for dynamic memory allocation)
+Uffs_os.c (e:\code\smartlock\rt-thread\components\dfs\filesystems\uffs\src\platform\posix):	pthread_mutex_t *mutex = (pthread_mutex_t *) malloc(sizeof(pthread_mutex_t));
+Uffs_os.c (e:\code\smartlock\rt-thread\components\dfs\filesystems\uffs\src\platform\posix):static void * sys_malloc(struct uffs_DeviceSt *dev, unsigned int size)
+Uffs_os.c (e:\code\smartlock\rt-thread\components\dfs\filesystems\uffs\src\platform\posix):	return malloc(size);
+Uffs_os.c (e:\code\smartlock\rt-thread\components\dfs\filesystems\uffs\src\platform\posix):	allocator->malloc = sys_malloc;
+Uffs_os.c (e:\code\smartlock\rt-thread\components\dfs\filesystems\uffs\src\platform\win32):static void * sys_malloc(struct uffs_DeviceSt *dev, unsigned int size)
+Uffs_os.c (e:\code\smartlock\rt-thread\components\dfs\filesystems\uffs\src\platform\win32):	return malloc(size);
+Uffs_os.c (e:\code\smartlock\rt-thread\components\dfs\filesystems\uffs\src\platform\win32):	allocator->malloc = sys_malloc;
+Uffs_rtthread.c (e:\code\smartlock\rt-thread\components\dfs\filesystems\uffs):static void * sys_malloc(struct uffs_DeviceSt *dev, unsigned int size)
+Uffs_rtthread.c (e:\code\smartlock\rt-thread\components\dfs\filesystems\uffs):	return rt_malloc(size);
+Uffs_rtthread.c (e:\code\smartlock\rt-thread\components\dfs\filesystems\uffs):	allocator->malloc = sys_malloc;
+Uffs_tree.c (e:\code\smartlock\rt-thread\components\dfs\filesystems\uffs\src\uffs):		if (dev->mem.malloc) {
+Uffs_tree.c (e:\code\smartlock\rt-thread\components\dfs\filesystems\uffs\src\uffs):			dev->mem.tree_nodes_pool_buf = dev->mem.malloc(dev, size * num);
+Xdr.c (e:\code\smartlock\rt-thread\components\dfs\filesystems\nfs\rpc):			*cpp = sp = (char *) rt_malloc(nodesize);
+Xdr.c (e:\code\smartlock\rt-thread\components\dfs\filesystems\nfs\rpc):			*cpp = sp = (char *) rt_malloc(nodesize);
+Xdr.c (e:\code\smartlock\rt-thread\components\dfs\filesystems\nfs\rpc):			*addrp = target = rt_malloc(nodesize);
+Xdr.c (e:\code\smartlock\rt-thread\components\dfs\filesystems\nfs\rpc):			*pp = loc = (char*) rt_malloc(size);
+Zconf.h (e:\code\smartlock\rt-thread\components\dfs\filesystems\jffs2\cyg\compress):#define malloc rt_malloc
+Zlib1.c (e:\code\smartlock\rt-thread\components\dfs\filesystems\jffs2\cyg\compress\tests):    unsigned char* packed = malloc(buf_size);
+Zlib1.c (e:\code\smartlock\rt-thread\components\dfs\filesystems\jffs2\cyg\compress\tests):    unsigned char* unpacked = malloc(buf_size);
+Zlib2.c (e:\code\smartlock\rt-thread\components\dfs\filesystems\jffs2\cyg\compress\tests):    unsigned char* unpacked = malloc(buf_size);
+Zutil.c (e:\code\smartlock\rt-thread\components\dfs\filesystems\jffs2\cyg\compress\src):/* Turbo C malloc() does not allow dynamic allocation of 64K bytes
+Zutil.c (e:\code\smartlock\rt-thread\components\dfs\filesystems\jffs2\cyg\compress\src): * and farmalloc(64K) returns a pointer with an offset of 8, so we
+Zutil.c (e:\code\smartlock\rt-thread\components\dfs\filesystems\jffs2\cyg\compress\src):    /* If we allocate less than 65520 bytes, we assume that farmalloc
+Zutil.c (e:\code\smartlock\rt-thread\components\dfs\filesystems\jffs2\cyg\compress\src):        buf = farmalloc(bsize);
+Zutil.c (e:\code\smartlock\rt-thread\components\dfs\filesystems\jffs2\cyg\compress\src):        buf = farmalloc(bsize + 16L);
+Zutil.c (e:\code\smartlock\rt-thread\components\dfs\filesystems\jffs2\cyg\compress\src):extern voidp  malloc OF((uInt size));
+Zutil.c (e:\code\smartlock\rt-thread\components\dfs\filesystems\jffs2\cyg\compress\src):    return sizeof(uInt) > 2 ? (voidpf)malloc(items * size) :
+Zutil.h (e:\code\smartlock\rt-thread\components\dfs\filesystems\jffs2\cyg\compress\src):       void *_Cdecl farmalloc( unsigned long nbytes );
+Zutil.h (e:\code\smartlock\rt-thread\components\dfs\filesystems\jffs2\cyg\compress\src):#    include <malloc.h>
+Zutil.h (e:\code\smartlock\rt-thread\components\dfs\filesystems\jffs2\cyg\compress\src):     #include <malloc.h>
