@@ -471,14 +471,9 @@
               <FilePath>.\filetest.c</FilePath>
             </File>
             <File>
-              <FileName>camera.c</FileName>
+              <FileName>picture.c</FileName>
               <FileType>1</FileType>
-              <FilePath>.\camera.c</FilePath>
-            </File>
-            <File>
-              <FileName>photograph.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\photograph.c</FilePath>
+              <FilePath>.\picture.c</FilePath>
             </File>
           </Files>
         </Group>

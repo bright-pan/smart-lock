@@ -45,7 +45,7 @@
 #endif
 
 #include "led.h"
-#include "photograph.h"
+
 
 
 ALIGN(RT_ALIGN_SIZE)
@@ -248,10 +248,10 @@ void rt_init_thread_entry(void* parameter)
 //filesystem_test();
 {
 	extern void camera_test(void);
-	extern void photograph_thread_init(void);
+	extern void picture_thread_init(void);
 	
 //	camera_test();
-	photograph_thread_init();
+	picture_thread_init();
 }
 
 
