@@ -14,10 +14,10 @@
  * 2012-05-28     bernard      code cleanup
  * 2012-11-23     bernard      fix compiler warning.
  */
-
 #include <rthw.h>
 #include <rtthread.h>
 #include <rtdevice.h>
+
 
 rt_inline void serial_ringbuffer_init(struct serial_ringbuffer *rbuffer)
 {

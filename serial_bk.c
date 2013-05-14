@@ -1,7 +1,7 @@
 /*
  * File      : serial.c
  * This file is part of RT-Thread RTOS
- * COPYRIGHT (C) 2009, RT-Thread Development Team
+ * COPYRIGHT (C) 2006 - 2012, RT-Thread Development Team
  *
  * The license and distribution terms for this file may be
  * found in the file LICENSE in this distribution or at
@@ -9,410 +9,441 @@
  *
  * Change Logs:
  * Date           Author       Notes
- * 2009-02-05     Bernard      first version
- * 2009-10-25     Bernard      fix rt_serial_read bug when there is no data
- *                             in the buffer.
- * 2010-03-29     Bernard      cleanup code.
+ * 2006-03-13     bernard      first version
+ * 2012-05-15     lgnq         modified according bernard's implementation.
+ * 2012-05-28     bernard      code cleanup
+ * 2012-11-23     bernard      fix compiler warning.
  */
-
 #include "serial.h"
-#include <stm32f10x_dma.h>
-#include <stm32f10x_usart.h>
+#include <rthw.h>
+#include <rtthread.h>
+#include <rtdevice.h>
 
-static void rt_serial_enable_dma(DMA_Channel_TypeDef* dma_channel,
-	rt_uint32_t address, rt_uint32_t size);
+rt_inline void serial_ringbuffer_init(struct serial_ringbuffer *rbuffer)
+{
+    rt_memset(rbuffer->buffer, 0, sizeof(rbuffer->buffer));
+    rbuffer->put_index = 0;
+    rbuffer->get_index = 0;
+}
 
-/**
- * @addtogroup STM32
- */
-/*@{*/
+rt_inline void serial_ringbuffer_putc(struct serial_ringbuffer *rbuffer,
+                                      char                      ch)
+{
+    rt_base_t level;
+
+    /* disable interrupt */
+    level = rt_hw_interrupt_disable();
+
+    rbuffer->buffer[rbuffer->put_index] = ch;
+    rbuffer->put_index = (rbuffer->put_index + 1) & (SERIAL_RBUFFER_SIZE - 1);
+
+    /* if the next position is read index, discard this 'read char' */
+    if (rbuffer->put_index == rbuffer->get_index)
+    {
+        rbuffer->get_index = (rbuffer->get_index + 1) & (SERIAL_RBUFFER_SIZE - 1);
+    }
+
+    /* enable interrupt */
+    rt_hw_interrupt_enable(level);
+}
+
+rt_inline int serial_ringbuffer_putchar(struct serial_ringbuffer *rbuffer,
+                                        char                      ch)
+{
+    rt_base_t level;
+    rt_uint16_t next_index;
+
+    /* disable interrupt */
+    level = rt_hw_interrupt_disable();
+
+    next_index = (rbuffer->put_index + 1) & (SERIAL_RBUFFER_SIZE - 1);
+    if (next_index != rbuffer->get_index)
+    {
+        rbuffer->buffer[rbuffer->put_index] = ch;
+        rbuffer->put_index = next_index;
+    }
+    else
+    {
+        /* enable interrupt */
+        rt_hw_interrupt_enable(level);
+
+        return -1;
+    }
+
+    /* enable interrupt */
+    rt_hw_interrupt_enable(level);
+
+    return 1;
+}
+
+rt_inline int serial_ringbuffer_getc(struct serial_ringbuffer *rbuffer)
+{
+    int ch;
+    rt_base_t level;
+
+    ch = -1;
+    /* disable interrupt */
+    level = rt_hw_interrupt_disable();
+    if (rbuffer->get_index != rbuffer->put_index)
+    {
+        ch = rbuffer->buffer[rbuffer->get_index];
+        rbuffer->get_index = (rbuffer->get_index + 1) & (SERIAL_RBUFFER_SIZE - 1);
+    }
+    /* enable interrupt */
+    rt_hw_interrupt_enable(level);
+
+    return ch;
+}
+
+rt_inline rt_uint32_t serial_ringbuffer_size(struct serial_ringbuffer *rbuffer)
+{
+    rt_uint32_t size;
+    rt_base_t level;
+
+    level = rt_hw_interrupt_disable();
+    size = (rbuffer->put_index - rbuffer->get_index) & (SERIAL_RBUFFER_SIZE - 1);
+    rt_hw_interrupt_enable(level);
+
+    return size;
+}
 
 /* RT-Thread Device Interface */
-static rt_err_t rt_serial_init (rt_device_t dev)
+
+/*
+ * This function initializes serial
+ */
+static rt_err_t rt_serial_init(struct rt_device *dev)
 {
-	struct stm32_serial_device* uart = (struct stm32_serial_device*) dev->user_data;
+    rt_err_t result = RT_EOK;
+    struct rt_serial_device *serial;
 
-	if (!(dev->flag & RT_DEVICE_FLAG_ACTIVATED))
-	{
-		if (dev->flag & RT_DEVICE_FLAG_INT_RX)
-		{
-			rt_memset(uart->int_rx->rx_buffer, 0,
-				sizeof(uart->int_rx->rx_buffer));
-			uart->int_rx->read_index = 0;
-			uart->int_rx->save_index = 0;
-		}
+    RT_ASSERT(dev != RT_NULL);
+    serial = (struct rt_serial_device *)dev;
 
-		if (dev->flag & RT_DEVICE_FLAG_DMA_TX)
-		{
-			RT_ASSERT(uart->dma_tx->dma_channel != RT_NULL);
-			uart->dma_tx->list_head = uart->dma_tx->list_tail = RT_NULL;
+    if (!(dev->flag & RT_DEVICE_FLAG_ACTIVATED))//uninitiated
+    {
+        /* apply configuration */
+        if (serial->ops->configure)			//		
+            result = serial->ops->configure(serial, &serial->config);
 
-			/* init data node memory pool */
-			rt_mp_init(&(uart->dma_tx->data_node_mp), "dn",
-				uart->dma_tx->data_node_mem_pool,
-				sizeof(uart->dma_tx->data_node_mem_pool),
-				sizeof(struct stm32_serial_data_node));
-		}
+        if (result != RT_EOK)
+            return result;
 
-		/* Enable USART */
-		USART_Cmd(uart->uart_device, ENABLE);
+        if (dev->flag & RT_DEVICE_FLAG_INT_RX)
+            serial_ringbuffer_init(serial->int_rx);
 
-		dev->flag |= RT_DEVICE_FLAG_ACTIVATED;
-	}
+        if (dev->flag & RT_DEVICE_FLAG_INT_TX)
+            serial_ringbuffer_init(serial->int_tx);
 
-	return RT_EOK;
+        if (dev->flag & RT_DEVICE_FLAG_DMA_TX)
+        {
+            serial->dma_flag = RT_FALSE;
+            
+            /* init data queue */
+            rt_data_queue_init(&(serial->tx_dq), RT_SERIAL_TX_DATAQUEUE_SIZE,
+                               RT_SERIAL_TX_DATAQUEUE_LWM, RT_NULL);
+        }
+
+        /* set activated */
+        dev->flag |= RT_DEVICE_FLAG_ACTIVATED;
+    }
+
+    return result;
 }
 
-static rt_err_t rt_serial_open(rt_device_t dev, rt_uint16_t oflag)
+static rt_err_t rt_serial_open(struct rt_device *dev, rt_uint16_t oflag)
 {
-	return RT_EOK;
+    struct rt_serial_device *serial;
+    rt_uint32_t int_flags = 0;
+
+    RT_ASSERT(dev != RT_NULL);
+    serial = (struct rt_serial_device *)dev;
+
+    if (dev->flag & RT_DEVICE_FLAG_INT_RX)
+        int_flags = RT_SERIAL_RX_INT;
+    if (dev->flag & RT_DEVICE_FLAG_INT_TX)
+        int_flags |= RT_SERIAL_TX_INT;
+
+    if (int_flags)
+    {
+        serial->ops->control(serial, RT_DEVICE_CTRL_SET_INT, (void *)int_flags);
+    }
+
+    return RT_EOK;
 }
 
-static rt_err_t rt_serial_close(rt_device_t dev)
+static rt_err_t rt_serial_close(struct rt_device *dev)
 {
-	return RT_EOK;
+    struct rt_serial_device *serial;
+    rt_uint32_t int_flags = 0;
+
+    RT_ASSERT(dev != RT_NULL);
+    serial = (struct rt_serial_device *)dev;
+
+    if (dev->flag & RT_DEVICE_FLAG_INT_RX)
+        int_flags = RT_SERIAL_RX_INT;
+    if (dev->flag & RT_DEVICE_FLAG_INT_TX)
+        int_flags |= RT_SERIAL_TX_INT;
+
+    if (int_flags)
+    {
+        serial->ops->control(serial, RT_DEVICE_CTRL_CLR_INT, (void *)int_flags);
+    }
+
+    return RT_EOK;
 }
 
-static rt_size_t rt_serial_read (rt_device_t dev, rt_off_t pos, void* buffer, rt_size_t size)
+static rt_size_t rt_serial_read(struct rt_device *dev,
+                                rt_off_t          pos,
+                                void             *buffer,
+                                rt_size_t         size)
 {
-	rt_uint8_t* ptr;
-	rt_err_t err_code;
-	struct stm32_serial_device* uart;
+    rt_uint8_t *ptr;
+    rt_uint32_t read_nbytes;
+    struct rt_serial_device *serial;
 
-	ptr = buffer;
-	err_code = RT_EOK;
-	uart = (struct stm32_serial_device*)dev->user_data;
+    RT_ASSERT(dev != RT_NULL);
+    serial = (struct rt_serial_device *)dev;
 
-	if (dev->flag & RT_DEVICE_FLAG_INT_RX)
-	{
-		/* interrupt mode Rx */
-		while (size)
-		{
-			rt_base_t level;
+    ptr = (rt_uint8_t *)buffer;
 
-			/* disable interrupt */
-			level = rt_hw_interrupt_disable();
+    if (dev->flag & RT_DEVICE_FLAG_INT_RX)
+    {
+        /* interrupt mode Rx */
+        while (size)
+        {
+            int ch;
 
-			if (uart->int_rx->read_index != uart->int_rx->save_index)
-			{
-				/* read a character */
-				*ptr++ = uart->int_rx->rx_buffer[uart->int_rx->read_index];
-				size--;
+            ch = serial_ringbuffer_getc(serial->int_rx);
+            if (ch == -1)
+                break;
 
-				/* move to next position */
-				uart->int_rx->read_index ++;
-				if (uart->int_rx->read_index >= UART_RX_BUFFER_SIZE)
-					uart->int_rx->read_index = 0;
-			}
-			else
-			{
-				/* set error code */
-				err_code = -RT_EEMPTY;
+            *ptr = ch & 0xff;
+            ptr ++;
+            size --;
+        }
+    }
+    else
+    {
+        /* polling mode */
+        while ((rt_uint32_t)ptr - (rt_uint32_t)buffer < size)
+        {
+            *ptr = serial->ops->getc(serial);
+            ptr ++;
+        }
+    }
 
-				/* enable interrupt */
-				rt_hw_interrupt_enable(level);
-				break;
-			}
+    read_nbytes = (rt_uint32_t)ptr - (rt_uint32_t)buffer;
+    /* set error code */
+    if (read_nbytes == 0)
+    {
+        rt_set_errno(-RT_EEMPTY);
+    }
 
-			/* enable interrupt */
-			rt_hw_interrupt_enable(level);
-		}
-	}
-	else
-	{
-		/* polling mode */
-		while ((rt_uint32_t)ptr - (rt_uint32_t)buffer < size)
-		{
-			while (uart->uart_device->SR & USART_FLAG_RXNE)
-			{
-				*ptr = uart->uart_device->DR & 0xff;
-				ptr ++;
-			}
-		}
-	}
-
-	/* set error code */
-	rt_set_errno(err_code);
-	return (rt_uint32_t)ptr - (rt_uint32_t)buffer;
+    return read_nbytes;
 }
 
-static void rt_serial_enable_dma(DMA_Channel_TypeDef* dma_channel,
-	rt_uint32_t address, rt_uint32_t size)
+static rt_size_t rt_serial_write(struct rt_device *dev,
+                                 rt_off_t          pos,
+                                 const void       *buffer,
+                                 rt_size_t         size)
 {
-	RT_ASSERT(dma_channel != RT_NULL);
+    rt_uint8_t *ptr;
+    rt_size_t write_nbytes = 0;
+    struct rt_serial_device *serial;
 
-	/* disable DMA */
-	DMA_Cmd(dma_channel, DISABLE);
+    RT_ASSERT(dev != RT_NULL);
+    serial = (struct rt_serial_device *)dev;
 
-	/* set buffer address */
-	dma_channel->CMAR = address;
-	/* set size */
-	dma_channel->CNDTR = size;
+    ptr = (rt_uint8_t*)buffer;
 
-	/* enable DMA */
-	DMA_Cmd(dma_channel, ENABLE);
+    if (dev->flag & RT_DEVICE_FLAG_INT_TX)
+    {
+        /* warning: data will be discarded if buffer is full */
+        while (size)
+        {
+            if (serial_ringbuffer_putchar(serial->int_tx, *ptr) != -1)
+            {
+                ptr ++;
+                size --;
+            }
+            else
+                break;
+        }
+    }
+    else if (dev->flag & RT_DEVICE_FLAG_DMA_TX)
+    {
+        const void *data_ptr = RT_NULL;
+        rt_size_t data_size = 0;
+        rt_base_t level;
+        rt_err_t result;
+        
+        RT_ASSERT(0 == (dev->flag & RT_DEVICE_FLAG_STREAM));
+
+        result = rt_data_queue_push(&(serial->tx_dq), buffer, size, 20); 
+        if (result == RT_EOK)
+        {
+            level = rt_hw_interrupt_disable();
+            if (serial->dma_flag == RT_FALSE)
+            {
+                serial->dma_flag = RT_TRUE;
+                rt_hw_interrupt_enable(level);
+            
+                if (RT_EOK == rt_data_queue_pop(&(serial->tx_dq), &data_ptr, &data_size, 0))
+                {
+                    serial->ops->dma_transmit(serial, data_ptr, data_size);
+                }
+            }
+            else
+                rt_hw_interrupt_enable(level);
+
+            return size;
+        }
+        else
+        {
+            rt_set_errno(result);
+
+            return 0;
+        }
+    }
+    else
+    {
+        /* polling mode */
+        while (size)
+        {
+            /*
+             * to be polite with serial console add a line feed
+             * to the carriage return character
+             */
+            if (*ptr == '\n' && (dev->flag & RT_DEVICE_FLAG_STREAM))
+            {
+                serial->ops->putc(serial, '\r');
+            }
+
+            serial->ops->putc(serial, *ptr);
+
+            ++ ptr;
+            -- size;
+        }
+    }
+
+    write_nbytes = (rt_uint32_t)ptr - (rt_uint32_t)buffer;
+    if (write_nbytes == 0)
+    {
+        rt_set_errno(-RT_EFULL);
+    }
+
+    return write_nbytes;
 }
 
-static rt_size_t rt_serial_write (rt_device_t dev, rt_off_t pos, const void* buffer, rt_size_t size)
+static rt_err_t rt_serial_control(struct rt_device *dev,
+                                  rt_uint8_t        cmd,
+                                  void             *args)
 {
-	rt_uint8_t* ptr;
-	rt_err_t err_code;
-	struct stm32_serial_device* uart;
+    struct rt_serial_device *serial;
 
-	err_code = RT_EOK;
-	ptr = (rt_uint8_t*)buffer;
-	uart = (struct stm32_serial_device*)dev->user_data;
+    RT_ASSERT(dev != RT_NULL);
+    serial = (struct rt_serial_device *)dev;
 
-	if (dev->flag & RT_DEVICE_FLAG_INT_TX)
-	{
-		/* interrupt mode Tx, does not support */
-		RT_ASSERT(0);
-	}
-	else if (dev->flag & RT_DEVICE_FLAG_DMA_TX)
-	{
-		/* DMA mode Tx */
+    switch (cmd)
+    {
+    case RT_DEVICE_CTRL_SUSPEND:
+        /* suspend device */
+        dev->flag |= RT_DEVICE_FLAG_SUSPENDED;
+        break;
 
-		/* allocate a data node */
-		struct stm32_serial_data_node* data_node = (struct stm32_serial_data_node*)
-			rt_mp_alloc (&(uart->dma_tx->data_node_mp), RT_WAITING_FOREVER);
-		if (data_node == RT_NULL)
-		{
-			/* set error code */
-			err_code = -RT_ENOMEM;
-		}
-		else
-		{
-			rt_uint32_t level;
+    case RT_DEVICE_CTRL_RESUME:
+        /* resume device */
+        dev->flag &= ~RT_DEVICE_FLAG_SUSPENDED;
+        break;
 
-			/* fill data node */
-			data_node->data_ptr 	= ptr;
-			data_node->data_size 	= size;
+    case RT_DEVICE_CTRL_CONFIG:
+        /* configure device */
+        serial->ops->configure(serial, (struct serial_configure *)args);
+        break;
+    }
 
-			/* insert to data link */
-			data_node->next = RT_NULL;
-
-			/* disable interrupt */
-			level = rt_hw_interrupt_disable();
-
-			data_node->prev = uart->dma_tx->list_tail;
-			if (uart->dma_tx->list_tail != RT_NULL)
-				uart->dma_tx->list_tail->next = data_node;
-			uart->dma_tx->list_tail = data_node;
-
-			if (uart->dma_tx->list_head == RT_NULL)
-			{
-				/* start DMA to transmit data */
-				uart->dma_tx->list_head = data_node;
-
-				/* Enable DMA Channel */
-				rt_serial_enable_dma(uart->dma_tx->dma_channel,
-					(rt_uint32_t)uart->dma_tx->list_head->data_ptr,
-					uart->dma_tx->list_head->data_size);
-			}
-
-			/* enable interrupt */
-			rt_hw_interrupt_enable(level);
-		}
-	}
-	else
-	{
-		/* polling mode */
-		if (dev->flag & RT_DEVICE_FLAG_STREAM)
-		{
-			/* stream mode */
-			while (size)
-			{
-				if (*ptr == '\n')
-				{
-					while (!(uart->uart_device->SR & USART_FLAG_TXE));
-					uart->uart_device->DR = '\r';
-				}
-
-				while (!(uart->uart_device->SR & USART_FLAG_TXE));
-				uart->uart_device->DR = (*ptr & 0x1FF);
-
-				++ptr; --size;
-			}
-		}
-		else
-		{
-			/* write data directly */
-			while (size)
-			{
-				while (!(uart->uart_device->SR & USART_FLAG_TXE));
-				uart->uart_device->DR = (*ptr & 0x1FF);
-
-				++ptr; --size;
-			}
-		}
-	}
-
-	/* set error code */
-	rt_set_errno(err_code);
-
-	return (rt_uint32_t)ptr - (rt_uint32_t)buffer;
-}
-
-static rt_err_t rt_serial_control (rt_device_t dev, rt_uint8_t cmd, void *args)
-{
-	struct stm32_serial_device* uart;
-
-	RT_ASSERT(dev != RT_NULL);
-
-	uart = (struct stm32_serial_device*)dev->user_data;
-	switch (cmd)
-	{
-	case RT_DEVICE_CTRL_SUSPEND:
-		/* suspend device */
-		dev->flag |= RT_DEVICE_FLAG_SUSPENDED;
-		USART_Cmd(uart->uart_device, DISABLE);
-		break;
-
-	case RT_DEVICE_CTRL_RESUME:
-		/* resume device */
-		dev->flag &= ~RT_DEVICE_FLAG_SUSPENDED;
-		USART_Cmd(uart->uart_device, ENABLE);
-		break;
-	}
-
-	return RT_EOK;
+    return RT_EOK;
 }
 
 /*
- * serial register for STM32
- * support STM32F103VB and STM32F103ZE
+ * serial register
  */
-rt_err_t rt_hw_serial_register(rt_device_t device, const char* name, rt_uint32_t flag, struct stm32_serial_device *serial)
+rt_err_t rt_hw_serial_register(struct rt_serial_device *serial,
+                               const char            	 *name,
+                               rt_uint32_t              flag,
+                               void                    *data)
 {
-	RT_ASSERT(device != RT_NULL);
+    struct rt_device *device;
+    RT_ASSERT(serial != RT_NULL);
 
-	if ((flag & RT_DEVICE_FLAG_DMA_RX) ||
-		(flag & RT_DEVICE_FLAG_INT_TX))
-	{
-		RT_ASSERT(0);
-	}
+    device = &(serial->parent);						
 
-	device->type 		= RT_Device_Class_Char;
-	device->rx_indicate = RT_NULL;
-	device->tx_complete = RT_NULL;
-	device->init 		= rt_serial_init;
-	device->open		= rt_serial_open;
-	device->close		= rt_serial_close;
-	device->read 		= rt_serial_read;
-	device->write 		= rt_serial_write;
-	device->control 	= rt_serial_control;
-	device->user_data	= serial;
+    device->type        = RT_Device_Class_Char;
+    device->rx_indicate = RT_NULL;
+    device->tx_complete = RT_NULL;
 
-	/* register a character device */
-	return rt_device_register(device, name, RT_DEVICE_FLAG_RDWR | flag);
+    device->init        = rt_serial_init;
+    device->open        = rt_serial_open;
+    device->close       = rt_serial_close;
+    device->read        = rt_serial_read;
+    device->write       = rt_serial_write;
+    device->control     = rt_serial_control;
+    device->user_data   = data;
+
+    /* register a character device */
+    return rt_device_register(device, name, flag);
 }
 
 /* ISR for serial interrupt */
-void rt_hw_serial_isr(rt_device_t device)
+void rt_hw_serial_isr(struct rt_serial_device *serial)
 {
-	struct stm32_serial_device* uart = (struct stm32_serial_device*) device->user_data;
+    int ch = -1;
 
-	if(USART_GetITStatus(uart->uart_device, USART_IT_RXNE) != RESET)
-	{
-		/* interrupt mode receive */
-		RT_ASSERT(device->flag & RT_DEVICE_FLAG_INT_RX);
+    /* interrupt mode receive */
+    RT_ASSERT(serial->parent.flag & RT_DEVICE_FLAG_INT_RX);
 
-		/* save on rx buffer */
-		while (uart->uart_device->SR & USART_FLAG_RXNE)
-		{
-			rt_base_t level;
+    while (1)
+    {
+        ch = serial->ops->getc(serial);//硬件中断收到一个字符
+        if (ch == -1)
+            break;
 
-			/* disable interrupt */
-			level = rt_hw_interrupt_disable();
+        serial_ringbuffer_putc(serial->int_rx, ch);
+    }
 
-			/* save character */
-			uart->int_rx->rx_buffer[uart->int_rx->save_index] = uart->uart_device->DR & 0xff;
-			uart->int_rx->save_index ++;
-			if (uart->int_rx->save_index >= UART_RX_BUFFER_SIZE)
-				uart->int_rx->save_index = 0;
+    /* invoke callback */
+    if (serial->parent.rx_indicate != RT_NULL)
+    {
+        rt_size_t rx_length;
 
-			/* if the next position is read index, discard this 'read char' */
-			if (uart->int_rx->save_index == uart->int_rx->read_index)
-			{
-				uart->int_rx->read_index ++;
-				if (uart->int_rx->read_index >= UART_RX_BUFFER_SIZE)
-					uart->int_rx->read_index = 0;
-			}
-
-			/* enable interrupt */
-			rt_hw_interrupt_enable(level);
-		}
-
-		/* clear interrupt */
-		USART_ClearITPendingBit(uart->uart_device, USART_IT_RXNE);
-
-		/* invoke callback */
-		if (device->rx_indicate != RT_NULL)
-		{
-			rt_size_t rx_length;
-
-			/* get rx length */
-			rx_length = uart->int_rx->read_index > uart->int_rx->save_index ?
-				UART_RX_BUFFER_SIZE - uart->int_rx->read_index + uart->int_rx->save_index :
-				uart->int_rx->save_index - uart->int_rx->read_index;
-
-			device->rx_indicate(device, rx_length);
-		}
-	}
-
-	if (USART_GetITStatus(uart->uart_device, USART_IT_TC) != RESET)
-	{
-		/* clear interrupt */
-		USART_ClearITPendingBit(uart->uart_device, USART_IT_TC);
-	}
+        /* get rx length */
+        rx_length = serial_ringbuffer_size(serial->int_rx);
+        serial->parent.rx_indicate(&serial->parent, rx_length);
+    }
 }
 
 /*
  * ISR for DMA mode Tx
  */
-void rt_hw_serial_dma_tx_isr(rt_device_t device)
+void rt_hw_serial_dma_tx_isr(struct rt_serial_device *serial)
 {
-	rt_uint32_t level;
-	struct stm32_serial_data_node* data_node;
-	struct stm32_serial_device* uart = (struct stm32_serial_device*) device->user_data;
+    const void *data_ptr;
+    rt_size_t data_size;
 
-	/* DMA mode receive */
-	RT_ASSERT(device->flag & RT_DEVICE_FLAG_DMA_TX);
+    if (RT_EOK == rt_data_queue_pop(&(serial->tx_dq), &data_ptr, &data_size, 0))
+    {
+        /* transmit next data node */
+        serial->ops->dma_transmit(serial, data_ptr, data_size);
+    }
+    else
+    {
+        serial->dma_flag = RT_FALSE;
+    }
 
-	/* get the first data node */
-	data_node = uart->dma_tx->list_head;
-	RT_ASSERT(data_node != RT_NULL);
-
-	/* invoke call to notify tx complete */
-	if (device->tx_complete != RT_NULL)
-		device->tx_complete(device, data_node->data_ptr);
-
-	/* disable interrupt */
-	level = rt_hw_interrupt_disable();
-
-	/* remove list head */
-	uart->dma_tx->list_head = data_node->next;
-	if (uart->dma_tx->list_head == RT_NULL) /* data link empty */
-		uart->dma_tx->list_tail = RT_NULL;
-
-	/* enable interrupt */
-	rt_hw_interrupt_enable(level);
-
-	/* release data node memory */
-	rt_mp_free(data_node);
-
-	if (uart->dma_tx->list_head != RT_NULL)
-	{
-		/* transmit next data node */
-		rt_serial_enable_dma(uart->dma_tx->dma_channel,
-			(rt_uint32_t)uart->dma_tx->list_head->data_ptr,
-			uart->dma_tx->list_head->data_size);
-	}
-	else
-	{
-		/* no data to be transmitted, disable DMA */
-		DMA_Cmd(uart->dma_tx->dma_channel, DISABLE);
-	}
+    /* invoke callback */
+    if (serial->parent.tx_complete != RT_NULL)
+    {
+        serial->parent.tx_complete(&serial->parent, RT_NULL);
+    }
 }
-
-/*@}*/

@@ -16,6 +16,12 @@
 #ifndef __BOARD_H__
 #define __BOARD_H__
 
+#include "usart.h"
+#include "gpio_pin.h"
+#include "gpio_exti.h"
+#include "gpio_pwm.h"
+#include "gpio_adc.h"
+
 /* board configuration */
 // <o> SDCard Driver <1=>SDIO sdcard <0=>SPI MMC card
 // 	<i>Default: 1
@@ -59,8 +65,6 @@ void rt_hw_board_init(void);
 #elif STM32_CONSOLE_USART == 3
 #define CONSOLE_DEVICE "usart3"
 #endif
-
-void rt_hw_usart_init(void);
 
 /* SD Card init function */
 void rt_hw_sdcard_init(void);

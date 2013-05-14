@@ -15,7 +15,6 @@
 
 #include "usart.h"
 #include <rtdevice.h>
-#include <serial.h>
 #include <stm32f10x_dma.h>
 
 /*
@@ -641,23 +640,22 @@ void serial_device_usart_isr(struct rt_serial_device *serial)
   {
 
     USART_ReceiveData(user_data->usart);
-    USART_ClearFlag(user_data->usart, USART_FLAG_ORE);
   }
 
   if(USART_GetFlagStatus(user_data->usart, USART_FLAG_NE) != RESET)
-  {//同  @arg USART_IT_NE     : Noise Error interrupt
-    USART_ClearFlag(user_data->usart, USART_FLAG_NE);
+  {//USART_IT_NE     : Noise Error interrupt
+    USART_ReceiveData(user_data->usart);
   }
 
 
   if(USART_GetFlagStatus(user_data->usart, USART_FLAG_FE) != RESET)
-  {//同   @arg USART_IT_FE     : Framing Error interrupt
-    USART_ClearFlag(user_data->usart, USART_FLAG_FE);
+  {//USART_IT_FE     : Framing Error interrupt
+    USART_ReceiveData(user_data->usart);
   }
 
   if(USART_GetFlagStatus(user_data->usart, USART_FLAG_PE) != RESET)
-  {//同  @arg USART_IT_PE     : Parity Error interrupt
-    USART_ClearFlag(user_data->usart, USART_FLAG_PE);
+  {//USART_IT_PE     : Parity Error interrupt
+    USART_ReceiveData(user_data->usart);
   }
   rt_hw_serial_isr(serial);
 }
