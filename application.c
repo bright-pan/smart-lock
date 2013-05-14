@@ -1,21 +1,15 @@
-/*
- * File      : application.c
- * This file is part of RT-Thread RTOS
- * COPYRIGHT (C) 2006, RT-Thread Development Team
+/*********************************************************************
+ * Filename:      application.c
+ * 
  *
- * The license and distribution terms for this file may be
- * found in the file LICENSE in this distribution or at
- * http://www.rt-thread.org/license/LICENSE
+ * Author:        Bright Pan <loststriker@gmail.com>
+ * Created at:    2013-05-09 09:56:05
  *
- * Change Logs:
- * Date           Author       Notes
- * 2009-01-05     Bernard      the first version
- */
-
-/**
- * @addtogroup STM32
- */
-/*@{*/
+ *
+ * Change Log:    
+ *
+ * Copyright (C) 2013 Yuettak Co.,Ltd
+ ********************************************************************/
 
 #include <board.h>
 #include <rtthread.h>
@@ -42,118 +36,8 @@
 #include <rtgui/driver.h>
 #endif
 
-#include "led.h"
 
-ALIGN(RT_ALIGN_SIZE)
-static rt_uint8_t led_stack[ 512 ];
-static struct rt_thread led_0_thread;
-static void led_0_thread_entry(void* parameter)
-{
-  unsigned int count=0;
-  rt_hw_led_init();
-  while (1)
-  {
-    /* led1 on */
-#ifndef RT_USING_FINSH
-    rt_kprintf("led on, count : %d\r\n",count);
-#endif
-    count++;
-    rt_hw_led_on(0);
-    rt_thread_delay( RT_TICK_PER_SECOND/2 ); /* sleep 0.5 second and switch to other thread */
-    /* led1 off */
-#ifndef RT_USING_FINSH
-    rt_kprintf("led off\r\n");
-#endif
-    rt_hw_led_off(0);
-    rt_thread_delay( RT_TICK_PER_SECOND/2 );
-  }
-}
-
-
-
-static void led_1_thread_entry(void* parameter)
-{
-  unsigned int count=0;
-
-  rt_hw_led_init();
-  
-  while (1)
-  {
-    /* led1 on */
-#ifndef RT_USING_FINSH
-    rt_kprintf("led on, count : %d\r\n",count);
-#endif
-    count++;
-    
-    rt_hw_led_on(1);
-    rt_thread_delay( RT_TICK_PER_SECOND/2 ); /* sleep 0.5 second and switch to other thread */
-    /* led1 off */
-#ifndef RT_USING_FINSH
-    rt_kprintf("led off\r\n");
-#endif
-    rt_hw_led_off(1);
-    rt_thread_delay( RT_TICK_PER_SECOND/2 );
-  }
-}
-
-#define MAX_SEM 5
-
-rt_uint32_t array[MAX_SEM];
-
-struct rt_semaphore sem_lock;
-struct rt_semaphore sem_empty, sem_full;
-
-rt_uint32_t set, get;
-
-
-void rt_producer_thread_entry(void* parameter) {
-  
-  rt_int32_t cnt = 0;
-
-  while (cnt < 100) {
-    rt_sem_take(&sem_empty, RT_WAITING_FOREVER);
-    rt_sem_take(&sem_lock, RT_WAITING_FOREVER);
-    array[set%MAX_SEM] = cnt + 1;
-#ifndef RT_USING_FINSH
-    rt_kprintf("the producer generates a number: %d\n", array[set%MAX_SEM]);
-#endif
-    set++;
-    rt_sem_release(&sem_lock);
-    rt_sem_release(&sem_full);
-    cnt++;
-               
-    rt_thread_delay(200);
-  }
-#ifndef RT_USING_FINSH
-  rt_kprintf("the producer exit!\n");
-#endif
-}
-
-void rt_consumer_thread_entry(void* parameter) {
-  
-  rt_uint32_t sum;
-
-  while (1) {
-    rt_sem_take(&sem_full, RT_WAITING_FOREVER);
-
-    rt_sem_take(&sem_lock, RT_WAITING_FOREVER);
-    sum += array[get%MAX_SEM];
-#ifndef RT_USING_FINSH
-    rt_kprintf("the consumer [%d] get a number: %d\n", no, array[set%MAX_SEM]);
-#endif
-    get++;
-    rt_sem_release(&sem_lock);
-          
-    rt_sem_release(&sem_empty);
-    if (get >= 100)
-      break;
-    rt_thread_delay(10);
-  }
-#ifndef RT_USING_FINSH  
-  rt_kprintf("the consumer[%d] sum is %d \n", no, sum);
-  rt_kprintf("the producer exit!\n");
-#endif
-}
+rt_device_t rtc_device;
 
 
 void rt_init_thread_entry(void* parameter)
@@ -238,63 +122,13 @@ void rt_init_thread_entry(void* parameter)
 
 int rt_application_init()
 {
-
-  rt_err_t result;
-
   rt_thread_t init_thread;
-  rt_thread_t led_1_thread;
-  rt_thread_t producer_thread;
-  rt_thread_t consumer_thread;
-
   rt_thread_t alarm_mail_process_thread;
   rt_thread_t sms_mail_process_thread;
   rt_thread_t gprs_mail_process_thread;
   rt_thread_t local_mail_process_thread;
-  
 
 
-  /*
-  result = rt_thread_init(&led_0_thread,
-                          "led_0",
-                          led_0_thread_entry, RT_NULL,
-                          (rt_uint8_t*)&led_stack[0], sizeof(led_stack), 20, 5);
-  if (result == RT_EOK) {
-    rt_thread_startup(&led_0_thread);
-  }
-
-
-  led_1_thread = rt_thread_create("led_1",
-                                  led_1_thread_entry, RT_NULL,
-                                  512, 20, 5);
-  if (led_1_thread != RT_NULL) {
-    rt_thread_startup(led_1_thread);
-  }
-
-  rt_sem_init(&sem_lock, "lock", 1, RT_IPC_FLAG_FIFO);
-  rt_sem_init(&sem_empty, "empty", MAX_SEM, RT_IPC_FLAG_FIFO);
-  rt_sem_init(&sem_full, "full", 0, RT_IPC_FLAG_FIFO);
-
-     
-  producer_thread = rt_thread_create("p", rt_producer_thread_entry, RT_NULL, 512, 15, 5);
-  if (producer_thread != RT_NULL) {
-    rt_thread_startup(producer_thread);
-  }
-  
-  consumer_thread = rt_thread_create("c1", rt_consumer_thread_entry, (void *)1, 512, 18, 5);
-  if (consumer_thread != RT_NULL) {
-    rt_thread_startup(consumer_thread);
-  }
-     
-  consumer_thread = rt_thread_create("c2", rt_consumer_thread_entry, (void *)2, 512, 20, 5);
-  if (consumer_thread != RT_NULL) {
-    rt_thread_startup(consumer_thread);
-  }
-     
-  consumer_thread = rt_thread_create("c3", rt_consumer_thread_entry, (void *)3, 512, 22, 5);
-  if (consumer_thread != RT_NULL) {
-    rt_thread_startup(consumer_thread);
-  }
-  */
   /* alarm mail process thread */
   alarm_mail_process_thread = rt_thread_create("alarm",
                                   alarm_mail_process_thread_entry, RT_NULL,
@@ -341,6 +175,13 @@ int rt_application_init()
 
   if (init_thread != RT_NULL)
     rt_thread_startup(init_thread);
+
+  /* get rtc clock */
+  rtc_device = rt_device_find("rtc");
+  if (rtc_device == RT_NULL)
+  {
+    rt_kprintf("rtc_device is not exist!!!");
+  }
 
   return 0;
 }
