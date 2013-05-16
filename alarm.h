@@ -27,16 +27,19 @@
  */
 typedef enum
 {
-  ALARM_TYPE_LK_SHELL,// lock shell alarm type
-  ALARM_TYPE_LK_TEMPERATRUE,// lock temperatrue
-  ALARM_TYPE_LK_GATE,// lock gate status
-  ALARM_TYPE_LK_PLUGIN,// lock gate plugin alarm type
-  ALARM_TYPE_LK_MOTOR,
-  ALARM_TYPE_CM_COVERED,// camera covered alarm type
-  ALARM_TYPE_BAT_WORKING_20M,
-  ALARM_TYPE_BAT_REMAIN_50P,
-  ALARM_TYPE_BAT_REMAIN_20P,
-  ALARM_TYPE_BAT_REMAIN_5P,  
+  ALARM_TYPE_LOCK_SHELL,// lock shell alarm type
+  ALARM_TYPE_LOCK_TEMPERATURE,// lock temperatrue
+  ALARM_TYPE_GATE_TEMPERATURE,// lock temperatrue
+  ALARM_TYPE_LOCK_GATE,// lock gate status
+  ALARM_TYPE_RFID_KEY_DETECT,// rfid key detect alarm type
+  ALARM_TYPE_CAMERA_COVERED,// camera covered alarm type'
+  ALARM_TYPE_CAMERA_PHOTOSENSOR,
+  ALARM_TYPE_CAMERA_IRDASENSOR,
+  ALARM_TYPE_MOTOR_STATUS,  
+  ALARM_TYPE_BATTERY_WORKING_20M,
+  ALARM_TYPE_BATTERY_REMAIN_50P,
+  ALARM_TYPE_BATTERY_REMAIN_20P,
+  ALARM_TYPE_BATTERY_REMAIN_5P,  
 }ALARM_TYPEDEF;
 
 typedef enum
@@ -68,6 +71,7 @@ typedef struct
   time_t time;
   ALARM_TYPEDEF alarm_type;
   ALARM_PROCESS_FLAG_TYPEDEF alarm_process_flag;
+  rt_int8_t gpio_value;
 }ALARM_MAIL_TYPEDEF;
 
 /*
