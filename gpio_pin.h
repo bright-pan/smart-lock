@@ -24,5 +24,9 @@
 
 void rt_hw_led1_register(void);
 void rt_hw_glint_light_register(void);
+void rt_hw_camera_power_register(void);
+void rt_hw_run_led_register(void);
+
+
 
 #endif

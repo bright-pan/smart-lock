@@ -97,7 +97,7 @@ struct rt_uart_ops usart_ops =
 struct serial_configure serial_device_default_config = RT_SERIAL_CONFIG_DEFAULT;
 struct serial_configure serial_device_usart2_config = 
 {
-	38400, /* 115200 bits/s */  \
+	9600, /* 115200 bits/s */  \
 	DATA_BITS_8,			/* 8 databits */		 \
 	STOP_BITS_1,			/* 1 stopbit */ 		 \
 	PARITY_NONE,			/* No parity	*/		 \

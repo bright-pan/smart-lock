@@ -183,6 +183,9 @@ void rt_hw_board_init()
 	rt_console_set_device(CONSOLE_DEVICE);
 
 	rt_hw_glint_light_register();
+	rt_hw_camera_power_register();
+	rt_hw_run_led_register();
+	rt_spi_flash_init();
   /* key device register */
 //  rt_hw_key1_register();
 // / rt_hw_key2_register();

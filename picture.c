@@ -10,20 +10,23 @@ struct _camera_
 {
 	rt_device_t device;
 	rt_device_t glint_led;
+	rt_device_t power;
 	rt_uint32_t	surplus;
 	rt_uint32_t	addr;
 	rt_uint32_t	page;
-	rt_uint32_t	size;
+	rt_base_t		size;
+	rt_uint8_t		time;
 	rt_uint8_t	data[CAMERA_BUFFER_LEN];
 };
 typedef struct _camera_*	camera_t;
 
-struct _pic_mailbox_
+struct _picture_mb_
 {
-	rt_uint8_t	time;
-	const rt_uint8_t*file_name;
+	rt_uint8_t		time;
+	const char*	name1;
+	const char* name2;
 };
-typedef struct _pic_mailbox_* pic_mailbox;
+typedef struct _picture_mb_* pic_mb_t;
 
 
 
@@ -41,7 +44,6 @@ rt_uint8_t get_picture_fbuf_cmd[16] = 		{0x56,0x00,0x32,0x0C,0x00,0x0a,0x00,0x00
 
 rt_sem_t		com2_graph_sem = RT_NULL;//photograph sem
 rt_sem_t		picture_sem = RT_NULL;
-rt_mailbox_t	picture_mailbox = RT_NULL;
 rt_mq_t			picture_mq = RT_NULL;
 
 
@@ -101,7 +103,7 @@ void test_recv_data(rt_uint8_t data[],rt_uint32_t len)
 	
 	while(i != len)
 	{
-		rt_kprintf("%x ",data[i]);
+		rt_kprintf("%c ",data[i]);
 		i++;
 	}
 }
@@ -112,6 +114,7 @@ void test_run(void)
 	while(run);run = 1;
 }
 
+
 void com2_release_buffer(camera_t camera)
 {
 	rt_uint8_t length;
@@ -120,7 +123,7 @@ void com2_release_buffer(camera_t camera)
 	release_com2_data = 1;
 	while(1)
 	{	
-		result = rt_sem_take(com2_graph_sem,100);
+		result = rt_sem_take(com2_graph_sem,50);
 		if(-RT_ETIMEOUT == result)
 		{	
 			length = rt_device_read(camera->device,0,camera->data,CAMERA_BUFFER_LEN);
@@ -128,10 +131,31 @@ void com2_release_buffer(camera_t camera)
 			test_recv_data(camera->data,length);
 			
 			rt_kprintf("length = %d\n",length);
+
+			release_com2_data = CAMERA_BUFFER_LEN;
 			break;
 		}
 	}
 }
+
+void glint_light_control(camera_t camera , rt_uint8_t status)
+{
+	rt_device_write(camera->glint_led,0,&status,1);
+
+}
+
+void camera_power_control()
+{
+
+}
+
+void  picture_reset(camera_t camera)
+{
+	rt_device_write(camera->device,0,reset_camrea_cmd,sizeof(reset_camrea_cmd));	
+	rt_thread_delay(10);
+	com2_release_buffer(camera);
+}
+
 
 void picture_update_frame(camera_t camera)
 {
@@ -139,7 +163,7 @@ void picture_update_frame(camera_t camera)
 	
 	rt_device_write(camera->device,0,update_camrea_cmd,sizeof(update_camrea_cmd));	
 	
-	rt_thread_delay(10);
+	rt_thread_delay(1);
 	
 	length = rt_device_read(camera->device,0,camera->data,CAMERA_BUFFER_LEN);
 }
@@ -149,7 +173,7 @@ void picture_stop_cur_frame(camera_t camera)
 	
 	rt_device_write(camera->device,0,stop_cur_frame_cmd,sizeof(stop_cur_frame_cmd)); 
 	
-	rt_thread_delay(10);
+	rt_thread_delay(1);
 	
 	length = rt_device_read(camera->device,0,camera->data,CAMERA_BUFFER_LEN);
 }
@@ -161,7 +185,7 @@ void picture_stop_next_frame(camera_t camera)
 
 	rt_device_write(camera->device,0,stop_next_frame_cmd,sizeof(stop_next_frame_cmd)); 
 	
-	rt_thread_delay(10);
+	rt_thread_delay(1);
 	
 	length = rt_device_read(camera->device,0,camera->data,CAMERA_BUFFER_LEN);
 }
@@ -173,13 +197,14 @@ void picture_switch_frame(camera_t camera)
 
 	rt_device_write(camera->device,0,switch_frame_cmd,sizeof(switch_frame_cmd)); 
 	
-	rt_thread_delay(10);
+	rt_thread_delay(1);
 	
 	length = rt_device_read(camera->device,0,camera->data,CAMERA_BUFFER_LEN);
 }
 void picture_get_size(camera_t camera,rt_uint8_t frame_flag)
 {
 	rt_size_t length;
+	rt_uint8_t cnt = 0;
 	
 	if(frame_flag == 0)
 	{
@@ -189,31 +214,32 @@ void picture_get_size(camera_t camera,rt_uint8_t frame_flag)
 	{
 		get_picture_len_cmd[4] = 1;
 	}
-	rt_device_write(camera->device,0,get_picture_len_cmd,sizeof(get_picture_len_cmd)); 
-	
-	rt_thread_delay(10);
-	
-	length = rt_device_read(camera->device,0,camera->data,CAMERA_BUFFER_LEN);
-
-	if(length == 9)
+	do
 	{
-		rt_kprintf("\npicture_recv_len = %d\n",length);
+		rt_device_write(camera->device,0,get_picture_len_cmd,sizeof(get_picture_len_cmd)); 
 		
-		test_recv_data(camera->data,9);
-	}
-	else
-	{
-		rt_thread_delay(100);
+		rt_thread_delay(10);
 		
-		rt_kprintf("\npicture_recv_len = %d\n",length);
+		length = rt_device_read(camera->device,0,camera->data,CAMERA_BUFFER_LEN);
+		
+		/*calculate receive size		*/
+		camera->size = (camera->data[5] << 24) |(camera->data[6] << 16) |(camera->data[7] << 8) |(camera->data[8]); 
+		
+		cnt++;
+		if(cnt>10)
+		{
+			break;
+		}
+		rt_kprintf("cnt = %d\n",cnt);
 	}
+	while((camera->size >60000) ||(camera->size < 0));
 	/*calculate receive size		*/
 	camera->size = (camera->data[5] << 24) |(camera->data[6] << 16) |(camera->data[7] << 8) |(camera->data[8]); 
 	camera->page = camera->size / CAMERA_BUFFER_LEN;
 	camera->surplus = camera->size % CAMERA_BUFFER_LEN;
 //	test_run();
 	length = rt_device_read(camera->device,0,camera->data,CAMERA_BUFFER_LEN);
-
+	printf_camera(camera);
 }
 
 
@@ -326,7 +352,7 @@ void picture_create_file_two(camera_t camera,const char *pathname1,const char *p
 	
 	picture_stop_cur_frame(camera);
 	
-	rt_thread_delay(100);
+	rt_thread_delay(camera->time);
 
 	picture_switch_frame(camera);
 
@@ -403,47 +429,47 @@ void picture_struct_init(camera_t camera,const char *camera_name,const char *led
 	camera->page = 0;
 	camera->size = 0;
 	camera->surplus = 0;
+	camera->time = 0;
 //	camera->data = data_buffer;
 }
 
-void glint_light_control(camera_t camera , rt_uint8_t status)
-{
-	rt_device_write(camera->glint_led,0,&status,1);
 
-}
 void picture_thread_entry(void *arg)
 {
-	camera_t	 picture = RT_NULL;
-	struct _pic_mailbox_	recv_mb;
+	struct _camera_	 picture;
+	struct _picture_mb_ recv_mq;
 
-	(camera_t)picture = rt_malloc(sizeof(struct _camera_));
 	
 	pic_timer = rt_timer_create("pic",pic_timer_test,RT_NULL,10,RT_TIMER_FLAG_PERIODIC);
 	
 	while(1)
 	{
-			rt_mb_recv(picture_mailbox,(rt_uint32_t *)(&recv_mb),RT_WAITING_FOREVER);
-//		rt_sem_take(picture_sem,RT_WAITING_FOREVER);
-//		picture_create_file_one(picture,"/5.jpg");
-//		test_run();
-//		picture_create_file_two(picture,"/1.jpg","/2.jpg");
+			rt_mq_recv(picture_mq,&recv_mq,sizeof(recv_mq),RT_WAITING_FOREVER);
 
-			rt_mq_recv(picture_mq,&recv_mb,sizeof(recv_mb),RT_WAITING_FOREVER);
+			picture_struct_init(&picture,"usart2","glint");
 
-			picture_struct_init(picture,"usart2","glint");
+			picture.time = recv_mq.time;
 
-			rt_device_set_rx_indicate(picture->device,com2_picture_data_rx_indicate);
+			rt_device_set_rx_indicate(picture.device,com2_picture_data_rx_indicate);
 
-			com2_release_buffer(picture);
+			picture_reset(&picture);
+			
+			com2_release_buffer(&picture);
 		
 
-			rt_kprintf("\n%d\n%s",recv_mb.time,recv_mb.file_name);
+			rt_kprintf("\n%d\n%s\n%s",recv_mq.time,recv_mq.name1,recv_mq.name2);
+
+			if('\0' == *(recv_mq.name2))
+			{
+				picture_create_file_one(&picture,recv_mq.name1);	
+			}
+			else
+			{
+				picture_create_file_two(&picture,recv_mq.name1,recv_mq.name2);	
+			}	
+
 			
-			picture_create_file_one(picture,recv_mb.file_name);	
-
-			free((camera_t)picture);
 	}
-
 }
 
 
@@ -471,13 +497,8 @@ void picture_thread_init(void)
 		rt_kprintf(" \"z1x\" sem create fail \n");
 	}
 	
-	picture_mailbox = rt_mb_create("pci_info",20,RT_IPC_FLAG_FIFO);
-	if(RT_NULL == picture_mailbox)
-	{
-		rt_kprintf(" \"z1x\" mailbox create fial\n");
-	}
 
-	picture_mq = rt_mq_create("pic_mq",128,3,RT_IPC_FLAG_FIFO);
+	picture_mq = rt_mq_create("pic_mq",64,8,RT_IPC_FLAG_FIFO);
 	if(RT_NULL == picture_mq)
 	{
 		rt_kprintf(" \"pic_mq\" mq create fial\n");
@@ -503,30 +524,119 @@ void reset()
 
 FINSH_FUNCTION_EXPORT(reset, reset());
 
-void mailbox(rt_uint8_t time, rt_uint8_t *name)
+
+
+void mq()//(rt_uint8_t time,rt_uint8_t *file_name)
 {
-	struct _pic_mailbox_ pic_mb = {0,"wfasdf"};
+	struct _picture_mb_ send_mq = {0,"/1.jpg","/2.jpg"};
 	
-//	(pic_mailbox)pic_mb = rt_malloc(sizeof(struct _pic_mailbox_));
-//	pic_mb.time = time;
-//	pic_mb.file_name = name;
-	rt_mb_send(picture_mailbox,(rt_uint32_t )(&pic_mb));
-}
-FINSH_FUNCTION_EXPORT(mailbox, mailbox(time,name));
-
-
-void mq(rt_uint8_t time,rt_uint8_t *file_name)
-{
-	struct _pic_mailbox_ pic_mb;
-
-	pic_mb.file_name = file_name;
-	pic_mb.time = time;
-	
-	rt_mq_send(picture_mq,&pic_mb,sizeof(pic_mb));
+	rt_mq_send(picture_mq,&send_mq,sizeof(send_mq));
 }
 FINSH_FUNCTION_EXPORT(mq, mq(time,name));
 
+
+
+
+
+
+
+
+
+
+
+
+struct test
+{
+	int a;
+	int b;
+	int c;
+	int d;
+};
+
+void filetest(int a,int b,int c,int d)
+{
+	struct test test = {0,1,2,3};
+
+	int id;
+
+	test.a = a;
+	test.b = b;
+	test.c = c;
+	test.d = d;
+
+	id = open("/config.txt",O_CREAT | O_RDWR,0);
+	write(id,&test,sizeof(struct test));
+
+	close(id);
+}
+FINSH_FUNCTION_EXPORT(filetest, filetest());
+
+void filetest1()
+{
+	struct test test = {'s',2,1,0};
+
+	int id;
+
+	
+	id = open("/config.txt",O_CREAT | O_RDWR,0);
+	read(id,&test,sizeof(struct test));
+
+	close(id);
+
+	rt_kprintf("test.a = %d ",test.a);
+	rt_kprintf("test.b = %d ",test.b);
+	rt_kprintf("test.c = %d ",test.c);
+	rt_kprintf("test.d = %d ",test.d);
+}
+FINSH_FUNCTION_EXPORT(filetest1, filetest1());
+
 #endif
 
+void gprs( const char str[],int len)
+{
+	rt_device_t device;
+
+	int id;
+	rt_uint8_t length;
+	rt_err_t	result;
+	rt_uint8_t data[200];
+
+	device = rt_device_find("usart2");
+	rt_device_write(device,0,str,len);
+
+	
+	
+	release_com2_data = 1;
+	while(1)
+	{	
+		result = rt_sem_take(com2_graph_sem,100);
+		if(-RT_ETIMEOUT == result)
+		{	
+			length = rt_device_read(device,0,data,200);
+				
+			test_recv_data(data,length);
+			
+			rt_kprintf("length = %d\n",length);
+
+			release_com2_data = CAMERA_BUFFER_LEN;
+			break;
+		}
+	}
+	
+	
+}
+FINSH_FUNCTION_EXPORT(gprs, gprs());
+
+
+void rled(int data)
+{
+	rt_device_t device;
+
+	device = rt_device_find("ledf");
+
+	rt_device_write(device,0,&data,1);
+	
+}
+FINSH_FUNCTION_EXPORT(rled, rled());
 
 

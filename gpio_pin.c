@@ -124,7 +124,7 @@ void rt_hw_led1_register(void)
   rt_hw_gpio_register(led_device,led_user_data->name, (RT_DEVICE_FLAG_RDWR), led_user_data);
 }
 
-
+/* camera glint light pin*/
 struct gpio_pin_user_data glint_right_user_data = 
 {
 	"glint",
@@ -142,6 +142,46 @@ void rt_hw_glint_light_register(void)
 	glint_device.ops = &gpio_pin_user_ops;
 	rt_hw_gpio_register(&glint_device,glint_right_user_data.name,RT_DEVICE_FLAG_RDWR,&glint_right_user_data);
 }
+
+/* camera power pin	*/
+struct gpio_pin_user_data camera_power_user_data = 
+{
+	"cpower",
+	GPIOE,
+	GPIO_Pin_12,
+	GPIO_Mode_Out_PP,
+	GPIO_Speed_50MHz,
+	RCC_APB2Periph_GPIOE,
+	0,
+};
+gpio_device cpower_device;
+
+void rt_hw_camera_power_register(void)
+{
+	cpower_device.ops = &gpio_pin_user_ops;
+	rt_hw_gpio_register(&cpower_device,camera_power_user_data.name,RT_DEVICE_FLAG_RDWR,&camera_power_user_data);
+}
+
+/* camera power pin	*/
+struct gpio_pin_user_data run_led_user_data = 
+{
+	"ledf",
+	GPIOE,
+	GPIO_Pin_13,
+	GPIO_Mode_Out_PP,
+	GPIO_Speed_50MHz,
+	RCC_APB2Periph_GPIOE,
+	0,
+};
+gpio_device runled_device;
+
+void rt_hw_run_led_register(void)
+{
+	runled_device.ops = &gpio_pin_user_ops;
+	rt_hw_gpio_register(&runled_device,run_led_user_data.name,RT_DEVICE_FLAG_RDWR,&run_led_user_data);
+}
+
+
 
 
 
