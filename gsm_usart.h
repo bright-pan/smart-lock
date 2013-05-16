@@ -1,5 +1,5 @@
 /*********************************************************************
- * Filename:      gsm.h
+ * Filename:      gsm_usart.h
  * 
  *
  * Author:        Bright Pan <loststriker@gmail.com>
@@ -12,8 +12,8 @@
  * Copyright (C) 2013 Yuettak Co.,Ltd
  ********************************************************************/
 
-#ifndef _GSM_H_
-#define _GSM_H_
+#ifndef _GSM_USART_H_
+#define _GSM_USART_H_
 #include <rtdevice.h>
 #include <serial.h>
 #include <stm32f10x_dma.h>
@@ -30,6 +30,6 @@ struct gsm_usart_user_data_t
 
 #define DEVICE_NAME_GSM_USART "g_usart"
 
-void rt_hw_gsm_usart_init();
+void rt_hw_gsm_usart_register(void); 
     
 #endif

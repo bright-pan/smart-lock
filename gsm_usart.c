@@ -12,29 +12,38 @@
  ********************************************************************/
 
 #include "gsm_usart.h"
-/*
-struct gsm_usart_user_data_t
-{
-  USART_TypeDef *usart;
-  DMA_Channel_TypeDef *usart_tx_dma_channel;
-  DMA_Channel_TypeDef *usart_rx_dma_channel;
-  };*/
 
 /*
  * Use UART2 with interrupt Rx and dma Tx
- *
+ * 
  * USART DMA setting on STM32
  * USART2 Tx --> DMA1 Channel 7
  * USART2 Rx --> DMA1 Channel 6
+ * 
+ * | gsm usart | pin | description    |
+ * |-----------+-----+----------------|
+ * | TX        | PD5 | usart2 remap=1 |
+ * | RX        | PD6 |                |
+ * | CTX       | PD3 |                |
+ * | RTX       | PD4 |                |
+ * 
+ * 
  */
 #define GSM_USART_DR_Base              0x40004404
 /* USART2_REMAP = 1 */
 #define GSM_USART_GPIO_PIN_CTS		GPIO_Pin_3
 #define GSM_USART_GPIO_PIN_RTS		GPIO_Pin_4
-#define GSM_USART_GPIO_PIN_TX		GPIO_Pin_6
-#define GSM_USART_GPIO_PIN_RX		GPIO_Pin_5
+
+#define GSM_USART_GPIO_PIN_TX		GPIO_Pin_5
+#define GSM_USART_GPIO_PIN_RX		GPIO_Pin_6
 #define GSM_USART_GPIO		        GPIOD
 #define GSM_USART_GPIO_RCC	        RCC_APB2Periph_GPIOD
+
+//#define GSM_USART_GPIO_PIN_TX		GPIO_Pin_2
+//#define GSM_USART_GPIO_PIN_RX		GPIO_Pin_3
+//#define GSM_USART_GPIO		        GPIOA
+//#define GSM_USART_GPIO_RCC	        RCC_APB2Periph_GPIOA
+
 #define GSM_USART_RCC	                RCC_APB1Periph_USART2
 #define GSM_USART                       USART2
 #define GSM_USART_TX_DMA_CHANNEL	DMA1_Channel7
@@ -55,7 +64,17 @@ struct rt_uart_ops gsm_usart_pos =
   gsm_usart_pos_getc,
   gsm_usart_pos_dma_transmit,
 };
-struct serial_configure gsm_usart_default_config = RT_SERIAL_CONFIG_DEFAULT;
+struct serial_configure gsm_usart_default_config =
+{
+  BAUD_RATE_115200, /* 115200 bits/s */
+  DATA_BITS_8,      /* 8 databits */
+  STOP_BITS_1,      /* 1 stopbit */
+  PARITY_NONE,      /* No parity  */
+  BIT_ORDER_LSB,    /* LSB first sent */
+  NRZ_NORMAL,       /* Normal mode */
+  0,                                  
+};
+
 
 struct gsm_usart_user_data_t gsm_usart_user_data = 
 {
@@ -96,12 +115,14 @@ static void GPIO_Configuration(struct rt_serial_device *serial)
   user_data = serial->parent.user_data;
   */
   /* Configure USART2 Rx CTS as input floating */
-  GPIO_InitStructure.GPIO_Pin = GSM_USART_GPIO_PIN_RX | GSM_USART_GPIO_PIN_CTS;
+  //GPIO_InitStructure.GPIO_Pin = GSM_USART_GPIO_PIN_RX | GSM_USART_GPIO_PIN_CTS;
+  GPIO_InitStructure.GPIO_Pin = GSM_USART_GPIO_PIN_RX;
   GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN_FLOATING;
   GPIO_Init(GSM_USART_GPIO, &GPIO_InitStructure);
 
   /* Configure USART2 Tx RTS as alternate function push-pull */
-  GPIO_InitStructure.GPIO_Pin = GSM_USART_GPIO_PIN_TX | GSM_USART_GPIO_PIN_RTS;
+  //GPIO_InitStructure.GPIO_Pin = GSM_USART_GPIO_PIN_TX | GSM_USART_GPIO_PIN_RTS;
+  GPIO_InitStructure.GPIO_Pin = GSM_USART_GPIO_PIN_TX;
   GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP;
   GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
   GPIO_Init(GSM_USART_GPIO, &GPIO_InitStructure);
@@ -326,7 +347,7 @@ static rt_err_t gsm_usart_pos_configure(struct rt_serial_device *serial, struct 
       }
   }
   /* set hardware flow control */
-  USART_InitStructure.USART_HardwareFlowControl = USART_HardwareFlowControl_RTS_CTS;
+  USART_InitStructure.USART_HardwareFlowControl = USART_HardwareFlowControl_None;
   USART_InitStructure.USART_Mode = USART_Mode_Rx | USART_Mode_Tx;
   USART_ClockInitStructure.USART_Clock = USART_Clock_Disable;
   USART_ClockInitStructure.USART_CPOL = USART_CPOL_Low;
@@ -356,7 +377,7 @@ static rt_err_t gsm_usart_pos_configure(struct rt_serial_device *serial, struct 
  * Init all related hardware in here
  * rt_hw_gsm_init() will register all supported GSM device
  */
-void rt_hw_gsm_usart_init()
+void rt_hw_gsm_usart_register(void)
 {
   gsm_usart_device.ops = &gsm_usart_pos;
   gsm_usart_device.int_rx = &gsm_usart_int_rx;
@@ -399,20 +420,26 @@ void gsm_usart_device_isr(struct rt_serial_device *serial)
 
 #ifdef RT_USING_FINSH
 #include <finsh.h>
-void gsm(rt_int8_t cmd, rt_int8_t *str)
+
+static char temp[100];
+
+void gsm(rt_int8_t cmd, const char *str)
 {
   rt_device_t device;
-
+  memset(temp, '\xFF', 100);
   device = rt_device_find(DEVICE_NAME_GSM_USART);
   if (device != RT_NULL)
   {
-    if (cmd == RT_DEVICE_CTRL_GSM_POWER)
+    if (cmd == 0)
     {
-      rt_device_control(device, RT_DEVICE_CTRL_GSM_POWER, (void *)str);
+      
+      rt_device_read(device, 0, temp, 20);
+      temp[99] = '\0';
+      rt_kprintf(temp);
     }
-    else if (cmd == RT_DEVICE_CTRL_GSM_GET_STATUS)
+    else if (cmd == 1)
     {
-      rt_device_control(device, RT_DEVICE_CTRL_GSM_GET_STATUS, (void *)str);
+      rt_device_write(device, 0, str, strlen(str));
     }
   }
   else
