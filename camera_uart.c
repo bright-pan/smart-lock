@@ -76,12 +76,14 @@ static void GPIO_Configuration(struct rt_serial_device *serial)
   user_data = serial->parent.user_data;
   */
   /* Configure USART2 Rx CTS as input floating */
+  GPIO_StructInit(&GPIO_InitStructure);
   //GPIO_InitStructure.GPIO_Pin = CAMERA_UART_GPIO_PIN_RX | CAMERA_UART_GPIO_PIN_CTS;
   GPIO_InitStructure.GPIO_Pin = CAMERA_UART_GPIO_PIN_RX;
   GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN_FLOATING;
   GPIO_Init(CAMERA_UART_GPIO_RX, &GPIO_InitStructure);
 
   /* Configure USART2 Tx RTS as alternate function push-pull */
+  GPIO_StructInit(&GPIO_InitStructure);
   //GPIO_InitStructure.GPIO_Pin = CAMERA_UART_GPIO_PIN_TX | CAMERA_UART_GPIO_PIN_RTS;
   GPIO_InitStructure.GPIO_Pin = CAMERA_UART_GPIO_PIN_TX;
   GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP;
@@ -189,6 +191,7 @@ static rt_err_t camera_uart_pos_configure(struct rt_serial_device *serial, struc
   NVIC_Configuration(serial);
 
   /* uart init */
+  USART_StructInit(&USART_InitStructure);
   USART_InitStructure.USART_BaudRate = cfg->baud_rate;
   switch(cfg->data_bits)
   {

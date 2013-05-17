@@ -666,12 +666,18 @@ void TIM8_UP_IRQHandler(void)
     if (motor_a_pulse_user_data.tim_pulse_counts == 0)
     {
       TIM_CCxCmd(motor_a_pulse_user_data.timx, motor_a_pulse_user_data.tim_oc_channel, TIM_CCx_Disable);
-      TIM_Cmd(motor_a_pulse_user_data.timx, DISABLE);
+      if (motor_b_pulse_user_data.tim_pulse_counts == 0)
+      {
+        TIM_Cmd(motor_a_pulse_user_data.timx, DISABLE);
+      }
     }    
     if (motor_b_pulse_user_data.tim_pulse_counts == 0)
     {
       TIM_CCxCmd(motor_b_pulse_user_data.timx, motor_b_pulse_user_data.tim_oc_channel, TIM_CCx_Disable);
-      TIM_Cmd(motor_b_pulse_user_data.timx, DISABLE);
+      if (motor_a_pulse_user_data.tim_pulse_counts == 0)
+      {
+        TIM_Cmd(motor_b_pulse_user_data.timx, DISABLE);
+      }
     }
   }  
   /*

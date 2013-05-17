@@ -57,18 +57,20 @@ struct gpio_adc_user_data
  */
 static void __gpio_pin_configure(gpio_device *gpio)
 {
-  GPIO_InitTypeDef gpio_initstructure;
+  GPIO_InitTypeDef gpio_init_structure;
   struct gpio_adc_user_data *user = (struct gpio_adc_user_data*)gpio->parent.user_data;
+  GPIO_StructInit(&gpio_init_structure);
   RCC_APB2PeriphClockCmd(user->gpio_clock,ENABLE);
-  gpio_initstructure.GPIO_Mode = user->gpio_mode;
-  gpio_initstructure.GPIO_Pin = user->gpio_pinx;
-  gpio_initstructure.GPIO_Speed = user->gpio_speed;
-  GPIO_Init(user->gpiox,&gpio_initstructure);
+  gpio_init_structure.GPIO_Mode = user->gpio_mode;
+  gpio_init_structure.GPIO_Pin = user->gpio_pinx;
+  gpio_init_structure.GPIO_Speed = user->gpio_speed;
+  GPIO_Init(user->gpiox,&gpio_init_structure);
 }
 static void __gpio_dma_configure(gpio_device *gpio)
 {
   DMA_InitTypeDef dma_init_structure;
   struct gpio_adc_user_data *user = (struct gpio_adc_user_data*)gpio->parent.user_data;
+  DMA_StructInit(&dma_init_structure);
   RCC_AHBPeriphClockCmd(user->dma_rcc, ENABLE);
   /* DMA1 channel1 configuration ----------------------------------------------*/
   DMA_DeInit(user->dma_channel);
@@ -90,7 +92,7 @@ static void __gpio_adc_configure(gpio_device *gpio)
 {
   ADC_InitTypeDef adc_init_structure;
   struct gpio_adc_user_data *user = (struct gpio_adc_user_data*)gpio->parent.user_data;
-  
+  ADC_StructInit(&adc_init_structure);
   RCC_ADCCLKConfig(user->adc_clock_div);
   RCC_APB2PeriphClockCmd(user->adc_rcc, ENABLE);
   

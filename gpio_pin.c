@@ -31,13 +31,13 @@ struct gpio_pin_user_data
  */
 rt_err_t gpio_pin_configure(gpio_device *gpio)
 {
-  GPIO_InitTypeDef gpio_initstructure;
+  GPIO_InitTypeDef gpio_init_structure;
   struct gpio_pin_user_data *user = (struct gpio_pin_user_data*)gpio->parent.user_data;
-
+  GPIO_StructInit(&gpio_init_structure);
   RCC_APB2PeriphClockCmd(user->gpio_clock,ENABLE);
-  gpio_initstructure.GPIO_Mode = user->gpio_mode;
-  gpio_initstructure.GPIO_Pin = user->gpio_pinx;
-  gpio_initstructure.GPIO_Speed = user->gpio_speed;
+  gpio_init_structure.GPIO_Mode = user->gpio_mode;
+  gpio_init_structure.GPIO_Pin = user->gpio_pinx;
+  gpio_init_structure.GPIO_Speed = user->gpio_speed;
   if (user->gpio_default_output)
   {
     GPIO_SetBits(user->gpiox,user->gpio_pinx);
@@ -46,7 +46,7 @@ rt_err_t gpio_pin_configure(gpio_device *gpio)
   {
     GPIO_ResetBits(user->gpiox,user->gpio_pinx);
   }
-  GPIO_Init(user->gpiox,&gpio_initstructure);
+  GPIO_Init(user->gpiox,&gpio_init_structure);
 
   return RT_EOK;
 }
@@ -262,7 +262,7 @@ struct gpio_pin_user_data voice_reset_user_data =
 {
   DEVICE_NAME_VOICE_RESET,
   GPIOA,
-  GPIO_Pin_11,
+  GPIO_Pin_12,
   GPIO_Mode_Out_PP,
   GPIO_Speed_50MHz,
   RCC_APB2Periph_GPIOA,
@@ -308,7 +308,7 @@ struct gpio_pin_user_data voice_amp_user_data =
   GPIO_Mode_Out_PP,
   GPIO_Speed_50MHz,
   RCC_APB2Periph_GPIOC,
-  0,
+  1,
 };
 gpio_device voice_amp_device;
 
@@ -321,6 +321,27 @@ void rt_hw_voice_amp_register(void)
   rt_hw_gpio_register(gpio_device, gpio_user_data->name, (RT_DEVICE_FLAG_RDWR), gpio_user_data);
 }
 
+/* gsm led device */
+struct gpio_pin_user_data test_user_data =
+{
+  "test",
+  GPIOC,
+  GPIO_Pin_8,
+  GPIO_Mode_Out_PP,
+  GPIO_Speed_50MHz,
+  RCC_APB2Periph_GPIOC,
+  1,
+};
+gpio_device test_device;
+
+void rt_hw_test_register(void)
+{
+  gpio_device *gpio_device = &test_device;
+  struct gpio_pin_user_data *gpio_user_data = &test_user_data;
+
+  gpio_device->ops = &gpio_pin_user_ops;
+  rt_hw_gpio_register(gpio_device, gpio_user_data->name, (RT_DEVICE_FLAG_RDWR), gpio_user_data);
+}
 
 
 #ifdef RT_USING_FINSH

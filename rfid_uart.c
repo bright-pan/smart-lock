@@ -87,12 +87,14 @@ static void GPIO_Configuration(struct rt_serial_device *serial)
   user_data = serial->parent.user_data;
   */
   /* Configure USART2 Rx CTS as input floating */
+  GPIO_StructInit(&GPIO_InitStructure);
   //GPIO_InitStructure.GPIO_Pin = RFID_UART_GPIO_PIN_RX | RFID_UART_GPIO_PIN_CTS;
   GPIO_InitStructure.GPIO_Pin = RFID_UART_GPIO_PIN_RX;
   GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN_FLOATING;
   GPIO_Init(RFID_UART_GPIO, &GPIO_InitStructure);
 
   /* Configure USART2 Tx RTS as alternate function push-pull */
+  GPIO_StructInit(&GPIO_InitStructure);
   //GPIO_InitStructure.GPIO_Pin = RFID_UART_GPIO_PIN_TX | RFID_UART_GPIO_PIN_RTS;
   GPIO_InitStructure.GPIO_Pin = RFID_UART_GPIO_PIN_TX;
   GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP;
@@ -134,8 +136,10 @@ static void DMA_Configuration(struct rt_serial_device *serial)
   struct rfid_uart_user_data_t *user_data;
   user_data = serial->parent.user_data;
   /* fill init structure */
+
   if (serial->parent.flag & RT_DEVICE_FLAG_DMA_TX)
   {
+    DMA_StructInit(&DMA_InitStructure);
     DMA_InitStructure.DMA_PeripheralInc = DMA_PeripheralInc_Disable;
     DMA_InitStructure.DMA_MemoryInc = DMA_MemoryInc_Enable;
     DMA_InitStructure.DMA_PeripheralDataSize = DMA_PeripheralDataSize_Byte;
@@ -242,6 +246,7 @@ static rt_err_t rfid_uart_pos_configure(struct rt_serial_device *serial, struct 
 
   DMA_Configuration(serial);
   /* uart init */
+  USART_StructInit(&USART_InitStructure);
   USART_InitStructure.USART_BaudRate = cfg->baud_rate;
   switch(cfg->data_bits)
   {

@@ -115,12 +115,14 @@ static void GPIO_Configuration(struct rt_serial_device *serial)
   user_data = serial->parent.user_data;
   */
   /* Configure USART2 Rx CTS as input floating */
+  GPIO_StructInit(&GPIO_InitStructure);
   //GPIO_InitStructure.GPIO_Pin = GSM_USART_GPIO_PIN_RX | GSM_USART_GPIO_PIN_CTS;
   GPIO_InitStructure.GPIO_Pin = GSM_USART_GPIO_PIN_RX;
   GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN_FLOATING;
   GPIO_Init(GSM_USART_GPIO, &GPIO_InitStructure);
 
   /* Configure USART2 Tx RTS as alternate function push-pull */
+  GPIO_StructInit(&GPIO_InitStructure);
   //GPIO_InitStructure.GPIO_Pin = GSM_USART_GPIO_PIN_TX | GSM_USART_GPIO_PIN_RTS;
   GPIO_InitStructure.GPIO_Pin = GSM_USART_GPIO_PIN_TX;
   GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP;
@@ -159,9 +161,11 @@ static void DMA_Configuration(struct rt_serial_device *serial)
   DMA_InitTypeDef DMA_InitStructure;
   struct gsm_usart_user_data_t *user_data;
   user_data = serial->parent.user_data;
+
   /* fill init structure */
   if (serial->parent.flag & RT_DEVICE_FLAG_DMA_TX)
   {
+    DMA_StructInit(&DMA_InitStructure);
     DMA_InitStructure.DMA_PeripheralInc = DMA_PeripheralInc_Disable;
     DMA_InitStructure.DMA_MemoryInc = DMA_MemoryInc_Enable;
     DMA_InitStructure.DMA_PeripheralDataSize = DMA_PeripheralDataSize_Byte;
@@ -267,7 +271,9 @@ static rt_err_t gsm_usart_pos_configure(struct rt_serial_device *serial, struct 
   NVIC_Configuration(serial);
 
   DMA_Configuration(serial);
+
   /* uart init */
+  USART_StructInit(&USART_InitStructure);
   USART_InitStructure.USART_BaudRate = cfg->baud_rate;
   switch(cfg->data_bits)
   {
@@ -349,6 +355,7 @@ static rt_err_t gsm_usart_pos_configure(struct rt_serial_device *serial, struct 
   /* set hardware flow control */
   USART_InitStructure.USART_HardwareFlowControl = USART_HardwareFlowControl_None;
   USART_InitStructure.USART_Mode = USART_Mode_Rx | USART_Mode_Tx;
+  USART_ClockStructInit(&USART_ClockInitStructure);
   USART_ClockInitStructure.USART_Clock = USART_Clock_Disable;
   USART_ClockInitStructure.USART_CPOL = USART_CPOL_Low;
   USART_ClockInitStructure.USART_CPHA = USART_CPHA_2Edge;
