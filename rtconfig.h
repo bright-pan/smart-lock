@@ -2,6 +2,8 @@
 #ifndef __RTTHREAD_CFG_H__
 #define __RTTHREAD_CFG_H__
 
+
+//#define RT_USING_NEWLIB
 /* RT_NAME_MAX*/
 #define RT_NAME_MAX	8
 
@@ -61,9 +63,11 @@
 #define RT_USING_DEVICE
 #define RT_USING_DEVICE_IPC
 #define RT_USING_USART1
-#define RT_USING_USART2
+//#define RT_USING_USART2
 #define RT_USING_SERIAL
 #define RT_USING_SPI
+
+//#define RT_USING_NEWLIBC
 
 /* SECTION: Console options */
 #define RT_USING_CONSOLE

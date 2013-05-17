@@ -22,11 +22,37 @@
 #include "stm32f10x.h"
 #include "gpio.h"
 
-void rt_hw_led1_register(void);
+#define DEVICE_NAME_GSM_POWER "g_power"
+#define DEVICE_NAME_GSM_STATUS "g_stat"
+#define DEVICE_NAME_GSM_LED "g_led"
+
+#define DEVICE_NAME_VOICE_RESET "vo_rst"
+#define DEVICE_NAME_VOICE_SWITCH "vo_sw"
+#define DEVICE_NAME_VOICE_AMP "vo_amp"
+
+#define DEVICE_NAME_LOGO_LED "logo"
+
+#define DEVICE_NAME_CAMERA_LED "cm_led"
+#define DEVICE_NAME_CAMERA_POWER "cm_power"
+
+#define DEVICE_NAME_RFID_POWER "rf_power"
+
+void rt_hw_gsm_led_register(void);
+void rt_hw_gsm_power_register(void);
+void rt_hw_gsm_status_register(void);
+
+void rt_hw_rfid_power_register(void);
+
+void rt_hw_camera_power_register(void);
+void rt_hw_camera_led_register(void);
+
+void rt_hw_logo_led_register(void);
+
+void rt_hw_voice_reset_register(void);
+void rt_hw_voice_switch_register(void);
+void rt_hw_voice_amp_register(void);
+
 void rt_hw_glint_light_register(void);
 void rt_hw_camera_power_register(void);
 void rt_hw_run_led_register(void);
-
-
-
 #endif

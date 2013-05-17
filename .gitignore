@@ -38,8 +38,9 @@ build/
 /project_uvproj.bak
 /project_uvopt.bak
 /delete_bat_file.bat
-/source_insight/SmartLock.IAB
-/source_insight/SmartLock.IAD
-/source_insight/SmartLock.IMB
-/source_insight/SmartLock.IMD
-/source_insight/SmartLock.PO
+
+
+/a.org
+/test
+
+

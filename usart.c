@@ -15,6 +15,7 @@
 
 #include "usart.h"
 #include <rtdevice.h>
+#include <serial.h>
 #include <stm32f10x_dma.h>
 
 /*
@@ -95,16 +96,17 @@ struct rt_uart_ops usart_ops =
   
 };
 struct serial_configure serial_device_default_config = RT_SERIAL_CONFIG_DEFAULT;
-struct serial_configure serial_device_usart2_config = 
+struct serial_configure serial_device_2_config = 
 {
-	9600, /* 115200 bits/s */  \
-	DATA_BITS_8,			/* 8 databits */		 \
-	STOP_BITS_1,			/* 1 stopbit */ 		 \
-	PARITY_NONE,			/* No parity	*/		 \
-	BIT_ORDER_LSB,		/* LSB first sent */ \
-	NRZ_NORMAL, 			/* Normal mode */ 	 \
-	0 		
+  BAUD_RATE_9600, /* 115200 bits/s */
+  DATA_BITS_8,      /* 8 databits */
+  STOP_BITS_1,      /* 1 stopbit */
+  PARITY_NONE,      /* No parity  */
+  BIT_ORDER_LSB,    /* LSB first sent */
+  NRZ_NORMAL,       /* Normal mode */
+  0,                                  
 };
+
 #ifdef RT_USING_USART1
 struct serial_user_data usart1_user_data = 
 {
@@ -365,6 +367,33 @@ static void DMA_Configuration(struct rt_serial_device *serial)
     DMA_ClearFlag(DMA1_FLAG_TC4);
   }
 #endif
+#if defined (RT_USING_USART2)
+  /* fill init structure */
+  if (serial->parent.flag & RT_DEVICE_FLAG_DMA_TX)
+  {  
+    DMA_InitStructure.DMA_PeripheralInc = DMA_PeripheralInc_Disable;
+    DMA_InitStructure.DMA_MemoryInc = DMA_MemoryInc_Enable;
+    DMA_InitStructure.DMA_PeripheralDataSize = DMA_PeripheralDataSize_Byte;
+    DMA_InitStructure.DMA_MemoryDataSize = DMA_MemoryDataSize_Byte;
+    DMA_InitStructure.DMA_Mode = DMA_Mode_Normal;
+    DMA_InitStructure.DMA_Priority = DMA_Priority_VeryHigh;
+    DMA_InitStructure.DMA_M2M = DMA_M2M_Disable;
+
+    /* DMA1 Channel4 (triggered by USART1 Tx event) Config */
+    DMA_DeInit(USART2_TX_DMA);
+    DMA_InitStructure.DMA_PeripheralBaseAddr = (rt_int32_t)&(user_data->usart->DR);
+    DMA_InitStructure.DMA_DIR = DMA_DIR_PeripheralDST;
+    /* As we will set them before DMA actually enabled, the DMA_MemoryBaseAddr
+     * and DMA_BufferSize are meaningless. So just set them to proper values
+     * which could make DMA_Init happy.
+     */
+    DMA_InitStructure.DMA_MemoryBaseAddr = (u32)0;
+    DMA_InitStructure.DMA_BufferSize = 1;
+    DMA_Init(USART2_TX_DMA, &DMA_InitStructure);
+    DMA_ITConfig(USART2_TX_DMA, DMA_IT_TC | DMA_IT_TE, ENABLE);
+    DMA_ClearFlag(DMA1_FLAG_TC7 | DMA1_FLAG_TE7);
+  }
+#endif
 #if defined (RT_USING_USART3)
 
   /* fill init structure */
@@ -606,18 +635,22 @@ void rt_hw_usart_init()
                         &usart1_user_data);
   rt_kprintf("register serial_device_usart1 <usart1>\n");
 #endif
+
   /* register uart2 */
+
 #ifdef RT_USING_USART2
   serial_device_usart2.ops = &usart_ops;
   serial_device_usart2.int_rx = &usart2_int_rx;
   serial_device_usart2.int_tx = &usart2_int_tx;
-  serial_device_usart2.config = serial_device_default_config;
+  serial_device_usart2.config = serial_device_2_config;
   rt_hw_serial_register(&serial_device_usart2, "usart2",
-                        RT_DEVICE_FLAG_RDWR | RT_DEVICE_FLAG_INT_RX,
+                        RT_DEVICE_FLAG_RDWR | RT_DEVICE_FLAG_INT_RX | RT_DEVICE_FLAG_DMA_TX,
                         &usart2_user_data);
   rt_kprintf("register serial_device_usart2 <usart2>\n");
 #endif
+
   /* register uart3 */
+  /*
 #ifdef RT_USING_USART3
   serial_device_usart3.ops = &usart_ops;
   serial_device_usart3.int_rx = &usart3_int_rx;
@@ -628,9 +661,9 @@ void rt_hw_usart_init()
                         &usart3_user_data);
   rt_kprintf("register serial_device_usart3 <usart3>\n");
 #endif
+  */
 }
 
-/*
 void serial_device_usart_isr(struct rt_serial_device *serial)
 {
   struct serial_user_data *user_data;  
@@ -638,28 +671,27 @@ void serial_device_usart_isr(struct rt_serial_device *serial)
 
   if(USART_GetFlagStatus(user_data->usart, USART_FLAG_ORE) != RESET)
   {
-
     USART_ReceiveData(user_data->usart);
+    while (USART_GetFlagStatus(user_data->usart, USART_FLAG_RXNE) != RESET)
+    {
+      USART_ReceiveData(user_data->usart);
+    }
   }
-
   if(USART_GetFlagStatus(user_data->usart, USART_FLAG_NE) != RESET)
   {//USART_IT_NE     : Noise Error interrupt
     USART_ReceiveData(user_data->usart);
   }
-
-
   if(USART_GetFlagStatus(user_data->usart, USART_FLAG_FE) != RESET)
   {//USART_IT_FE     : Framing Error interrupt
     USART_ReceiveData(user_data->usart);
   }
-
   if(USART_GetFlagStatus(user_data->usart, USART_FLAG_PE) != RESET)
   {//USART_IT_PE     : Parity Error interrupt
     USART_ReceiveData(user_data->usart);
   }
   rt_hw_serial_isr(serial);
 }
-*/
+
 
 #ifdef RT_USING_FINSH
 #include <finsh.h>
@@ -691,20 +723,24 @@ FINSH_FUNCTION_EXPORT(usart1, set usart1[0 xxx] for read.)
 #endif
 
 #ifdef RT_USING_USART2
-void usart2(rt_int8_t cmd, rt_int8_t *str)
+char u2_temp[100];
+void usart2(rt_int8_t cmd, const char *str)
 {
+  rt_uint8_t i = 0;
   rt_device_t usart;
-
+  memset(u2_temp, '\0', 100);
   usart = rt_device_find("usart2");
   if (usart != RT_NULL)
   {
     if (cmd == 0)
     {
-      rt_device_read(usart,0,str,20);
+      rt_device_read(usart,0,(void *)u2_temp,20);
+      u2_temp[99] = '\0';
+      rt_kprintf(u2_temp);
     }
     else
     {
-      rt_device_write(usart,0,str,20);
+      rt_device_write(usart,0,str,strlen(str));
     }    
   }
   else

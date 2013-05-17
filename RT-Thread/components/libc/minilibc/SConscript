@@ -2,8 +2,12 @@ Import('RTT_ROOT')
 from building import *
 
 src	= Glob('*.c')
-CPPPATH = [RTT_ROOT + '/components/libc/minilibc']
-CPPDEFINES = ['RT_USING_MINILIBC']
+CPPDEFINES = []
+if GetDepend('RT_USING_MINILIBC'):
+   CPPPATH = [RTT_ROOT + '/components/libc/minilibc']
+else:
+   CPPPATH = []
+
 group = DefineGroup('minilibc', src, 
 	depend = ['RT_USING_MINILIBC'], 
 	CPPPATH = CPPPATH,

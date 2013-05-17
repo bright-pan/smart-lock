@@ -345,7 +345,7 @@
               <MiscControls></MiscControls>
               <Define>STM32F10X_HD, USE_STDPERIPH_DRIVER</Define>
               <Undefine></Undefine>
-              <IncludePath>.;Libraries/CMSIS/CM3/DeviceSupport/ST/STM32F10x;Libraries/STM32F10x_StdPeriph_Driver/inc;RT-Thread/components/CMSIS/Include;RT-Thread/components/finsh;RT-Thread/include;RT-Thread/libcpu/arm/common;RT-Thread/libcpu/arm/cortex-m3;.\RT-Thread\components\drivers\include;.\RT-Thread\components\dfs\include</IncludePath>
+              <IncludePath>.;Libraries/CMSIS/CM3/DeviceSupport/ST/STM32F10x;Libraries/STM32F10x_StdPeriph_Driver/inc;RT-Thread/components/CMSIS/Include;RT-Thread/components/finsh;.\RT-Thread\libcpu;RT-Thread/libcpu/arm/common;RT-Thread/libcpu/arm/cortex-m3;.\RT-Thread\components\drivers\include;.\RT-Thread\components\dfs\include;.\RT-Thread\components\dfs\filesystems\elmfat;.\RT-Thread\components\drivers\include\drivers;.\RT-Thread\include;.\RT-Thread\components\libc\newlib;.\RT-Thread\components\libc\minilibc</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -416,11 +416,6 @@
               <FilePath>./usart.c</FilePath>
             </File>
             <File>
-              <FileName>led.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>./led.c</FilePath>
-            </File>
-            <File>
               <FileName>serial.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\RT-Thread\components\drivers\serial\serial.c</FilePath>
@@ -484,6 +479,21 @@
               <FileName>filetest.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\filetest.c</FilePath>
+            </File>
+            <File>
+              <FileName>camera_uart.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\camera_uart.c</FilePath>
+            </File>
+            <File>
+              <FileName>gsm_usart.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\gsm_usart.c</FilePath>
+            </File>
+            <File>
+              <FileName>rfid_uart.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\rfid_uart.c</FilePath>
             </File>
           </Files>
         </Group>
