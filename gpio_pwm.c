@@ -201,13 +201,13 @@ struct gpio_pwm_user_data voice_data_user_data =
   TIM1,
   RCC_APB2Periph_TIM1,
   24000000,
-  65535,
+  4800,//period=200us
   0,
   TIM_CounterMode_Up,
   /* timer oc */
   TIM_OCMode_PWM2,
   TIM_OutputState_Enable,
-  30000,// pulse value
+  2400,// pulse value 100us
   TIM_OCPolarity_High,
   TIM_Channel_4,
   TIM_IT_CC4 | TIM_IT_Update,
@@ -374,6 +374,15 @@ void rt_hw_pwm1_register(void)
   rt_hw_gpio_register(pwm_device,pwm_user_data->name, (RT_DEVICE_FLAG_RDWR | RT_DEVICE_FLAG_PWM_TX | RT_DEVICE_FLAG_INT_TX), pwm_user_data);
 }
 
+void delay(rt_uint32_t counts)
+{
+  rt_uint32_t i = 0;
+  for (; i < counts; i++)
+  {
+    
+  }
+}
+
 #ifdef RT_USING_FINSH
 #include <finsh.h>
 void pwm_set_counts(char *str, rt_uint16_t counts)
@@ -399,4 +408,28 @@ void pwm_send_pulse(char *str)
   rt_device_control(device, RT_DEVICE_CTRL_SEND_PULSE, (void *)0);
 }
 FINSH_FUNCTION_EXPORT(pwm_send_pulse, pwm_send_pulse[device_name])
+
+void voice_output(rt_uint16_t counts)
+{
+  rt_device_t device = RT_NULL;
+  rt_device_t data_device = RT_NULL;  
+  rt_int8_t dat = 0;
+  data_device = rt_device_find("vo_data");
+  rt_device_control(data_device, RT_DEVICE_CTRL_SET_PULSE_COUNTS, (void *)&counts);
+  device = rt_device_find("vo_sw");
+  dat = 1;
+  rt_device_write(device, 0, &dat, 0);
+  device = rt_device_find("vo_amp");
+  dat = 0;
+  rt_device_write(device, 0, &dat, 0);
+  device = rt_device_find("vo_rst");
+  dat = 1;
+  rt_device_write(device, 0, &dat, 0);
+  delay(1058);
+  dat = 0;
+  rt_device_write(device, 0, &dat, 0);
+  delay(26450);
+  rt_device_control(data_device, RT_DEVICE_CTRL_SEND_PULSE, (void *)0);
+}
+FINSH_FUNCTION_EXPORT(voice_output, voice_output[counts])
 #endif
