@@ -19,7 +19,7 @@
 
 #define SPI1_BUS_NAME									("spi1")
 #define SPI1_CS_NAME										("flash")
-#define FLASH_DEVICE_NAME							("w25")
+#define FLASH_DEVICE_NAME							("flash1")
 
 #define USING_SPI1												//spi1 bus 
 

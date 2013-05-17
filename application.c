@@ -176,6 +176,7 @@ void rt_init_thread_entry(void* parameter)
 //	do
 	{
 		result = dfs_mount("flash1", "/", "elm", 0, 0);
+//		result = dfs_mount("w25", "/", "elm", 0, 0);
 	}
 //	while(result == -1);
 	
@@ -329,5 +330,11 @@ int rt_application_init()
 
   return 0;
 }
+
+
+
+
+
+
 
 /*@}*/

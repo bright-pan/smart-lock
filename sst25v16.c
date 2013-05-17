@@ -27,13 +27,12 @@
 #define SPI2_BUS_NAME									"spi2bus"
 #define FLASH_DEVICE_NAME							"flash1"
 
-#define SPI2_
 /* hardware define ---------------------------------------------------------*/
 
-#define SPI1_SCK_PIN											GPIO_Pin_13;
-#define	 SPI1_MISO_PIN										GPIO_Pin_14
-#define SPI1_MOSI_PIN										GPIO_Pin_15
-#define SPI1_GPIO_PORT									GPIOB
+#define SPI2_SCK_PIN											GPIO_Pin_13;
+#define	 SPI2_MISO_PIN										GPIO_Pin_14
+#define SPI2_MOSI_PIN										GPIO_Pin_15
+#define SPI2_GPIO_PORT									GPIOB
 #define SPI2_CLOCK											RCC_APB1Periph_SPI2
 
 
@@ -91,8 +90,8 @@ void rt_hw_spi_init(void)
 
 		gpio_initstructure.GPIO_Mode = GPIO_Mode_AF_PP;
 		gpio_initstructure.GPIO_Speed = GPIO_Speed_50MHz;
-		gpio_initstructure.GPIO_Pin = SPI1_MISO_PIN | SPI1_MOSI_PIN | SPI1_SCK_PIN;
-		GPIO_Init(SPI1_GPIO_PORT,&gpio_initstructure);
+		gpio_initstructure.GPIO_Pin = SPI2_MISO_PIN | SPI2_MOSI_PIN | SPI2_SCK_PIN;
+		GPIO_Init(SPI2_GPIO_PORT,&gpio_initstructure);
 		/*		register spi bus device */
 		stm32_spi_register(SPI2,&stm32_spi_bus_2,SPI2_BUS_NAME);
 	}
@@ -146,71 +145,66 @@ static void spi_flash_wait_write_end(struct rt_spi_device *device)
 	
 	rt_spi_take(device);
 
-	spi_flash_write_read_byte(device,CMD_RDSR);
+//	spi_flash_write_read_byte(device,CMD_EBSY);//open buys so output
 	
+	spi_flash_write_read_byte(device,CMD_RDSR);
+	 
   do
   {
     flash_status = spi_flash_write_read_byte(device,Dummy_Byte);	 
   }
   while ((flash_status& WIP_Flag) == SET); 
 
+//	spi_flash_write_read_byte(device,CMD_DBSY);
+	
 	rt_spi_release(device);
+}
+
+
+
+static void spi_flash_write_status_enable(struct rt_spi_device *device)
+{
+	rt_spi_take(device);
+
+	spi_flash_write_read_byte(device,CMD_EWSR);
+
+	rt_spi_release(device);
+
+	rt_spi_take(device);
+
+	spi_flash_write_read_byte(device,CMD_WRSR);
+	
+	spi_flash_write_read_byte(device , 0x00);
+
+	rt_spi_release(device);
+
+	spi_flash_wait_write_end(device);
+
 }
 
 
 static void spi_flash_write_enable(struct rt_spi_device *device )
 {
+	spi_flash_write_status_enable(device);
+
 	rt_spi_take(device);
-
-	spi_flash_write_read_byte(device,CMD_EWSR);
-
-	rt_spi_release(device);
-	
-	rt_spi_take(device);
-	
-	spi_flash_write_read_byte(device,CMD_WRSR);
-	spi_flash_write_read_byte(device , 0);
-
-	rt_spi_release(device);
-
-		spi_flash_wait_write_end(device);
-
-  	rt_spi_take(device);
 
 	spi_flash_write_read_byte(device,CMD_WREN);
 
 	rt_spi_release(device);
 
-
-
 	spi_flash_wait_write_end(device);
-  
 }
 
 static void spi_flash_write_disable(struct rt_spi_device *device)
 {
-	rt_spi_take(device);
+	spi_flash_write_status_enable(device);
 
-	spi_flash_write_read_byte(device,CMD_EWSR);
-
-	rt_spi_release(device);
-
-	rt_spi_take(device);
-
-	spi_flash_write_read_byte(device,CMD_WRSR);
-	spi_flash_write_read_byte(device , 0);
-
-	rt_spi_release(device);
-
-	spi_flash_wait_write_end(device);
-	
 	rt_spi_take(device);
 
 	spi_flash_write_read_byte(device,CMD_WRDI);
 
 	rt_spi_release(device);
-
-
 
 	spi_flash_wait_write_end(device);
 }
@@ -254,18 +248,18 @@ static void spi_flash_buffer_write(struct rt_spi_device *device,const u8* pBuffe
 
 	WriteAddr &= ~0xFFF; // page size = 4096byte
 
-
-
 	spi_flash_sector_erase(device,WriteAddr);
-
 
 	spi_flash_write_enable(device);
 
 	rt_spi_take(device);
 
 	spi_flash_write_read_byte(device, CMD_AAIP );
+	
 	spi_flash_write_read_byte(device, WriteAddr>>16 );
+	
 	spi_flash_write_read_byte(device, WriteAddr>>8 );
+	
 	spi_flash_write_read_byte(device, WriteAddr );
 
 	spi_flash_write_read_byte(device,*pBuffer++ );
@@ -293,17 +287,17 @@ static void spi_flash_buffer_write(struct rt_spi_device *device,const u8* pBuffe
 
 static void spi_flash_buffer_read(struct rt_spi_device *device,u8* pBuffer, u32 ReadAddr, u16 NumByteToRead)
 {
-	//spi_flash_write_disable(device);
+	spi_flash_write_disable(device);
 	
 	rt_spi_take(device);
 
 	spi_flash_write_read_byte(device,CMD_FAST_READ);
 
-	spi_flash_write_read_byte(device,(ReadAddr & 0xFF0000) >> 16);
+	spi_flash_write_read_byte(device,(ReadAddr & 0x00FF0000) >> 16);
 
-	spi_flash_write_read_byte(device,(ReadAddr& 0xFF00) >> 8);
+	spi_flash_write_read_byte(device,(ReadAddr & 0x0000FF00) >> 8);
 
-	spi_flash_write_read_byte(device,ReadAddr & 0xFF);
+	spi_flash_write_read_byte(device, ReadAddr & 0x000000FF);
 
 	spi_flash_write_read_byte(device,0);
 
@@ -433,7 +427,7 @@ rt_err_t rt_flash_register(const char * flash_device_name, const char * spi_devi
     }
     rt_memset(&sst25v16, 0, sizeof(sst25v16));
     sst25v16.spi_device = spi_device;
-	sst25v16.max_clock = 10;
+	sst25v16.max_clock = 18000000;
 	sst25v16.spi_device->config = spi2_configuer;
     /* register flash device */
     sst25v16.parent.type    = RT_Device_Class_Block;
@@ -457,7 +451,7 @@ rt_err_t rt_flash_register(const char * flash_device_name, const char * spi_devi
     sst25v16.parent.tx_complete = RT_NULL;
 
     result = rt_device_register(&sst25v16.parent, flash_device_name,
-                                RT_DEVICE_FLAG_RDWR  | RT_DEVICE_FLAG_STANDALONE);
+                                RT_DEVICE_FLAG_RDWR  | RT_DEVICE_FLAG_STANDALONE | RT_DEVICE_FLAG_DMA_RX |RT_DEVICE_FLAG_DMA_TX);
 
     return result;	
 }
@@ -548,6 +542,14 @@ void flashwrite(u32 addr,u8 *data, u32 size)
 	
 }
 FINSH_FUNCTION_EXPORT(flashwrite,flashwrite(addr,data,size)--Sectore_Erase);
+
+void sreset()
+{
+	NVIC_SystemReset();
+}
+FINSH_FUNCTION_EXPORT(sreset,sreset()--system reset);
+
+
 
 
 #endif

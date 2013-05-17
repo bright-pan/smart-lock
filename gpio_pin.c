@@ -203,5 +203,29 @@ void led1(const rt_uint8_t dat)
 #endif
   }
 }	
-FINSH_FUNCTION_EXPORT(led1, led1[0 1])
+FINSH_FUNCTION_EXPORT(led1, led1[0 1]);
+
+void led_run()
+{
+	rt_device_t led = RT_NULL;
+	static rt_uint8_t status = 1;
+	static rt_uint32_t	time_glint = 0;
+
+	time_glint++;
+	if(time_glint == 0xffff)
+	{
+		time_glint = 0;
+		status = !status;
+		led = rt_device_find("ledf");
+		
+		rt_device_write(led,0,&status,1);
+	}
+}
+void ledsys()
+{
+	rt_thread_idle_sethook(led_run);
+}
+FINSH_FUNCTION_EXPORT(ledsys, ledsys());
+
+
 #endif

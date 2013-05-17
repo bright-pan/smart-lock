@@ -590,7 +590,7 @@ void filetest1()
 }
 FINSH_FUNCTION_EXPORT(filetest1, filetest1());
 
-#endif
+
 
 void gprs( const char str[],int len)
 {
@@ -639,4 +639,26 @@ void rled(int data)
 }
 FINSH_FUNCTION_EXPORT(rled, rled());
 
+void cfile()
+{
+	int file_id;
+	rt_uint32_t i;
+	
+	file_id = open("/1.c",O_CREAT | O_RDWR,0);
+
+	i = 4096;
+	while(i--)
+	{
+		write(file_id,"1234567890",10);
+	}
+	
+
+	close(file_id);
+}
+FINSH_FUNCTION_EXPORT(cfile,cfile()--new file);
+
+
+
+
+#endif
 

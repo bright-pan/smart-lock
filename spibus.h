@@ -20,7 +20,7 @@
 #include "stm32f10x.h"
 #include "board.h"
 
-//#define SPI_USE_DMA
+#define SPI_USE_DMA
 
 struct stm32_spi_bus
 {
