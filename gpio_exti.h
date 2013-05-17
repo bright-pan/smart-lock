@@ -18,8 +18,35 @@
 #include <rtthread.h>
 #include <stm32f10x.h>
 #include "gpio.h"
+#include "alarm.h"
 
-void rt_hw_key1_register(void);
+#define DEVICE_NAME_LOCK_SHELL "lk_shell"// length <= 8
+#define DEVICE_NAME_LOCK_TEMPERATRUE "lk_temp"
+#define DEVICE_NAME_GATE_TEMPERATRUE "gt_temp"
+#define DEVICE_NAME_LOCK_GATE "lk_gate"
+
+#define DEVICE_NAME_CAMERA_COVER "cm_cover"
+#define DEVICE_NAME_CAMERA_PHOTOSENSOR "cm_photo"
+#define DEVICE_NAME_CAMERA_IRDASENSOR "cm_irda"
+
+#define DEVICE_NAME_MOTOR_STATUS "mt_stat"
+#define DEVICE_NAME_RFID_KEY_DETECT "rf_kdet"
+
+void rt_hw_lock_shell_register(void);
+void rt_hw_lock_temperature_register(void);
+void rt_hw_lock_gate_register(void);
+
+void rt_hw_gate_temperature_register(void);
+
+void rt_hw_camera_photosensor_register(void);
+void rt_hw_camera_irdasensor_register(void);
+
+void rt_hw_motor_status_register(void);
+
+void rt_hw_rfid_key_detect_register(void);
+
 void rt_hw_key2_register(void);
+
+extern rt_device_t rtc_device;
 
 #endif
