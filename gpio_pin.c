@@ -266,7 +266,7 @@ struct gpio_pin_user_data voice_reset_user_data =
   GPIO_Mode_Out_PP,
   GPIO_Speed_50MHz,
   RCC_APB2Periph_GPIOA,
-  1,
+  0,
 };
 gpio_device voice_reset_device;
 
@@ -308,7 +308,7 @@ struct gpio_pin_user_data voice_amp_user_data =
   GPIO_Mode_Out_PP,
   GPIO_Speed_50MHz,
   RCC_APB2Periph_GPIOC,
-  1,
+  0,
 };
 gpio_device voice_amp_device;
 

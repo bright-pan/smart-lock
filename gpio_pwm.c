@@ -420,7 +420,7 @@ void voice_output(rt_uint16_t counts)
   dat = 1;
   rt_device_write(device, 0, &dat, 0);
   device = rt_device_find("vo_amp");
-  dat = 0;
+  dat = 1;
   rt_device_write(device, 0, &dat, 0);
   device = rt_device_find("vo_rst");
   dat = 1;
@@ -428,7 +428,8 @@ void voice_output(rt_uint16_t counts)
   delay(1058);
   dat = 0;
   rt_device_write(device, 0, &dat, 0);
-  delay(26450);
+  //  delay(26450);
+  delay(1058);
   rt_device_control(data_device, RT_DEVICE_CTRL_SEND_PULSE, (void *)0);
 }
 FINSH_FUNCTION_EXPORT(voice_output, voice_output[counts])
