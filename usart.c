@@ -642,9 +642,9 @@ void rt_hw_usart_init()
   serial_device_usart2.ops = &usart_ops;
   serial_device_usart2.int_rx = &usart2_int_rx;
   serial_device_usart2.int_tx = &usart2_int_tx;
-  serial_device_usart2.config = serial_device_2_config;
+  serial_device_usart2.config = serial_device_default_config;
   rt_hw_serial_register(&serial_device_usart2, "usart2",
-                        RT_DEVICE_FLAG_RDWR | RT_DEVICE_FLAG_INT_RX | RT_DEVICE_FLAG_DMA_TX,
+                        RT_DEVICE_FLAG_RDWR | RT_DEVICE_FLAG_INT_RX | RT_DEVICE_FLAG_STREAM,
                         &usart2_user_data);
   rt_kprintf("register serial_device_usart2 <usart2>\n");
 #endif
@@ -726,7 +726,6 @@ FINSH_FUNCTION_EXPORT(usart1, set usart1[0 xxx] for read.)
 char u2_temp[100];
 void usart2(rt_int8_t cmd, const char *str)
 {
-  rt_uint8_t i = 0;
   rt_device_t usart;
   memset(u2_temp, '\0', 100);
   usart = rt_device_find("usart2");
