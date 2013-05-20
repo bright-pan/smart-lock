@@ -471,11 +471,6 @@
               <FilePath>.\gpio_pin.c</FilePath>
             </File>
             <File>
-              <FileName>sst25v16.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\sst25v16.c</FilePath>
-            </File>
-            <File>
               <FileName>filetest.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\filetest.c</FilePath>
@@ -494,6 +489,11 @@
               <FileName>rfid_uart.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\rfid_uart.c</FilePath>
+            </File>
+            <File>
+              <FileName>spiflash.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\spiflash.c</FilePath>
             </File>
           </Files>
         </Group>

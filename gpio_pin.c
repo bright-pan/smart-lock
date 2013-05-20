@@ -130,6 +130,14 @@ void rt_hw_rfid_power_register(void)
   rt_hw_gpio_register(gpio_device, gpio_user_data->name, (RT_DEVICE_FLAG_RDWR), gpio_user_data);
   }
 
+
+
+
+
+
+
+
+
 /* camera led device */
 struct gpio_pin_user_data camera_led_user_data = 
 {
@@ -139,7 +147,7 @@ struct gpio_pin_user_data camera_led_user_data =
   GPIO_Mode_Out_PP,
   GPIO_Speed_50MHz,
   RCC_APB2Periph_GPIOE,
-  1,
+  0,
 };
 gpio_device camera_led_device;
 
@@ -160,7 +168,7 @@ struct gpio_pin_user_data camera_power_user_data =
   GPIO_Mode_Out_PP,
   GPIO_Speed_50MHz,
   RCC_APB2Periph_GPIOE,
-  1,
+  0,
 };
 gpio_device camera_power_device;
 
@@ -172,6 +180,16 @@ void rt_hw_camera_power_register(void)
   gpio_device->ops = &gpio_pin_user_ops;  
   rt_hw_gpio_register(gpio_device, gpio_user_data->name, (RT_DEVICE_FLAG_RDWR), gpio_user_data);
 }
+
+
+
+
+
+
+
+
+
+
 
 /* logo led device */
 struct gpio_pin_user_data logo_led_user_data = 
@@ -194,6 +212,20 @@ void rt_hw_logo_led_register(void)
   gpio_device->ops = &gpio_pin_user_ops;  
   rt_hw_gpio_register(gpio_device, gpio_user_data->name, (RT_DEVICE_FLAG_RDWR), gpio_user_data);
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 /* gsm led device */
 struct gpio_pin_user_data gsm_led_user_data = 

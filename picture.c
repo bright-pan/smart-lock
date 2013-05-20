@@ -1,8 +1,30 @@
+/*********************************************************************
+ * Filename:      picture.c
+ *
+ * Description:  Camera code Photo file 			
+ *		Hardware resources : 	USART5 			
+ 											Baud:	115200 
+ 												Stop: 	1
+ 												DataBit:8
+ *
+ * Author:        wangzw <wangzw@yuettak.com>
+ * Created at:    2013-05-17 14:22:03
+ *                
+ * Modify:
+ *
+ * 
+ *
+ * Copyright (C) 2013 Yuettak Co.,Ltd
+ ********************************************************************/
+
+
 #include "picture.h"
 #include <dfs_init.h>
 #include <dfs_elm.h>
 #include <dfs_fs.h>
 #include "dfs_posix.h"
+#include "gpio_pin.h"
+#include "camera_uart.h"
 
 #define CAMERA_BUFFER_LEN							2000
 //rt_uint8_t data_buffer[CAMERA_BUFFER_LEN];
@@ -16,6 +38,7 @@ struct _camera_
 	rt_uint32_t	page;
 	rt_base_t		size;
 	rt_uint8_t		time;
+	rt_uint8_t		error;
 	rt_uint8_t	data[CAMERA_BUFFER_LEN];
 };
 typedef struct _camera_*	camera_t;
@@ -143,10 +166,19 @@ void glint_light_control(camera_t camera , rt_uint8_t status)
 	rt_device_write(camera->glint_led,0,&status,1);
 
 }
+void gpio_config(int status);
 
-void camera_power_control()
+void camera_power_control(camera_t camera,rt_uint8_t status)
 {
-
+	rt_device_write(camera->power,0,&status,1);
+/*	gpio_config(1);
+	GPIO_WriteBit(GPIOC,GPIO_Pin_12,0);
+	GPIO_WriteBit(GPIOA,GPIO_Pin_4,0);
+	GPIO_WriteBit(GPIOA,GPIO_Pin_5,0);
+	GPIO_WriteBit(GPIOA,GPIO_Pin_6,0);
+	GPIO_WriteBit(GPIOA,GPIO_Pin_7,0);
+	gpio_config(0);*/rt_thread_delay(200);
+	
 }
 
 void  picture_reset(camera_t camera)
@@ -159,47 +191,47 @@ void  picture_reset(camera_t camera)
 
 void picture_update_frame(camera_t camera)
 {
- 	volatile rt_size_t length = 0;
-	
 	rt_device_write(camera->device,0,update_camrea_cmd,sizeof(update_camrea_cmd));	
 	
 	rt_thread_delay(1);
 	
-	length = rt_device_read(camera->device,0,camera->data,CAMERA_BUFFER_LEN);
+	rt_device_read(camera->device,0,camera->data,CAMERA_BUFFER_LEN);
 }
 void picture_stop_cur_frame(camera_t camera)
 {
-	rt_uint8_t length = 0;
-	
 	rt_device_write(camera->device,0,stop_cur_frame_cmd,sizeof(stop_cur_frame_cmd)); 
 	
 	rt_thread_delay(1);
 	
-	length = rt_device_read(camera->device,0,camera->data,CAMERA_BUFFER_LEN);
+	rt_device_read(camera->device,0,camera->data,CAMERA_BUFFER_LEN);
+
+	/* close camera glint light */
+	glint_light_control(camera,0);
 }
 
 
 void picture_stop_next_frame(camera_t camera)
 {
-	rt_uint8_t length = 0;
-
 	rt_device_write(camera->device,0,stop_next_frame_cmd,sizeof(stop_next_frame_cmd)); 
 	
 	rt_thread_delay(1);
 	
-	length = rt_device_read(camera->device,0,camera->data,CAMERA_BUFFER_LEN);
+	rt_device_read(camera->device,0,camera->data,CAMERA_BUFFER_LEN);
+
+	/* close camera glint light */
+	glint_light_control(camera,0);
 }
 
 
 void picture_switch_frame(camera_t camera)
 {
-	rt_uint8_t length = 0;
-
 	rt_device_write(camera->device,0,switch_frame_cmd,sizeof(switch_frame_cmd)); 
+
+	glint_light_control(camera,0);
 	
 	rt_thread_delay(1);
 	
-	length = rt_device_read(camera->device,0,camera->data,CAMERA_BUFFER_LEN);
+	rt_device_read(camera->device,0,camera->data,CAMERA_BUFFER_LEN);
 }
 void picture_get_size(camera_t camera,rt_uint8_t frame_flag)
 {
@@ -228,6 +260,7 @@ void picture_get_size(camera_t camera,rt_uint8_t frame_flag)
 		cnt++;
 		if(cnt>10)
 		{
+			camera->error = 1;
 			break;
 		}
 		rt_kprintf("cnt = %d\n",cnt);
@@ -360,6 +393,11 @@ void picture_create_file_two(camera_t camera,const char *pathname1,const char *p
 
 	/*deal picture one */
 	picture_get_size(camera,0);
+
+	if(camera->error == 1)
+	{
+		return ;
+	}
 	
 	picture_set_per_read_size(camera,0);
 
@@ -375,6 +413,11 @@ void picture_create_file_two(camera_t camera,const char *pathname1,const char *p
 
 	/*deal picture two*/
 	picture_get_size(camera,1);
+
+	if(camera->error == 1)
+	{
+		return ;
+	}
 	
 	picture_set_per_read_size(camera,1);
 	
@@ -401,6 +444,11 @@ void picture_create_file_one(camera_t camera,const char *pathname )
 	
 	picture_get_size(camera,0);
 
+	if(camera->error == 1)
+	{
+		return ;
+	}
+	
 	printf_camera(camera);
 	
 	uint32_to_array(&get_picture_fbuf_cmd[10],CAMERA_BUFFER_LEN);
@@ -412,7 +460,6 @@ void picture_create_file_one(camera_t camera,const char *pathname )
 	unlink(pathname);
 	
 	file_id = open(pathname,O_CREAT | O_RDWR, 0);
-	
 	if(1 == picture_data_deal(camera,file_id))
 	{
 		rt_kprintf("\nphotograph fail\n");
@@ -420,18 +467,20 @@ void picture_create_file_one(camera_t camera,const char *pathname )
 
 }
 
-void picture_struct_init(camera_t camera,const char *camera_name,const char *led_name)
+void picture_struct_init(camera_t camera)
 {	
-	camera->device = rt_device_find(camera_name);
-	camera->glint_led = rt_device_find(led_name);
-	
+	camera->device = rt_device_find(DEVICE_NAME_CAMERA_UART);
+	camera->glint_led = rt_device_find(DEVICE_NAME_CAMERA_LED);
+	camera->power = rt_device_find(DEVICE_NAME_CAMERA_POWER);
 	camera->addr = 0;
 	camera->page = 0;
 	camera->size = 0;
 	camera->surplus = 0;
 	camera->time = 0;
+	camera->error = 0;
 //	camera->data = data_buffer;
 }
+
 
 
 void picture_thread_entry(void *arg)
@@ -440,19 +489,26 @@ void picture_thread_entry(void *arg)
 	struct _picture_mb_ recv_mq;
 
 	
-	pic_timer = rt_timer_create("pic",pic_timer_test,RT_NULL,10,RT_TIMER_FLAG_PERIODIC);
+	pic_timer = rt_timer_create("cm_time",pic_timer_test,RT_NULL,10,RT_TIMER_FLAG_PERIODIC);
 	
 	while(1)
 	{
 			rt_mq_recv(picture_mq,&recv_mq,sizeof(recv_mq),RT_WAITING_FOREVER);
 
-			picture_struct_init(&picture,"usart2","glint");
+			picture_struct_init(&picture);
 
+			camera_power_control(&picture,1);	
+
+			/*start camera job */
+			rt_timer_start(pic_timer);
+			
+			glint_light_control(&picture,1);
+			
 			picture.time = recv_mq.time;
 
 			rt_device_set_rx_indicate(picture.device,com2_picture_data_rx_indicate);
 
-			picture_reset(&picture);
+		//	picture_reset(&picture);
 			
 			com2_release_buffer(&picture);
 		
@@ -467,7 +523,7 @@ void picture_thread_entry(void *arg)
 			{
 				picture_create_file_two(&picture,recv_mq.name1,recv_mq.name2);	
 			}	
-
+			camera_power_control(&picture,0);
 			
 	}
 }
@@ -478,7 +534,7 @@ void picture_thread_init(void)
 	rt_thread_t	id;//threasd id
 
 	
-	id = rt_thread_create("graph",picture_thread_entry,RT_NULL,1024*6,20,30);
+	id = rt_thread_create("cm_task",picture_thread_entry,RT_NULL,1024*6,20,30);
 	if(RT_NULL == id )
 	{
 		rt_kprintf("graph thread create fail\n");
@@ -486,19 +542,13 @@ void picture_thread_init(void)
 	}
 	rt_thread_startup(id);
 
-	com2_graph_sem = rt_sem_create("sxt",0,RT_IPC_FLAG_FIFO);
+	com2_graph_sem = rt_sem_create("cm_sem",0,RT_IPC_FLAG_FIFO);
 	if(RT_NULL == com2_graph_sem)
 	{
 		rt_kprintf(" \"sxt\" sem create fail\n");
 	}
-	picture_sem	= rt_sem_create("z1x",0,RT_IPC_FLAG_FIFO);
-	if(RT_NULL == picture_sem)
-	{
-		rt_kprintf(" \"z1x\" sem create fail \n");
-	}
 	
-
-	picture_mq = rt_mq_create("pic_mq",64,8,RT_IPC_FLAG_FIFO);
+	picture_mq = rt_mq_create("cm_mq",64,8,RT_IPC_FLAG_FIFO);
 	if(RT_NULL == picture_mq)
 	{
 		rt_kprintf(" \"pic_mq\" mq create fial\n");
@@ -509,13 +559,6 @@ void picture_thread_init(void)
 
 #ifdef RT_USING_FINSH
 #include <finsh.h>
-void picture()
-{
-	rt_sem_release(picture_sem);
-}
-
-FINSH_FUNCTION_EXPORT(picture, picture());
-
 void reset()
 {
 	rt_kprintf("%d",buffer_len_test);
@@ -657,8 +700,55 @@ void cfile()
 }
 FINSH_FUNCTION_EXPORT(cfile,cfile()--new file);
 
+void gpio_config(int status)
+{
+   GPIO_InitTypeDef gpio_struct;
+
+	if(status)
+	{
+		RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA,ENABLE);
+		
+		gpio_struct.GPIO_Mode = GPIO_Mode_Out_OD;
+		gpio_struct.GPIO_Pin = GPIO_Pin_4 | GPIO_Pin_5 | GPIO_Pin_6 |GPIO_Pin_7;
+		gpio_struct.GPIO_Speed = GPIO_Speed_50MHz;
+		
+		GPIO_Init(GPIOA,&gpio_struct);
+		
+		gpio_struct.GPIO_Mode = GPIO_Mode_Out_OD;
+		gpio_struct.GPIO_Pin = GPIO_Pin_12;
+		gpio_struct.GPIO_Speed = GPIO_Speed_50MHz;
+		
+		GPIO_Init(GPIOC,&gpio_struct);
+	}
+	else
+	{
+		gpio_struct.GPIO_Mode = GPIO_Mode_AF_PP;
+		gpio_struct.GPIO_Pin = GPIO_Pin_12;
+		gpio_struct.GPIO_Speed = GPIO_Speed_50MHz;
+		
+		GPIO_Init(GPIOC,&gpio_struct);
+	}
+
+}
 
 
+void chardevieo(const char *name,rt_int8_t data)
+{
+	rt_device_t device;
+
+	device = rt_device_find(name);
+	
+	rt_device_write(device,0,&data,1);
+	gpio_config(1);
+	GPIO_WriteBit(GPIOC,GPIO_Pin_12,0);
+	GPIO_WriteBit(GPIOC,GPIO_Pin_12,0);
+	GPIO_WriteBit(GPIOA,GPIO_Pin_4,0);
+	GPIO_WriteBit(GPIOA,GPIO_Pin_5,0);
+	GPIO_WriteBit(GPIOA,GPIO_Pin_6,0);
+	GPIO_WriteBit(GPIOA,GPIO_Pin_7,0);
+	gpio_config(0);
+}
+FINSH_FUNCTION_EXPORT(chardevieo,chardevieo(name,data)--output char device);
 
 #endif
 

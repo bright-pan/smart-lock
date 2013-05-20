@@ -28,7 +28,8 @@
 #include "gsm_usart.h"
 #include "rfid_uart.h"
 #include "camera_uart.h"
-#include "sst25v16.h"
+//#include "sst25v16.h"
+#include "spiflash.h"
 /* board configuration */
 // <o> SDCard Driver <1=>SDIO sdcard <0=>SPI MMC card
 // 	<i>Default: 1

@@ -183,8 +183,10 @@ void rt_hw_board_init()
   rt_console_set_device(CONSOLE_DEVICE);
 
     rt_spi_flash_init();
-//	rt_hw_glint_light_register();
-//	rt_hw_camera_power_register();
+
+    rt_hw_camera_uart_register();
+	rt_hw_camera_led_register();
+	rt_hw_camera_power_register();
 //  rt_hw_gsm_usart_register();
 //  rt_hw_gsm_led_register();
 //  rt_hw_gsm_power_register();

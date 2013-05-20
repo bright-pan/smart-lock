@@ -20,15 +20,15 @@
 
 /* hardware define ---------------------------------------------------------*/
 
-#define SPI1_SCK_PIN											GPIO_Pin_5;
-#define	 SPI1_MISO_PIN										GPIO_Pin_6
-#define SPI1_MOSI_PIN										GPIO_Pin_7
-#define SPI1_GPIO_PORT									GPIOA
-#define SPI1_APB2_CLOCK								RCC_APB2Periph_SPI1 | RCC_APB2Periph_GPIOA
+#define SPI1_SCK_PIN											GPIO_Pin_13
+#define	 SPI1_MISO_PIN										GPIO_Pin_14
+#define SPI1_MOSI_PIN										GPIO_Pin_15
+#define SPI1_GPIO_PORT									GPIOB
+#define SPI1_APB2_CLOCK							   RCC_APB2Periph_GPIOB
 
-#define SPI1_CS_PIN											GPIO_Pin_4
-#define SPI1_CS_PORT										GPIOA
-#define SPI1_CS_CLOCK									RCC_APB2Periph_GPIOA
+#define SPI1_CS_PIN											GPIO_Pin_12
+#define SPI1_CS_PORT										GPIOB
+#define SPI1_CS_CLOCK									RCC_APB2Periph_GPIOB
 
 
 
@@ -98,14 +98,15 @@ void rt_hw_spi_init(void)
 	{		
 		GPIO_InitTypeDef 							gpio_initstructure;
 
-		RCC_APB2PeriphClockCmd(SPI1_APB2_CLOCK | SPI1_CS_CLOCK,ENABLE);
+		RCC_APB2PeriphClockCmd(SPI1_APB2_CLOCK ,ENABLE);
+		RCC_APB1PeriphClockCmd(RCC_APB1Periph_SPI2,ENABLE);
 
 		gpio_initstructure.GPIO_Mode = GPIO_Mode_AF_PP;
 		gpio_initstructure.GPIO_Speed = GPIO_Speed_50MHz;
 		gpio_initstructure.GPIO_Pin = SPI1_MISO_PIN | SPI1_MOSI_PIN | SPI1_SCK_PIN;
 		GPIO_Init(SPI1_GPIO_PORT,&gpio_initstructure);
 		/*		register spi bus device */
-		stm32_spi_register(SPI1,&stm32_spi_bus_1,SPI1_BUS_NAME);
+		stm32_spi_register(SPI2,&stm32_spi_bus_1,SPI1_BUS_NAME);
 	}
 	/*		initialization SPI CS device 		 */
 	{
@@ -403,7 +404,7 @@ rt_err_t rt_flash_register(const char * flash_device_name, const char * spi_devi
 		RT_SPI_MODE_MASK,										//spi clock and data mode set
 		8,																			//data width
 		0,																			//reserved
-		72000000/4														//MAX frequency 18MHz
+		36000000/2													//MAX frequency 18MHz
 	};
 
     spi_device = (struct rt_spi_device *)rt_device_find(spi_device_name);

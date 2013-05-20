@@ -53,7 +53,7 @@ void rt_init_thread_entry(void* parameter)
     elm_init();
 
     /* mount sd card fat partition 1 as root directory */
-    if (dfs_mount("sd0", "/", "elm", 0, 0) == 0)
+    if (dfs_mount("flash1", "/", "elm", 0, 0) == 0)
     {
       rt_kprintf("File System initialized!\n");
     }
@@ -118,6 +118,10 @@ void rt_init_thread_entry(void* parameter)
     rtgui_system_server_init();
   }
 #endif /* #ifdef RT_USING_RTGUI */
+	{
+		extern void picture_thread_init(void);
+		picture_thread_init();
+	}
 }
 
 int rt_application_init()
