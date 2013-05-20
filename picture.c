@@ -4,8 +4,8 @@
  * Description:  Camera code Photo file 			
  *		Hardware resources : 	USART5 			
  											Baud:	115200 
- 												Stop: 	1
- 												DataBit:8
+ 											Stop: 	1
+ 											DataBit:8
  *
  * Author:        wangzw <wangzw@yuettak.com>
  * Created at:    2013-05-17 14:22:03
@@ -164,21 +164,11 @@ void com2_release_buffer(camera_t camera)
 void glint_light_control(camera_t camera , rt_uint8_t status)
 {
 	rt_device_write(camera->glint_led,0,&status,1);
-
 }
-void gpio_config(int status);
 
 void camera_power_control(camera_t camera,rt_uint8_t status)
 {
 	rt_device_write(camera->power,0,&status,1);
-/*	gpio_config(1);
-	GPIO_WriteBit(GPIOC,GPIO_Pin_12,0);
-	GPIO_WriteBit(GPIOA,GPIO_Pin_4,0);
-	GPIO_WriteBit(GPIOA,GPIO_Pin_5,0);
-	GPIO_WriteBit(GPIOA,GPIO_Pin_6,0);
-	GPIO_WriteBit(GPIOA,GPIO_Pin_7,0);
-	gpio_config(0);*/rt_thread_delay(200);
-	
 }
 
 void  picture_reset(camera_t camera)
@@ -331,9 +321,8 @@ rt_bool_t picture_data_deal(camera_t camera,int file_id)
 		{
 			static	rt_uint16_t i = 0;
 			write(file_id,camera->data,length);
-			
+
 			rt_kprintf("file write %d   length = %d\n",i++,length);
-			
 			
 			
 		}
@@ -481,21 +470,32 @@ void picture_struct_init(camera_t camera)
 //	camera->data = data_buffer;
 }
 
-
-
 void picture_thread_entry(void *arg)
 {
 	struct _camera_	 picture;
 	struct _picture_mb_ recv_mq;
-
+	rt_int32_t timeout = 1000;
+	rt_err_t	result;
 	
 	pic_timer = rt_timer_create("cm_time",pic_timer_test,RT_NULL,10,RT_TIMER_FLAG_PERIODIC);
 	
+	picture_struct_init(&picture);
+
+	camera_power_control(&picture,1);	
 	while(1)
 	{
-			rt_mq_recv(picture_mq,&recv_mq,sizeof(recv_mq),RT_WAITING_FOREVER);
+			
+			
+			result =  rt_mq_recv(picture_mq,&recv_mq,sizeof(recv_mq),timeout);
 
-			picture_struct_init(&picture);
+			/*first open power  need 10ms after  */
+			if(result == -RT_ETIMEOUT)
+			{
+				camera_power_control(&picture,0);	
+				timeout = RT_WAITING_FOREVER;
+				rt_kprintf("close power\n");
+				continue;
+			}
 
 			camera_power_control(&picture,1);	
 
@@ -508,7 +508,7 @@ void picture_thread_entry(void *arg)
 
 			rt_device_set_rx_indicate(picture.device,com2_picture_data_rx_indicate);
 
-		//	picture_reset(&picture);
+//			picture_reset(&picture);
 			
 			com2_release_buffer(&picture);
 		
@@ -700,36 +700,6 @@ void cfile()
 }
 FINSH_FUNCTION_EXPORT(cfile,cfile()--new file);
 
-void gpio_config(int status)
-{
-   GPIO_InitTypeDef gpio_struct;
-
-	if(status)
-	{
-		RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA,ENABLE);
-		
-		gpio_struct.GPIO_Mode = GPIO_Mode_Out_OD;
-		gpio_struct.GPIO_Pin = GPIO_Pin_4 | GPIO_Pin_5 | GPIO_Pin_6 |GPIO_Pin_7;
-		gpio_struct.GPIO_Speed = GPIO_Speed_50MHz;
-		
-		GPIO_Init(GPIOA,&gpio_struct);
-		
-		gpio_struct.GPIO_Mode = GPIO_Mode_Out_OD;
-		gpio_struct.GPIO_Pin = GPIO_Pin_12;
-		gpio_struct.GPIO_Speed = GPIO_Speed_50MHz;
-		
-		GPIO_Init(GPIOC,&gpio_struct);
-	}
-	else
-	{
-		gpio_struct.GPIO_Mode = GPIO_Mode_AF_PP;
-		gpio_struct.GPIO_Pin = GPIO_Pin_12;
-		gpio_struct.GPIO_Speed = GPIO_Speed_50MHz;
-		
-		GPIO_Init(GPIOC,&gpio_struct);
-	}
-
-}
 
 
 void chardevieo(const char *name,rt_int8_t data)
@@ -739,14 +709,6 @@ void chardevieo(const char *name,rt_int8_t data)
 	device = rt_device_find(name);
 	
 	rt_device_write(device,0,&data,1);
-	gpio_config(1);
-	GPIO_WriteBit(GPIOC,GPIO_Pin_12,0);
-	GPIO_WriteBit(GPIOC,GPIO_Pin_12,0);
-	GPIO_WriteBit(GPIOA,GPIO_Pin_4,0);
-	GPIO_WriteBit(GPIOA,GPIO_Pin_5,0);
-	GPIO_WriteBit(GPIOA,GPIO_Pin_6,0);
-	GPIO_WriteBit(GPIOA,GPIO_Pin_7,0);
-	gpio_config(0);
 }
 FINSH_FUNCTION_EXPORT(chardevieo,chardevieo(name,data)--output char device);
 
