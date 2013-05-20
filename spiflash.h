@@ -17,11 +17,9 @@
 #define		__SPIFLASH_H__
 #include "spibus.h"
 
-#define SPI1_BUS_NAME									("spi1")
-#define SPI1_CS_NAME										("flash")
+#define SPI1_BUS_NAME									("spi2")
+#define SPI1_CS_NAME										("w25")
 #define FLASH_DEVICE_NAME							("flash1")
-
-#define USING_SPI1												//spi1 bus 
 
 
 void rt_spi_flash_init(void);

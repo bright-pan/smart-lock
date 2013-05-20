@@ -59,18 +59,6 @@
 #define Dummy_Byte                						0xFF  //moke needful read clock
 
 
-/********************************************* spi devie data struct **********************************/
-#ifdef USING_SPI1
-static struct stm32_spi_bus stm32_spi_bus_1;
-#endif 
-
-#ifdef USING_SPI2
-static struct stm32_spi_bus stm32_spi_bus_2;
-#endif
-
-#ifdef USING_SPI3
-static struct stm32_spi_bus stm32_spi_bus_3;
-#endif
 
 /* flash device */
 struct flash_device 
@@ -85,14 +73,14 @@ struct flash_device
 struct flash_device	w25q16_device;
 
 /*******************************************************************************
-* Function Name  : rt_hw_spi_init
+* Function Name  : rt_hw_spi2_init
 * Description    : register spi bus and register spi cs device
 *                  
 * Input				: None
 * Output			: None
 * Return         	: None
 *******************************************************************************/
-void rt_hw_spi_init(void)
+void rt_hw_spi2_init(void)
 {
 	/*		initialization SPI Bus device		 */
 	{		
@@ -106,7 +94,7 @@ void rt_hw_spi_init(void)
 		gpio_initstructure.GPIO_Pin = SPI1_MISO_PIN | SPI1_MOSI_PIN | SPI1_SCK_PIN;
 		GPIO_Init(SPI1_GPIO_PORT,&gpio_initstructure);
 		/*		register spi bus device */
-		stm32_spi_register(SPI2,&stm32_spi_bus_1,SPI1_BUS_NAME);
+		stm32_spi_register(SPI2,&stm32_spi_bus_2,SPI1_BUS_NAME);
 	}
 	/*		initialization SPI CS device 		 */
 	{
@@ -452,7 +440,7 @@ rt_err_t rt_flash_register(const char * flash_device_name, const char * spi_devi
 
 void rt_spi_flash_init(void)
 {
-	rt_hw_spi_init();
+	rt_hw_spi2_init();
 	rt_flash_register(FLASH_DEVICE_NAME,SPI1_CS_NAME);
 }
 

@@ -44,19 +44,6 @@
 
 
 
-/********************************************* spi devie data struct **********************************/
-#ifdef USING_SPI1
-static struct stm32_spi_bus stm32_spi_bus_1;
-#endif 
-
-#ifdef USING_SPI2
-static struct stm32_spi_bus stm32_spi_bus_2;
-#endif
-
-#ifdef USING_SPI3
-static struct stm32_spi_bus stm32_spi_bus_3;
-#endif
-
 /* flash device */
 struct flash_device 
 {

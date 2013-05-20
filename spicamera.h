@@ -4,7 +4,9 @@
 #include "spibus.h"
 
 
-#define USING_SPI2											//spi1 bus 
+
+void rt_hw_camera_init(void);
+
 
 #endif
 

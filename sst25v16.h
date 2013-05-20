@@ -4,7 +4,6 @@
 #include "rtthread.h"
 #include "spibus.h"
 
-#define USING_SPI2												//spi1 bus 
 
 
 void rt_spi_flash_init(void);

@@ -30,6 +30,8 @@
 #include "camera_uart.h"
 //#include "sst25v16.h"
 #include "spiflash.h"
+#include "spicamera.h"
+
 /* board configuration */
 // <o> SDCard Driver <1=>SDIO sdcard <0=>SPI MMC card
 // 	<i>Default: 1

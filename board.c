@@ -179,12 +179,15 @@ void rt_hw_board_init()
 #if STM32_EXT_SRAM
   EXT_SRAM_Configuration();
 #endif
-  rt_hw_usart_init();
-  rt_console_set_device(CONSOLE_DEVICE);
+	rt_hw_usart_init();
+	rt_console_set_device(CONSOLE_DEVICE);
+	
+	rt_hw_camera_init();
 
-    rt_spi_flash_init();
+	rt_spi_flash_init();
+	
 
-    rt_hw_camera_uart_register();
+	rt_hw_camera_uart_register();
 	rt_hw_camera_led_register();
 	rt_hw_camera_power_register();
 //  rt_hw_gsm_usart_register();
