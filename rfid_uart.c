@@ -12,7 +12,7 @@
  ********************************************************************/
 
 #include "rfid_uart.h"
-
+#include "gpio_pin.h"
 /*
  * Use UART4 with interrupt Rx and dma Tx
  *
@@ -391,28 +391,40 @@ void rfid_uart_device_isr(struct rt_serial_device *serial)
   rt_hw_serial_isr(serial);
 }
 
-
 #ifdef RT_USING_FINSH
 #include <finsh.h>
 
-static char temp[100];
+extern void delay(rt_uint32_t counts);
+static char temp[20];
 
-void rfid_uart(char cmd, char *str)
+void rfid_uart(rt_int8_t cmd, const char *str)
 {
   rt_device_t device;
-  memset(temp, '\xFF', 100);
+  rt_int8_t i = 0;
+  memset(temp, '\xFF', 20);
   device = rt_device_find(DEVICE_NAME_RFID_UART);
   if (device != RT_NULL)
   {
     if (cmd == 0)
     {
       rt_device_read(device, 0, temp, 20);
-      temp[99] = '\0';
-      rt_kprintf(temp);
+      if (temp[0] == 0x50)
+      {
+        rt_kprintf("%02X %02X %02X %02X\n", temp[4]^temp[8], temp[5]^temp[8], temp[6]^temp[8], temp[7]^temp[8]);
+      }
+      else
+      {
+
+      }
+      while(i < 20)
+      {
+        rt_kprintf("%02X ", temp[i++]);
+      }
+      rt_kprintf("\n");
     }
     else if (cmd == 1)
     {
-      rt_device_write(device, 0, str, strlen(str));
+      rt_device_write(device, 0, "\x50\x00\x06\xD4\x07\x01\x00\x00\x00\x04\x80", 11);
     }
   }
   else
@@ -421,4 +433,5 @@ void rfid_uart(char cmd, char *str)
   }
 }
 FINSH_FUNCTION_EXPORT(rfid_uart, rfid_uart[cmd parameters])
+
 #endif
