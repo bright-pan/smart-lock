@@ -17,6 +17,10 @@
 #include "spiflash.h"
 
 
+#define SPI2_BUS_NAME									("spi2")
+#define SPI2_CS1_NAME										("w25")
+#define FLASH_DEVICE_NAME							("flash1")
+
 
 /* hardware define ---------------------------------------------------------*/
 
@@ -94,7 +98,7 @@ void rt_hw_spi2_init(void)
 		gpio_initstructure.GPIO_Pin = SPI1_MISO_PIN | SPI1_MOSI_PIN | SPI1_SCK_PIN;
 		GPIO_Init(SPI1_GPIO_PORT,&gpio_initstructure);
 		/*		register spi bus device */
-		stm32_spi_register(SPI2,&stm32_spi_bus_2,SPI1_BUS_NAME);
+		stm32_spi_register(SPI2,&stm32_spi_bus_2,SPI2_BUS_NAME);
 	}
 	/*		initialization SPI CS device 		 */
 	{
@@ -114,7 +118,7 @@ void rt_hw_spi2_init(void)
 		
 		GPIO_Init(spi_cs.GPIOx, &gpio_initstructure);     
 		/* 	add cs devie go to spi bus devie	*/
-		rt_spi_bus_attach_device(&spi_device,SPI1_CS_NAME, SPI1_BUS_NAME, (void*)&spi_cs);
+		rt_spi_bus_attach_device(&spi_device,SPI2_CS1_NAME, SPI2_BUS_NAME, (void*)&spi_cs);
 		
 	}
 }
@@ -387,7 +391,7 @@ rt_err_t rt_flash_register(const char * flash_device_name, const char * spi_devi
 {
 	rt_err_t result = RT_EOK;
 	struct rt_spi_device * spi_device;
-	struct rt_spi_configuration spi1_configuer= 
+	struct rt_spi_configuration spi2_configuer= 
 	{
 		RT_SPI_MODE_MASK,										//spi clock and data mode set
 		8,																			//data width
@@ -407,8 +411,8 @@ rt_err_t rt_flash_register(const char * flash_device_name, const char * spi_devi
     }
     rt_memset(&w25q16_device, 0, sizeof(w25q16_device));
     w25q16_device.spi_device = spi_device;
-	w25q16_device.max_clock = 10;
-	w25q16_device.spi_device->config = spi1_configuer;
+	w25q16_device.max_clock = 18000000;
+	w25q16_device.spi_device->config = spi2_configuer;
     /* register flash device */
     w25q16_device.parent.type    = RT_Device_Class_Block;
 
@@ -431,7 +435,7 @@ rt_err_t rt_flash_register(const char * flash_device_name, const char * spi_devi
     w25q16_device.parent.tx_complete = RT_NULL;
 
     result = rt_device_register(&w25q16_device.parent, flash_device_name,
-                                RT_DEVICE_FLAG_RDWR  | RT_DEVICE_FLAG_STANDALONE);
+                                RT_DEVICE_FLAG_RDWR  | RT_DEVICE_FLAG_STANDALONE |RT_DEVICE_FLAG_DMA_RX | RT_DEVICE_FLAG_DMA_TX);
 
     return result;	
 }
@@ -441,7 +445,7 @@ rt_err_t rt_flash_register(const char * flash_device_name, const char * spi_devi
 void rt_spi_flash_init(void)
 {
 	rt_hw_spi2_init();
-	rt_flash_register(FLASH_DEVICE_NAME,SPI1_CS_NAME);
+	rt_flash_register(FLASH_DEVICE_NAME,SPI2_CS1_NAME);
 }
 
 

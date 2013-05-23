@@ -119,8 +119,13 @@ void rt_init_thread_entry(void* parameter)
   }
 #endif /* #ifdef RT_USING_RTGUI */
 	{
-		extern void picture_thread_init(void);
-		picture_thread_init();
+		extern void photo_thread_init(void);
+		extern void filesystem_test(void);
+		extern void send_photo_thread_init(void);
+
+		send_photo_thread_init();
+		photo_thread_init();
+//		filesystem_test();
 	}
 }
 

@@ -184,6 +184,8 @@ void rt_hw_board_init()
 	
 	rt_hw_camera_init();
 
+	rt_kprintf("spi1 config ok\n");
+	
 	rt_spi_flash_init();
 	
 

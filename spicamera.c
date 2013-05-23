@@ -1,8 +1,8 @@
 #include "spicamera.h"
 
-#define SPI1_BUS_NAME				"spi1"
-#define SPI1_CS1_NAME				"PA4"
-#define SPI1_DEVICE1_NAME		"FIRD"
+#define SPI1_BUS_NAME				("spi1")
+#define SPI1_CS1_NAME				("cm_cs")
+#define SPI1_DEVICE1_NAME		("camera")
 
 #define SPI1_RCC						RCC_APB2Periph_SPI1
 #define SPI1_PORT_RCC			RCC_APB2Periph_GPIOA
@@ -29,6 +29,10 @@ struct camera_device	camera_mode;
 
 
 
+static void delay(rt_uint32_t t)
+{
+	while(--t);
+}
 
 void rt_hw_spi1_init(void)
 {
@@ -36,7 +40,7 @@ void rt_hw_spi1_init(void)
 	{		
 		GPIO_InitTypeDef 							gpio_initstructure;
 
-		RCC_APB2PeriphClockCmd(SPI1_RCC | SPI1_PORT_RCC ,ENABLE);
+		RCC_APB2PeriphClockCmd(SPI1_RCC | SPI1_PORT_RCC |RCC_APB2Periph_AFIO,ENABLE);
 
 		gpio_initstructure.GPIO_Mode = GPIO_Mode_AF_PP;
 		gpio_initstructure.GPIO_Speed = GPIO_Speed_50MHz;
@@ -47,10 +51,10 @@ void rt_hw_spi1_init(void)
 	}
 	/*		initialization SPI CS device 		 */
 	{
-		static struct rt_spi_device 		spi_device;        
-		static struct stm32_spi_cs  		spi_cs;	
 		GPIO_InitTypeDef						gpio_initstructure;
-   
+		static struct rt_spi_device 		spi_device; 			 
+		static struct stm32_spi_cs			spi_cs; 
+		
 		/*		configure CS clock port pin		*/
 		spi_cs.GPIOx = SPI1_CS_PORT;        
 		spi_cs.GPIO_Pin = SPI1_CS_PIN;     
@@ -64,7 +68,6 @@ void rt_hw_spi1_init(void)
 		GPIO_Init(spi_cs.GPIOx, &gpio_initstructure);     
 		/* 	add cs devie go to spi bus devie	*/
 		rt_spi_bus_attach_device(&spi_device,SPI1_CS1_NAME, SPI1_BUS_NAME, (void*)&spi_cs);
-		
 	}
 }
 
@@ -75,15 +78,51 @@ void rt_hw_spi1_init(void)
 
 
 
+static u8 camera_read_write_byte(struct rt_spi_device* device,const u8 data)
+{
+	u8 value;
+	struct rt_spi_message message;
+
+	message.length = 1;
+	message.recv_buf = &value;
+	message.send_buf = &data;
+	message.cs_release = 0;
+	message.cs_take = 0;
+	message.next = RT_NULL;
+	rt_spi_transfer_message(device,&message);
+
+	return value;
+}
+
+
+static camera_read_buffer_data(struct rt_spi_device*  dev, rt_off_t pos, rt_uint8_t* buffer, rt_size_t size)
+{
+	
+	while(size)
+	{
+		rt_spi_take(dev);
+		delay(5000);
+		*buffer = camera_read_write_byte(dev,0xff);
+		delay(5000);
+		rt_spi_release(dev);
+		delay(5000);
+		buffer++;
+		size--;
+	}
+	
+}
+
 /**************************************** spi flash resiger function **********************************/
 
 static rt_err_t rt_camera_init(rt_device_t dev)
 {
-	struct camera_device* device = (struct camera_device *)dev;	
+	struct camera_device* camera = (struct camera_device *)dev;	
 
-	if(device->spi_device->bus->owner != device->spi_device)
+	 RT_ASSERT(dev != RT_NULL);
+	 
+	if(camera->spi_device->bus->owner != camera->spi_device)
 	{
-		device->spi_device->bus->ops->configure(device->spi_device,&device->spi_device->config);
+		camera->spi_device->bus->ops->configure(camera->spi_device,&camera->spi_device->config);
 	}
 	
 	return RT_EOK;
@@ -100,6 +139,10 @@ static rt_err_t rt_camera_close(rt_device_t dev)
 
 static rt_size_t rt_camera_read(rt_device_t dev, rt_off_t pos, void* buffer, rt_size_t size)
 {
+	struct camera_device *device = (struct camera_device *)dev;
+	
+	camera_read_buffer_data(device->spi_device,pos,buffer,size);
+	
 	return size;
 }
 
@@ -110,27 +153,29 @@ static rt_size_t rt_camera_write(rt_device_t dev, rt_off_t pos,const void* buffe
 
 static rt_err_t rt_camera_control(rt_device_t dev, rt_uint8_t cmd, void *args)
 {
+	RT_ASSERT(dev != RT_NULL);
+
     return RT_EOK;
 }
 
-rt_err_t rt_camera_register(const char *device_name,const char *bus_name)
+rt_err_t rt_camera_register(const char* device_name,const char *cs_name)
 {
 	rt_err_t result = RT_EOK;
 	struct rt_spi_device * spi_device;
 	struct rt_spi_configuration spi1_configuer= 
 	{
-		RT_SPI_MODE_MASK,										//spi clock and data mode set
+		RT_SPI_MODE_0 | RT_SPI_MSB,										//spi clock and data mode set
 		8,																			//data width
 		0,																			//reserved
-		36000000/2													//MAX frequency 18MHz
+		72000000/64													//MAX frequency 18MHz
 	};
 
-	spi_device = (struct rt_spi_device *)rt_device_find(bus_name);
+	spi_device = (struct rt_spi_device *)rt_device_find(cs_name);
 	if(spi_device == RT_NULL)
 	{
 
 #ifdef RT_USING_FINSH
-	rt_kprintf("spi device %s not found!\r\n", bus_name);
+	rt_kprintf("spi device %s not found!\r\n", cs_name);
 #endif
 
 	return -RT_ENOSYS;
@@ -157,7 +202,7 @@ rt_err_t rt_camera_register(const char *device_name,const char *bus_name)
 	camera_mode.parent.tx_complete = RT_NULL;
 
 	result = rt_device_register(&camera_mode.parent, device_name,
-	                            RT_DEVICE_FLAG_RDWR );
+	                            RT_DEVICE_FLAG_RDWR |RT_DEVICE_FLAG_STANDALONE );
 
 	return result;	
 }
@@ -165,7 +210,7 @@ rt_err_t rt_camera_register(const char *device_name,const char *bus_name)
 void rt_hw_camera_init()
 {
 	rt_hw_spi1_init();
-	rt_camera_register(SPI1_DEVICE1_NAME,SPI1_BUS_NAME);
+	rt_camera_register(SPI1_DEVICE1_NAME,SPI1_CS1_NAME);
 }
 
 

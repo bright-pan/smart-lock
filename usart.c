@@ -738,7 +738,7 @@ FINSH_FUNCTION_EXPORT(usart1, set usart1[0 xxx] for read.)
 char u2_temp[100];
 void usart2(rt_int8_t cmd, const char *str)
 {
-  rt_uint8_t i = 0;
+  volatile rt_uint8_t i = 0;
   rt_device_t usart;
   memset(u2_temp, '\0', 100);
   usart = rt_device_find("usart2");

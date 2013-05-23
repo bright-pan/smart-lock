@@ -168,7 +168,7 @@ struct gpio_pin_user_data camera_power_user_data =
   GPIO_Mode_Out_PP,
   GPIO_Speed_50MHz,
   RCC_APB2Periph_GPIOE,
-  0,
+  1,
 };
 gpio_device camera_power_device;
 

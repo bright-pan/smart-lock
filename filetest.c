@@ -77,34 +77,16 @@ rt_bool_t com_cmd_flie_deal(rt_uint8_t* rec_data,const rt_uint8_t cmd[],rt_uint8
 }
 void filesystem_test_thread(void *arg)
 {
-	rt_device_t 	device;
-	rt_uint8_t		rec_data[64];
-	rt_uint8_t 		rt_file_open_cnt = 0;
-	rt_uint8_t 		rt_file_close_cnt = 0;
-	rt_uint8_t 		rt_file_read_cnt = 0;
-	rt_uint8_t 		rt_file_move_cnt = 0;
- 	 int 				fd = 0;
-  	rt_uint8_t		write_flag = 0;
-  	rt_uint8_t		read_flag = 0;
-  	
-
-	device = rt_device_find("usart2");
+	int file_id;
+	rt_uint8_t data[100];
 	
-	if(device == RT_NULL)
-	{
-		rt_kprintf("usart init fail\n ");
-	}
 	while(1)
 	{
-		read_flag = rt_device_read(device,0,rec_data,64);
-		if(read_flag != 0)
-		{
-			write(file_id,rec_data,read_flag);
-			if(read_flag > 1)
-			{
-				rt_kprintf("%d",read_flag);
-			}
-		}	
+		rt_thread_delay(500);
+		file_id = open("/photo/1.jpg",O_CREAT | O_RDWR,0);
+		read(file_id,data,100);
+		rt_kprintf("%s\n",data);
+		close(file_id);
 	}
 }
 void filesystem_test(void)

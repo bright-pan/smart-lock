@@ -1,56 +1,54 @@
+/*********************************************************************
+ * Filename:    sst25v16.h
+ *
+ * Description:  Tihs flie function spi flash block device
+ *						drivie,chip type sst25vf016,user stm32
+ *						hardware resources SPI2 ,
+ *						
+ * Author:        wangzw <wangzw@yuettak.com>
+ * Created at:    2013-04-26 12:00:00
+ *                
+ * Modify:
+ *
+ * 
+ *
+ * Copyright (C) 2013 Yuettak Co.,Ltd
+ ********************************************************************/
 
 #include "sst25v16.h"
 
-/* command list */
-#define CMD_RDSR                    		0x05  /* 读状态寄存器     */
+/*-----------sst25v16 chip  command list --------------*/
+#define CMD_RDSR                    	0x05  /* 读状态寄存器     */
 #define CMD_WRSR                    	0x01  /* 写状态寄存器     */
 #define CMD_EWSR                    	0x50  /* 使能写状态寄存器 */
-#define CMD_WRDI                    		0x04  /* 关闭写使能       */
+#define CMD_WRDI                    	0x04  /* 关闭写使能       */
 #define CMD_WREN                    	0x06  /* 打开写使能       */
-#define CMD_READ                    		0x03  /* 读数据           */
-#define CMD_FAST_READ               0x0B  /* 快速读           */
-#define CMD_BP                      		0x02  /* 字节编程         */
-#define CMD_AAIP                    		0xAD  /* 自动地址增量编程 */
-#define CMD_ERASE_4K               	0x20  /* 扇区擦除:4K      */
-#define CMD_ERASE_32K               0x52  /* 扇区擦除:32K     */
-#define CMD_ERASE_64K               0xD8  /* 扇区擦除:64K     */
+#define CMD_READ                    	0x03  /* 读数据           */
+#define CMD_FAST_READ                 0x0B  /* 快速读           */
+#define CMD_BP                      	0x02  /* 字节编程         */
+#define CMD_AAIP                    	0xAD  /* 自动地址增量编程 */
+#define CMD_ERASE_4K               		0x20  /* 扇区擦除:4K      */
+#define CMD_ERASE_32K               	0x52  /* 扇区擦除:32K     */
+#define CMD_ERASE_64K               	0xD8  /* 扇区擦除:64K     */
 #define CMD_ERASE_full              	0xC7  /* 全片擦除         */
 #define CMD_JEDEC_ID                	0x9F  /* 读 JEDEC_ID      */
-#define CMD_EBSY                    		0x70  /* 打开SO忙输出指示 */
-#define CMD_DBSY                    		0x80  /* 关闭SO忙输出指示 */
+#define CMD_EBSY                    	0x70  /* 打开SO忙输出指示 */
+#define CMD_DBSY                    	0x80  /* 关闭SO忙输出指示 */
 
-#define WIP_Flag                  							0x01  //Write In Progress (WIP) flag 
-#define Dummy_Byte                						0xFF  //moke needful read clock
+/* use auxiliary data */
+#define WIP_Flag                  		0x01  //Write In Progress (WIP) flag 
+#define Dummy_Byte                		0xFF  //moke needful read clock
 
-
-#define SPI2_CS_NAME1									"sst25"
-#define SPI2_BUS_NAME									"spi2bus"
-#define FLASH_DEVICE_NAME							"flash1"
-
-/* hardware define ---------------------------------------------------------*/
-
-#define SPI2_SCK_PIN											GPIO_Pin_13;
-#define	 SPI2_MISO_PIN										GPIO_Pin_14
-#define SPI2_MOSI_PIN										GPIO_Pin_15
-#define SPI2_GPIO_PORT									GPIOB
-#define SPI2_CLOCK											RCC_APB1Periph_SPI2
-
-
-#define SPI2_CS_PIN											GPIO_Pin_12
-#define SPI2_CS_PORT										GPIOB
-#define SPI2_CS_CLOCK									RCC_APB2Periph_GPIOB
-
-#define GPIO_RCC												RCC_APB2Periph_GPIOB
 
 
 
 /* flash device */
 struct flash_device 
 {
-	struct rt_device                			parent;      /**< RT-Thread device struct */
+	struct rt_device                	parent;      /**< RT-Thread device struct */
 	struct rt_device_blk_geometry   	geometry;    /**< sector size, sector count */
-	struct rt_spi_device *          		spi_device;  /**< SPI interface */
-	uint32_t                        				max_clock;   /**< MAX SPI clock */
+	struct rt_spi_device *          	spi_device;  /**< SPI interface */
+	u32 											max_clock;   /**< MAX SPI clock */
 };
 
 /*spi device*/
@@ -108,7 +106,15 @@ void rt_hw_spi_init(void)
 
 
 
-/******************************************** flash device drive function ******************************/
+/*-------------flash chip device drive function -------------*/
+/*******************************************************************************
+* Function Name  : spi_flash_write_read_byte
+* Description    : write and read flash one byte
+*                  
+* Input				: device :spi device data :input flash of data
+* Output			: read output data
+* Return         	: None
+*******************************************************************************/
 
 static u8 spi_flash_write_read_byte(struct rt_spi_device *device,const u8 data)
 {
@@ -125,14 +131,19 @@ static u8 spi_flash_write_read_byte(struct rt_spi_device *device,const u8 data)
 
 	return value;
 }
-
+/*******************************************************************************
+* Function Name  : spi_flash_wait_write_end
+* Description    :flash private function busy check fun
+*                  
+* Input				: device :spi device 
+* Output			: None
+* Return         	: None
+*******************************************************************************/
 static void spi_flash_wait_write_end(struct rt_spi_device *device)
 {
 	u8 flash_status;
 	
 	rt_spi_take(device);
-
-//	spi_flash_write_read_byte(device,CMD_EBSY);//open buys so output
 	
 	spi_flash_write_read_byte(device,CMD_RDSR);
 	 
@@ -141,14 +152,17 @@ static void spi_flash_wait_write_end(struct rt_spi_device *device)
     flash_status = spi_flash_write_read_byte(device,Dummy_Byte);	 
   }
   while ((flash_status& WIP_Flag) == SET); 
-
-//	spi_flash_write_read_byte(device,CMD_DBSY);
 	
 	rt_spi_release(device);
 }
-
-
-
+/*******************************************************************************
+* Function Name  : spi_flash_write_status_enable
+* Description    :flash private function enable write status register
+*                  
+* Input				: device :spi device 
+* Output			: None
+* Return         	: None
+*******************************************************************************/
 static void spi_flash_write_status_enable(struct rt_spi_device *device)
 {
 	rt_spi_take(device);
@@ -168,8 +182,14 @@ static void spi_flash_write_status_enable(struct rt_spi_device *device)
 	spi_flash_wait_write_end(device);
 
 }
-
-
+/*******************************************************************************
+* Function Name  : spi_flash_write_enable
+* Description    :flash private function enable write data fun
+*                  
+* Input				: device :spi device 
+* Output			: None
+* Return         	: None
+*******************************************************************************/
 static void spi_flash_write_enable(struct rt_spi_device *device )
 {
 	spi_flash_write_status_enable(device);
@@ -182,7 +202,14 @@ static void spi_flash_write_enable(struct rt_spi_device *device )
 
 	spi_flash_wait_write_end(device);
 }
-
+/*******************************************************************************
+* Function Name  : spi_flash_write_disable
+* Description    :flash private function disable write data fun
+*                  
+* Input				: device :spi device 
+* Output			: None
+* Return         	: None
+*******************************************************************************/
 static void spi_flash_write_disable(struct rt_spi_device *device)
 {
 	spi_flash_write_status_enable(device);
@@ -195,7 +222,14 @@ static void spi_flash_write_disable(struct rt_spi_device *device)
 
 	spi_flash_wait_write_end(device);
 }
-
+/*******************************************************************************
+* Function Name  : spi_flash_sector_erase
+* Description    :flash private function erase 4k sector
+*                  
+* Input				: device :spi device 
+* Output			: None
+* Return         	: None
+*******************************************************************************/
 void spi_flash_sector_erase(struct rt_spi_device *device,u32 SectorAddr)
 {
 	spi_flash_write_enable(device);
@@ -214,7 +248,14 @@ void spi_flash_sector_erase(struct rt_spi_device *device,u32 SectorAddr)
   
   spi_flash_wait_write_end(device);
 }
-
+/*******************************************************************************
+* Function Name  : spi_flash_chip_erase
+* Description    :flash private function erase Chip Integration plan
+*                  
+* Input				: device :spi device 
+* Output			: None
+* Return         	: None
+*******************************************************************************/
 static void spi_flash_chip_erase(struct rt_spi_device *device)
 {
 	spi_flash_write_enable(device);
@@ -227,7 +268,17 @@ static void spi_flash_chip_erase(struct rt_spi_device *device)
 
 	spi_flash_wait_write_end(device);
 }
-
+/*******************************************************************************
+* Function Name  : spi_flash_buffer_write
+* Description    :flash private function write sst25vf016 data 
+*                  
+* Input				: device :		spi device;
+*						  pBuffer :		data buffer;
+*						  WriteAddr:	statr write pos;
+*						  NumByteToWrite: write data size
+* Output			: None
+* Return         	: None
+*******************************************************************************/
 static void spi_flash_buffer_write(struct rt_spi_device *device,const u8* pBuffer, u32 WriteAddr, u16 NumByteToWrite)
 {
 	u32 index;
@@ -334,21 +385,26 @@ static rt_err_t rt_flash_init(rt_device_t dev)
 
 	if(flash->spi_device->bus->owner != flash->spi_device)
 	{
-//		rt_spi_configure(flash->spi_device,&spi1_configuer);
+		/* 	current configuration spi bus */		
 		flash->spi_device->bus->ops->configure(flash->spi_device,&flash->spi_device->config);
 	}
 	
 	return RT_EOK;
 }
 
+
+
 static rt_err_t rt_flash_open(rt_device_t dev, rt_uint16_t oflag)
 {
 	return RT_EOK;
 }
+
+
 static rt_err_t rt_flash_close(rt_device_t dev)
 {
 	return RT_EOK;
 }
+
 
 static rt_size_t rt_flash_read(rt_device_t dev, rt_off_t pos, void* buffer, rt_size_t size)
 {
@@ -359,6 +415,7 @@ static rt_size_t rt_flash_read(rt_device_t dev, rt_off_t pos, void* buffer, rt_s
 	return size;
 }
 
+
 static rt_size_t rt_flash_write(rt_device_t dev, rt_off_t pos,const void* buffer, rt_size_t size)
 {
 	struct flash_device* flash = (struct flash_device *)dev;	
@@ -367,6 +424,7 @@ static rt_size_t rt_flash_write(rt_device_t dev, rt_off_t pos,const void* buffer
 	
 	return size;
 }
+
 
 static rt_err_t rt_flash_control(rt_device_t dev, rt_uint8_t cmd, void *args)
 {

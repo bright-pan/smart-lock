@@ -17,6 +17,8 @@
 #ifndef	__FILETEST_H__
 #define		__FILETEST_H__
 #include "rtthread.h"
+#include "photo.h"
+
 
 void filesystem_test(void);
 

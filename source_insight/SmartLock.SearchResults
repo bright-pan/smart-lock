@@ -1,10 +1,10 @@
----- "usart2" 匹配 (6 in 5 文件) ----
-Board.h (e:\code\smartlock):#define CONSOLE_DEVICE "usart2"
-Filetest.c (e:\code\smartlock):	device = rt_device_find("usart2");
-Picture.c (e:\code\smartlock):	device = rt_device_find("usart2");
-Startup.c (e:\code\smartlock):	finsh_set_device("usart2");
-Usart.c (e:\code\smartlock):  rt_hw_serial_register(&serial_device_usart2, "usart2",
-Usart.c (e:\code\smartlock):  usart = rt_device_find("usart2");
----- "usart2" 搜索遇到错误 (1) ----
+---- local_mq 匹配 (6 in 3 文件) ----
+Alarm.c (e:\code\smartlock):        /* send to local_mq */
+Alarm.c (e:\code\smartlock):        rt_mq_send(local_mq, local_mail_buf, sizeof(LOCAL_MAIL_TYPEDEF));
+Local.c (e:\code\smartlock):rt_mq_t local_mq;
+Local.c (e:\code\smartlock):  local_mq = rt_mq_create("local", sizeof(LOCAL_MAIL_TYPEDEF), LOCAL_MAIL_MAX_MSGS, RT_IPC_FLAG_FIFO);
+Local.c (e:\code\smartlock):    result = rt_mq_recv(local_mq, local_mail_buf, sizeof(LOCAL_MAIL_TYPEDEF), RT_WAITING_FOREVER);
+Local.h (e:\code\smartlock):extern rt_mq_t local_mq;
+---- local_mq 搜索遇到错误 (1) ----
 以下1个文件不能被处理：
 E:\code\smartlock\JLinkLog.txt : 文件打不开。
