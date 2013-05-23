@@ -67,7 +67,7 @@
 #define RT_USING_SERIAL
 #define RT_USING_SPI
 
-//#define RT_USING_NEWLIBC
+#define RT_USING_NEWLIBC
 
 /* SECTION: Console options */
 #define RT_USING_CONSOLE

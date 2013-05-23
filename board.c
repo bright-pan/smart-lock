@@ -208,7 +208,7 @@ void rt_hw_board_init()
   /* camera device register */
   //rt_hw_camera_uart_register();
   //rt_hw_camera_photosensor_register();
-  //rt_hw_camera_irdasensor_register();
+  rt_hw_camera_irdasensor_register();
   //rt_hw_camera_power_register();
   //rt_hw_camera_led_register();
   /* motor device register */

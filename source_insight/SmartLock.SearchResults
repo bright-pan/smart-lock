@@ -1,10 +1,14 @@
----- local_mq 匹配 (6 in 3 文件) ----
-Alarm.c (e:\code\smartlock):        /* send to local_mq */
-Alarm.c (e:\code\smartlock):        rt_mq_send(local_mq, local_mail_buf, sizeof(LOCAL_MAIL_TYPEDEF));
-Local.c (e:\code\smartlock):rt_mq_t local_mq;
-Local.c (e:\code\smartlock):  local_mq = rt_mq_create("local", sizeof(LOCAL_MAIL_TYPEDEF), LOCAL_MAIL_MAX_MSGS, RT_IPC_FLAG_FIFO);
-Local.c (e:\code\smartlock):    result = rt_mq_recv(local_mq, local_mail_buf, sizeof(LOCAL_MAIL_TYPEDEF), RT_WAITING_FOREVER);
-Local.h (e:\code\smartlock):extern rt_mq_t local_mq;
----- local_mq 搜索遇到错误 (1) ----
+---- list_date 匹配 (10 in 3 文件) ----
+Rtc.c (e:\code\smartlock):void list_date(void)
+Rtc.c (e:\code\smartlock):FINSH_FUNCTION_EXPORT(list_date, show date and time.)
+Rtc.c (e:\code\smartlock\rt-thread\components\drivers\rtc):void list_date(void)
+Rtc.c (e:\code\smartlock\rt-thread\components\drivers\rtc):FINSH_FUNCTION_EXPORT(list_date, show date and time.)
+Rtthread-stm32.htm (e:\code\smartlock\obj): <LI><a href="#[107]">list_date</a> from rtc.o(.text) referenced from rtc.o(FSymTab)
+Rtthread-stm32.htm (e:\code\smartlock\obj):<LI><a href="#[107]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;list_date
+Rtthread-stm32.htm (e:\code\smartlock\obj):<BR>[Called By]<UL><LI><a href="#[107]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;list_date
+Rtthread-stm32.htm (e:\code\smartlock\obj):<P><STRONG><a name="[107]"></a>list_date</STRONG> (Thumb, 24 bytes, Stack size 8 bytes, rtc.o(.text))
+Rtthread-stm32.htm (e:\code\smartlock\obj):<BR><BR>[Stack]<UL><LI>Max Depth = 268<LI>Call Chain = list_date &rArr; time &rArr; rt_device_find &rArr; rt_exit_critical &rArr; rt_schedule &rArr; _rt_scheduler_stack_check &rArr; list_thread &rArr; _list_thread &rArr; rt_kprintf &rArr; vsnprintf &rArr; print_number
+Rtthread-stm32.htm (e:\code\smartlock\obj):<BR>[Called By]<UL><LI><a href="#[107]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;list_date
+---- list_date 搜索遇到错误 (1) ----
 以下1个文件不能被处理：
 E:\code\smartlock\JLinkLog.txt : 文件打不开。

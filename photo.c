@@ -17,10 +17,6 @@
  * Copyright (C) 2013 Yuettak Co.,Ltd
  ********************************************************************/
 #include "photo.h"
-#include <dfs_init.h>
-#include <dfs_elm.h>
-#include <dfs_fs.h>
-#include "dfs_posix.h"
 #include "gpio_pin.h"
 #include "camera_uart.h"
 #include "testprintf.h"
@@ -48,7 +44,7 @@ rt_mq_t			photo_ok_mq = RT_NULL;			//photo finish
 
 
 volatile rt_uint32_t release_com2_data = 0;
-rt_timer_t		pic_timer = RT_NULL;
+rt_timer_t	pic_timer = RT_NULL;
 rt_uint32_t	pic_timer_value = 0;
 
 //test
@@ -464,7 +460,10 @@ void photo_deal(camera_dev_t camera,cm_recv_mq_t recv_mq)
 		rt_thread_delay(camera->time);
 		photo_create_file_one(camera,recv_mq->name2);	
 	}
+	/* camera woker finish send Message Queuing */
 	send_mq.error = camera->error;
+	send_mq.name1 = recv_mq->name1;
+	send_mq.name2 = recv_mq->name2;
 	rt_mq_send(photo_ok_mq,&send_mq,sizeof(send_mq));
 }
 void photo_thread_entry(void *arg)
@@ -486,7 +485,7 @@ void photo_thread_entry(void *arg)
 			/*first open power  need 10ms after  */
 			if(result == -RT_ETIMEOUT)
 			{
-				camera_power_control(&photo,0);	
+			//	camera_power_control(&photo,0);	
 				timeout = RT_WAITING_FOREVER;
 				rt_kprintf("close power\n");
 				continue;
@@ -509,7 +508,7 @@ void photo_thread_entry(void *arg)
 			
 			photo_deal(&photo,&recv_mq);	
 
-			camera_power_control(&photo,0);		//close camera power
+		//	camera_power_control(&photo,0);		//close camera power
 	}
 }
 
@@ -593,68 +592,6 @@ void mq(rt_uint32_t time)//(rt_uint8_t time,rt_uint8_t *file_name)
 }
 FINSH_FUNCTION_EXPORT(mq, mq(time,name));
 
-void gprs( const char str[],int len)
-{
-	rt_device_t device;
-	rt_uint8_t length;
-	rt_err_t	result;
-	rt_uint8_t data[200];
-
-	device = rt_device_find("usart2");
-	rt_device_write(device,0,str,len);
-
-	
-	
-	release_com2_data = 1;
-	while(1)
-	{	
-		result = rt_sem_take(usart_data_sem,100);
-		if(-RT_ETIMEOUT == result)
-		{	
-			length = rt_device_read(device,0,data,200);
-				
-			test_recv_data(data,length);
-			
-			rt_kprintf("length = %d\n",length);
-
-			release_com2_data = CM_BUFFER_LEN;
-			break;
-		}
-	}
-	
-	
-}
-FINSH_FUNCTION_EXPORT(gprs, gprs());
-
-
-void rled(int data)
-{
-	rt_device_t device;
-
-	device = rt_device_find("ledf");
-
-	rt_device_write(device,0,&data,1);
-	
-}
-FINSH_FUNCTION_EXPORT(rled, rled());
-
-void cfile()
-{
-	int file_id;
-	rt_uint32_t i;
-	
-	file_id = open("/1.c",O_CREAT | O_RDWR,0);
-
-	i = 4096;
-	while(i--)
-	{
-		write(file_id,"1234567890",10);
-	}
-	
-
-	close(file_id);
-}
-FINSH_FUNCTION_EXPORT(cfile,cfile()--new file);
 
 
 
@@ -668,11 +605,6 @@ void chardevieo(const char *name,rt_int8_t data)
 }
 FINSH_FUNCTION_EXPORT(chardevieo,chardevieo(name,data)--output char device);
 
-void terminal()
-{
-	rt_kprintf("\033[1;40;32m");
-}
-FINSH_FUNCTION_EXPORT(terminal,terminal());
 
 #endif
 

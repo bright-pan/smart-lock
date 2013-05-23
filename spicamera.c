@@ -5,9 +5,9 @@
 #define SPI1_DEVICE1_NAME		("camera")
 
 #define SPI1_RCC						RCC_APB2Periph_SPI1
-#define SPI1_PORT_RCC			RCC_APB2Periph_GPIOA
+#define SPI1_PORT_RCC				RCC_APB2Periph_GPIOA
 #define SPI1_GPIO_PORT			GPIOA
-#define SPI1_CLK_PIN					GPIO_Pin_5
+#define SPI1_CLK_PIN				GPIO_Pin_5
 #define SPI1_MISO_PIN				GPIO_Pin_6
 #define SPI1_MOSI_PIN				GPIO_Pin_7
 
@@ -21,9 +21,9 @@
 
 struct camera_device 
 {
-	struct rt_device                			parent;      /**< RT-Thread device struct */
-	struct rt_spi_device *          		spi_device;  /**< SPI interface */
-	uint32_t                        				max_clock;   /**< MAX SPI clock */
+	struct rt_device          parent;      /**< RT-Thread device struct */
+	struct rt_spi_device *    spi_device;  /**< SPI interface */
+	uint32_t                  max_clock;   /**< MAX SPI clock */
 };
 struct camera_device	camera_mode;
 
@@ -51,7 +51,7 @@ void rt_hw_spi1_init(void)
 	}
 	/*		initialization SPI CS device 		 */
 	{
-		GPIO_InitTypeDef						gpio_initstructure;
+		GPIO_InitTypeDef								gpio_initstructure;
 		static struct rt_spi_device 		spi_device; 			 
 		static struct stm32_spi_cs			spi_cs; 
 		
@@ -80,7 +80,7 @@ void rt_hw_spi1_init(void)
 
 static u8 camera_read_write_byte(struct rt_spi_device* device,const u8 data)
 {
-	u8 value;
+	volatile u8 value;
 	struct rt_spi_message message;
 
 	message.length = 1;
@@ -101,11 +101,8 @@ static camera_read_buffer_data(struct rt_spi_device*  dev, rt_off_t pos, rt_uint
 	while(size)
 	{
 		rt_spi_take(dev);
-		delay(5000);
 		*buffer = camera_read_write_byte(dev,0xff);
-		delay(5000);
 		rt_spi_release(dev);
-		delay(5000);
 		buffer++;
 		size--;
 	}
@@ -167,7 +164,7 @@ rt_err_t rt_camera_register(const char* device_name,const char *cs_name)
 		RT_SPI_MODE_0 | RT_SPI_MSB,										//spi clock and data mode set
 		8,																			//data width
 		0,																			//reserved
-		72000000/64													//MAX frequency 18MHz
+		72000000/8													//MAX frequency 18MHz
 	};
 
 	spi_device = (struct rt_spi_device *)rt_device_find(cs_name);
@@ -182,7 +179,7 @@ rt_err_t rt_camera_register(const char* device_name,const char *cs_name)
 	}
 	rt_memset(&camera_mode, 0, sizeof(camera_mode));
 	camera_mode.spi_device = spi_device;
-	camera_mode.max_clock = 18000000;
+	camera_mode.max_clock = 9000000;
 	camera_mode.spi_device->config = spi1_configuer;
 	/* register flash device */
 	camera_mode.parent.type    = RT_Device_Class_Char;

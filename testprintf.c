@@ -1,3 +1,17 @@
+/*********************************************************************
+ * Filename:      testprintf.c
+ *
+ * Description:	test file test ok after delete
+ *
+ * Author:        wangzw <wangzw@yuettak.com>
+ * Created at:    2013-05-17 14:22:03
+ *                
+ * Modify:
+ *
+ * 
+ *
+ * Copyright (C) 2013 Yuettak Co.,Ltd
+ ********************************************************************/
 #include "testprintf.h"
 
 
@@ -52,4 +66,21 @@ void printf_camera(camera_dev_t camera)
 }
 
 
+
+
+
+
+
+
+#ifdef RT_USING_FINSH
+#include <finsh.h>
+/*  modification terminal display  */
+void terminal()
+{
+	rt_kprintf("\033[1;40;32m");
+}
+FINSH_FUNCTION_EXPORT(terminal,terminal());
+
+
+#endif
 

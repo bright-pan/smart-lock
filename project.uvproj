@@ -72,7 +72,7 @@
           <AfterMake>
             <RunUserProg1>0</RunUserProg1>
             <RunUserProg2>0</RunUserProg2>
-            <UserProg1Name></UserProg1Name>
+            <UserProg1Name>C:\Keil\ARM\BIN40\fromelf.exe  --bin -o D:\1.bin  E:\code\smartlock\obj\rtthread-stm32.axf</UserProg1Name>
             <UserProg2Name></UserProg2Name>
             <UserProg1Dos16Mode>0</UserProg1Dos16Mode>
             <UserProg2Dos16Mode>0</UserProg2Dos16Mode>
@@ -391,11 +391,6 @@
               <FilePath>.\local.c</FilePath>
             </File>
             <File>
-              <FileName>sendphoto.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\sendphoto.c</FilePath>
-            </File>
-            <File>
               <FileName>alarm.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\alarm.c</FilePath>
@@ -426,14 +421,14 @@
               <FilePath>.\RT-Thread\components\drivers\src\dataqueue.c</FilePath>
             </File>
             <File>
-              <FileName>photo.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\photo.c</FilePath>
-            </File>
-            <File>
               <FileName>sdcard.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\sdcard.c</FilePath>
+            </File>
+            <File>
+              <FileName>cameraspi.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\cameraspi.c</FilePath>
             </File>
           </Files>
         </Group>

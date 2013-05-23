@@ -18,14 +18,14 @@
 
 
 #define SPI2_BUS_NAME									("spi2")
-#define SPI2_CS1_NAME										("w25")
+#define SPI2_CS1_NAME									("w25")
 #define FLASH_DEVICE_NAME							("flash1")
 
 
 /* hardware define ---------------------------------------------------------*/
 
-#define SPI1_SCK_PIN											GPIO_Pin_13
-#define	 SPI1_MISO_PIN										GPIO_Pin_14
+#define SPI1_SCK_PIN										GPIO_Pin_13
+#define	 SPI1_MISO_PIN									GPIO_Pin_14
 #define SPI1_MOSI_PIN										GPIO_Pin_15
 #define SPI1_GPIO_PORT									GPIOB
 #define SPI1_APB2_CLOCK							   RCC_APB2Periph_GPIOB

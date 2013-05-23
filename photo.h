@@ -2,6 +2,11 @@
 #define	 __PHOTO_H__
 #include "rtthread.h"
 #include "rtdevice.h"
+#include <dfs_init.h>
+#include <dfs_elm.h>
+#include <dfs_fs.h>
+#include "dfs_posix.h"
+
 
 
 
@@ -61,6 +66,8 @@ typedef struct cm_send_mq cm_send_mq_t;
 extern rt_mq_t			photo_ok_mq;			//photo finish
 
 void photo_thread_init(void);
+void mq(rt_uint32_t time);//(rt_uint8_t time,rt_uint8_t *file_name);
+
 
 #endif
  

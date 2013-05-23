@@ -171,7 +171,6 @@ static rt_err_t configure(struct rt_spi_device* device, struct rt_spi_configurat
     if(configuration->mode & RT_SPI_CPOL)
     {
         SPI_InitStructure.SPI_CPOL = SPI_CPOL_High;
-         rt_kprintf("SPI_CPOL_High \n");
     }
     else
     {
@@ -181,7 +180,6 @@ static rt_err_t configure(struct rt_spi_device* device, struct rt_spi_configurat
     if(configuration->mode & RT_SPI_CPHA)
     {
         SPI_InitStructure.SPI_CPHA = SPI_CPHA_2Edge;
-        rt_kprintf("SPI_CPHA_2Edge \n");
     }
     else
     {
@@ -191,7 +189,6 @@ static rt_err_t configure(struct rt_spi_device* device, struct rt_spi_configurat
     if(configuration->mode & RT_SPI_MSB)
     {
         SPI_InitStructure.SPI_FirstBit = SPI_FirstBit_MSB;
-        rt_kprintf("MSB \n");
     }
     else
     {
