@@ -139,7 +139,7 @@ struct gpio_pin_user_data camera_led_user_data =
   GPIO_Mode_Out_PP,
   GPIO_Speed_50MHz,
   RCC_APB2Periph_GPIOE,
-  1,
+  0,
 };
 gpio_device camera_led_device;
 
@@ -160,7 +160,7 @@ struct gpio_pin_user_data camera_power_user_data =
   GPIO_Mode_Out_PP,
   GPIO_Speed_50MHz,
   RCC_APB2Periph_GPIOE,
-  1,
+  0,
 };
 gpio_device camera_power_device;
 
@@ -182,7 +182,7 @@ struct gpio_pin_user_data logo_led_user_data =
   GPIO_Mode_Out_PP,
   GPIO_Speed_50MHz,
   RCC_APB2Periph_GPIOE,
-  1,
+  0,
 };
 gpio_device logo_led_device;
 
@@ -204,7 +204,7 @@ struct gpio_pin_user_data gsm_led_user_data =
   GPIO_Mode_Out_PP,
   GPIO_Speed_50MHz,
   RCC_APB2Periph_GPIOE,
-  1,
+  0,
 };
 gpio_device gsm_led_device;
 
