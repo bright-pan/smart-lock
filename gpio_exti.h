@@ -29,6 +29,8 @@
 #define DEVICE_NAME_CAMERA_PHOTOSENSOR "cm_photo"
 #define DEVICE_NAME_CAMERA_IRDASENSOR "cm_irda"
 
+#define DEVICE_NAME_GSM_RING "g_ring"
+
 #define DEVICE_NAME_MOTOR_STATUS "mt_stat"
 #define DEVICE_NAME_RFID_KEY_DETECT "rf_kdet"
 
@@ -44,6 +46,8 @@ void rt_hw_camera_irdasensor_register(void);
 void rt_hw_motor_status_register(void);
 
 void rt_hw_rfid_key_detect_register(void);
+
+void rt_hw_gsm_ring_register(void);
 
 void rt_hw_key2_register(void);
 

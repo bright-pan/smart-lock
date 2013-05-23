@@ -388,6 +388,66 @@ void rt_hw_camera_irdasensor_register(void)
   rt_device_set_rx_indicate((rt_device_t)gpio_device, gpio_user_data->gpio_exti_rx_indicate);
 }
 
+/* gsm_ring device */
+rt_err_t gsm_ring_rx_ind(rt_device_t dev, rt_size_t size)
+{
+  ALARM_MAIL_TYPEDEF buf;
+  rt_err_t result;
+  gpio_device *gpio = RT_NULL;
+  RT_ASSERT(dev != RT_NULL);
+  gpio = (gpio_device *)dev;
+  /* produce mail */
+  rt_device_control(rtc_device, RT_DEVICE_CTRL_RTC_GET_TIME, &(buf.time));
+
+  buf.alarm_type = ALARM_TYPE_GSM_RING;
+  buf.alarm_process_flag = ALARM_PROCESS_FLAG_SMS | ALARM_PROCESS_FLAG_GPRS | ALARM_PROCESS_FLAG_LOCAL;
+  buf.gpio_value = gpio->pin_value;
+  /* send mail */
+  if (alarm_mq != NULL)
+  {
+    result = rt_mq_send(alarm_mq, &buf, sizeof(ALARM_MAIL_TYPEDEF));
+    if (result == -RT_EFULL)
+    {
+      rt_kprintf("alarm_mq is full!!!\n");
+    }
+  }
+  else
+  {
+    rt_kprintf("alarm_mq is RT_NULL!!!\n");
+  }
+  return RT_EOK;
+}
+
+gpio_device gsm_ring_device;
+
+struct gpio_exti_user_data gsm_ring_user_data = 
+{
+  DEVICE_NAME_GSM_RING,
+  GPIOD,
+  GPIO_Pin_13,
+  GPIO_Mode_IPD,
+  GPIO_Speed_50MHz,
+  RCC_APB2Periph_GPIOD |RCC_APB2Periph_AFIO,
+  GPIO_PortSourceGPIOD,
+  GPIO_PinSource13,
+  EXTI_Line13,
+  EXTI_Mode_Interrupt,
+  EXTI_Trigger_Rising,
+  EXTI15_10_IRQn,
+  1,
+  5,
+  gsm_ring_rx_ind,
+};
+
+void rt_hw_gsm_ring_register(void)
+{
+  gpio_device *gpio_device = &gsm_ring_device;
+  struct gpio_exti_user_data *gpio_user_data = &gsm_ring_user_data;
+
+  gpio_device->ops = &gpio_exti_user_ops;
+  rt_hw_gpio_register(gpio_device, gpio_user_data->name, (RT_DEVICE_FLAG_RDWR | RT_DEVICE_FLAG_INT_RX), gpio_user_data);
+  rt_device_set_rx_indicate((rt_device_t)gpio_device, gpio_user_data->gpio_exti_rx_indicate);
+}
 /* lock_gate device */
 rt_err_t lock_gate_rx_ind(rt_device_t dev, rt_size_t size)
 {
@@ -485,17 +545,17 @@ gpio_device lock_shell_device;
 struct gpio_exti_user_data lock_shell_user_data = 
 {
   DEVICE_NAME_LOCK_SHELL,
-  GPIOE,
-  GPIO_Pin_5,
-  GPIO_Mode_IN_FLOATING,
+  GPIOD,
+  GPIO_Pin_11,
+  GPIO_Mode_IPD,
   GPIO_Speed_50MHz,
-  RCC_APB2Periph_GPIOE |RCC_APB2Periph_AFIO,
-  GPIO_PortSourceGPIOE,
-  GPIO_PinSource5,
-  EXTI_Line5,
+  RCC_APB2Periph_GPIOD |RCC_APB2Periph_AFIO,
+  GPIO_PortSourceGPIOD,
+  GPIO_PinSource11,
+  EXTI_Line11,
   EXTI_Mode_Interrupt,
   EXTI_Trigger_Rising,
-  EXTI9_5_IRQn,
+  EXTI15_10_IRQn,
   1,
   5,
   lock_shell_rx_ind,
