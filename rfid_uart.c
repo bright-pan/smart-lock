@@ -12,7 +12,7 @@
  ********************************************************************/
 
 #include "rfid_uart.h"
-
+#include "gpio_pin.h"
 /*
  * Use UART4 with interrupt Rx and dma Tx
  *
@@ -87,12 +87,14 @@ static void GPIO_Configuration(struct rt_serial_device *serial)
   user_data = serial->parent.user_data;
   */
   /* Configure USART2 Rx CTS as input floating */
+  GPIO_StructInit(&GPIO_InitStructure);
   //GPIO_InitStructure.GPIO_Pin = RFID_UART_GPIO_PIN_RX | RFID_UART_GPIO_PIN_CTS;
   GPIO_InitStructure.GPIO_Pin = RFID_UART_GPIO_PIN_RX;
   GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN_FLOATING;
   GPIO_Init(RFID_UART_GPIO, &GPIO_InitStructure);
 
   /* Configure USART2 Tx RTS as alternate function push-pull */
+  GPIO_StructInit(&GPIO_InitStructure);
   //GPIO_InitStructure.GPIO_Pin = RFID_UART_GPIO_PIN_TX | RFID_UART_GPIO_PIN_RTS;
   GPIO_InitStructure.GPIO_Pin = RFID_UART_GPIO_PIN_TX;
   GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP;
@@ -134,8 +136,10 @@ static void DMA_Configuration(struct rt_serial_device *serial)
   struct rfid_uart_user_data_t *user_data;
   user_data = serial->parent.user_data;
   /* fill init structure */
+
   if (serial->parent.flag & RT_DEVICE_FLAG_DMA_TX)
   {
+    DMA_StructInit(&DMA_InitStructure);
     DMA_InitStructure.DMA_PeripheralInc = DMA_PeripheralInc_Disable;
     DMA_InitStructure.DMA_MemoryInc = DMA_MemoryInc_Enable;
     DMA_InitStructure.DMA_PeripheralDataSize = DMA_PeripheralDataSize_Byte;
@@ -242,6 +246,7 @@ static rt_err_t rfid_uart_pos_configure(struct rt_serial_device *serial, struct 
 
   DMA_Configuration(serial);
   /* uart init */
+  USART_StructInit(&USART_InitStructure);
   USART_InitStructure.USART_BaudRate = cfg->baud_rate;
   switch(cfg->data_bits)
   {
@@ -386,28 +391,40 @@ void rfid_uart_device_isr(struct rt_serial_device *serial)
   rt_hw_serial_isr(serial);
 }
 
-
 #ifdef RT_USING_FINSH
 #include <finsh.h>
 
-static char temp[100];
+extern void delay(rt_uint32_t counts);
+static char temp[20];
 
-void rfid_uart(char cmd, char *str)
+void rfid_uart(rt_int8_t cmd, const char *str)
 {
   rt_device_t device;
-  memset(temp, '\xFF', 100);
+  rt_int8_t i = 0;
+  memset(temp, '\xFF', 20);
   device = rt_device_find(DEVICE_NAME_RFID_UART);
   if (device != RT_NULL)
   {
     if (cmd == 0)
     {
       rt_device_read(device, 0, temp, 20);
-      temp[99] = '\0';
-      rt_kprintf(temp);
+      if (temp[0] == 0x50)
+      {
+        rt_kprintf("%02X %02X %02X %02X\n", temp[4]^temp[8], temp[5]^temp[8], temp[6]^temp[8], temp[7]^temp[8]);
+      }
+      else
+      {
+
+      }
+      while(i < 20)
+      {
+        rt_kprintf("%02X ", temp[i++]);
+      }
+      rt_kprintf("\n");
     }
     else if (cmd == 1)
     {
-      rt_device_write(device, 0, str, strlen(str));
+      rt_device_write(device, 0, "\x50\x00\x06\xD4\x07\x01\x00\x00\x00\x04\x80", 11);
     }
   }
   else
@@ -416,4 +433,5 @@ void rfid_uart(char cmd, char *str)
   }
 }
 FINSH_FUNCTION_EXPORT(rfid_uart, rfid_uart[cmd parameters])
+
 #endif

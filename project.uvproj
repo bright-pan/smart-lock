@@ -383,8 +383,28 @@
       </TargetOption>
       <Groups>
         <Group>
-          <GroupName>Startup</GroupName>
+          <GroupName>Application</GroupName>
           <Files>
+            <File>
+              <FileName>local.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\local.c</FilePath>
+            </File>
+            <File>
+              <FileName>sendphoto.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\sendphoto.c</FilePath>
+            </File>
+            <File>
+              <FileName>alarm.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\alarm.c</FilePath>
+            </File>
+            <File>
+              <FileName>gprs.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\gprs.c</FilePath>
+            </File>
             <File>
               <FileName>application.c</FileName>
               <FileType>1</FileType>
@@ -401,94 +421,9 @@
               <FilePath>./board.c</FilePath>
             </File>
             <File>
-              <FileName>stm32f10x_it.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>./stm32f10x_it.c</FilePath>
-            </File>
-            <File>
-              <FileName>rtc.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>./rtc.c</FilePath>
-            </File>
-            <File>
-              <FileName>usart.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>./usart.c</FilePath>
-            </File>
-            <File>
-              <FileName>serial.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\RT-Thread\components\drivers\serial\serial.c</FilePath>
-            </File>
-            <File>
-              <FileName>completion.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\RT-Thread\components\drivers\src\completion.c</FilePath>
-            </File>
-            <File>
               <FileName>dataqueue.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\RT-Thread\components\drivers\src\dataqueue.c</FilePath>
-            </File>
-            <File>
-              <FileName>pipe.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\RT-Thread\components\drivers\src\pipe.c</FilePath>
-            </File>
-            <File>
-              <FileName>ringbuffer.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\RT-Thread\components\drivers\src\ringbuffer.c</FilePath>
-            </File>
-            <File>
-              <FileName>spi_core.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\RT-Thread\components\drivers\spi\spi_core.c</FilePath>
-            </File>
-            <File>
-              <FileName>spi_dev.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\RT-Thread\components\drivers\spi\spi_dev.c</FilePath>
-            </File>
-            <File>
-              <FileName>spibus.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\spibus.c</FilePath>
-            </File>
-            <File>
-              <FileName>gpio.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\gpio.c</FilePath>
-            </File>
-            <File>
-              <FileName>gpio_pin.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\gpio_pin.c</FilePath>
-            </File>
-            <File>
-              <FileName>filetest.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\filetest.c</FilePath>
-            </File>
-            <File>
-              <FileName>camera_uart.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\camera_uart.c</FilePath>
-            </File>
-            <File>
-              <FileName>rfid_uart.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\rfid_uart.c</FilePath>
-            </File>
-            <File>
-              <FileName>spicamera.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\spicamera.c</FilePath>
-            </File>
-            <File>
-              <FileName>testprintf.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\testprintf.c</FilePath>
             </File>
             <File>
               <FileName>photo.c</FileName>
@@ -496,14 +431,9 @@
               <FilePath>.\photo.c</FilePath>
             </File>
             <File>
-              <FileName>sst25v16.c</FileName>
+              <FileName>sdcard.c</FileName>
               <FileType>1</FileType>
-              <FilePath>.\sst25v16.c</FilePath>
-            </File>
-            <File>
-              <FileName>sendphoto.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\sendphoto.c</FilePath>
+              <FilePath>.\sdcard.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -838,7 +768,7 @@
           </Files>
         </Group>
         <Group>
-          <GroupName>z</GroupName>
+          <GroupName>Zmodem</GroupName>
           <Files>
             <File>
               <FileName>rz.c</FileName>
@@ -864,6 +794,126 @@
               <FileName>zstart.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\RT-Thread\components\utilities\zmodem\zstart.c</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>Device_drive</GroupName>
+          <Files>
+            <File>
+              <FileName>spicamera.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\spicamera.c</FilePath>
+            </File>
+            <File>
+              <FileName>sms.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\sms.c</FilePath>
+            </File>
+            <File>
+              <FileName>sst25v16.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\sst25v16.c</FilePath>
+            </File>
+            <File>
+              <FileName>stm32f10x_it.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>./stm32f10x_it.c</FilePath>
+            </File>
+            <File>
+              <FileName>gpio_pin.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\gpio_pin.c</FilePath>
+            </File>
+            <File>
+              <FileName>rfid_uart.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\rfid_uart.c</FilePath>
+            </File>
+            <File>
+              <FileName>gpio_adc.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\gpio_adc.c</FilePath>
+            </File>
+            <File>
+              <FileName>camera_uart.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\camera_uart.c</FilePath>
+            </File>
+            <File>
+              <FileName>spi_core.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\RT-Thread\components\drivers\spi\spi_core.c</FilePath>
+            </File>
+            <File>
+              <FileName>spi_dev.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\RT-Thread\components\drivers\spi\spi_dev.c</FilePath>
+            </File>
+            <File>
+              <FileName>spibus.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\spibus.c</FilePath>
+            </File>
+            <File>
+              <FileName>pipe.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\RT-Thread\components\drivers\src\pipe.c</FilePath>
+            </File>
+            <File>
+              <FileName>ringbuffer.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\RT-Thread\components\drivers\src\ringbuffer.c</FilePath>
+            </File>
+            <File>
+              <FileName>usart.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>./usart.c</FilePath>
+            </File>
+            <File>
+              <FileName>completion.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\RT-Thread\components\drivers\src\completion.c</FilePath>
+            </File>
+            <File>
+              <FileName>rtc.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>./rtc.c</FilePath>
+            </File>
+            <File>
+              <FileName>serial.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\RT-Thread\components\drivers\serial\serial.c</FilePath>
+            </File>
+            <File>
+              <FileName>gpio.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\gpio.c</FilePath>
+            </File>
+            <File>
+              <FileName>gpio_pwm.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\gpio_pwm.c</FilePath>
+            </File>
+            <File>
+              <FileName>gpio_exti.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\gpio_exti.c</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>Test</GroupName>
+          <Files>
+            <File>
+              <FileName>filetest.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\filetest.c</FilePath>
+            </File>
+            <File>
+              <FileName>testprintf.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\testprintf.c</FilePath>
             </File>
           </Files>
         </Group>

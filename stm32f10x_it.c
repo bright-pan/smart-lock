@@ -359,361 +359,367 @@ void UART5_IRQHandler(void)
   /* leave interrupt */
   rt_interrupt_leave();
 }
-//
-//#if defined(RT_USING_DFS) && STM32_USE_SDIO
-///*******************************************************************************
-// * Function Name  : SDIO_IRQHandler
-// * Description    : This function handles SDIO global interrupt request.
-// * Input          : None
-// * Output         : None
-// * Return         : None
-// *******************************************************************************/
-//void SDIO_IRQHandler(void)
-//{
-//  extern int SD_ProcessIRQSrc(void);
-//
-//  /* enter interrupt */
-//  rt_interrupt_enter();
-//
-//  /* Process All SDIO Interrupt Sources */
-//  SD_ProcessIRQSrc();
-//
-//  /* leave interrupt */
-//  rt_interrupt_leave();
-//}
-//#endif
-//
-//#ifdef RT_USING_LWIP
-//#ifdef STM32F10X_CL
-///*******************************************************************************
-// * Function Name  : ETH_IRQHandler
-// * Description    : This function handles ETH interrupt request.
-// * Input          : None
-// * Output         : None
-// * Return         : None
-// *******************************************************************************/
-//void ETH_IRQHandler(void)
-//{
-//  extern void rt_hw_stm32_eth_isr(void);
-//
-//  /* enter interrupt */
-//  rt_interrupt_enter();
-//
-//  rt_hw_stm32_eth_isr();
-//
-//  /* leave interrupt */
-//  rt_interrupt_leave();
-//}
-//#else
-//#if (STM32_ETH_IF == 0)
-///*******************************************************************************
-// * Function Name  : EXTI0_IRQHandler
-// * Description    : This function handles External interrupt Line 0 request.
-// * Input          : None
-// * Output         : None
-// * Return         : None
-// *******************************************************************************/
-//void EXTI2_IRQHandler(void)
-//{
-//  extern void enc28j60_isr(void);
-//
-//  /* enter interrupt */
-//  rt_interrupt_enter();
-//
-//  enc28j60_isr();
-//
-//  /* Clear the Key Button EXTI line pending bit */
-//  EXTI_ClearITPendingBit(EXTI_Line2);
-//
-//  /* leave interrupt */
-//  rt_interrupt_leave();
-//}
-//#endif
-//
-//#if (STM32_ETH_IF == 1)
-///*******************************************************************************
-// * Function Name  : EXTI4_IRQHandler
-// * Description    : This function handles External lines 9 to 5 interrupt request.
-// * Input          : None
-// * Output         : None
-// * Return         : None
-// *******************************************************************************/
-//void EXTI4_IRQHandler(void)
-//{
-//  extern void rt_dm9000_isr(void);
-//
-//  /* enter interrupt */
-//  rt_interrupt_enter();
-//
-//  /* Clear the DM9000A EXTI line pending bit */
-//  EXTI_ClearITPendingBit(EXTI_Line4);
-//
-//  rt_dm9000_isr();
-//
-//  /* leave interrupt */
-//  rt_interrupt_leave();
-//}
-//#endif
-//#endif
-//#endif /* end of RT_USING_LWIP */
-//
-///**
-// * @}
-// */
-//
-//void EXTI9_5_IRQHandler(void)
-//{
-//  extern void rt_hw_gpio_isr(gpio_device *gpio);
-//  
-//  /* enter interrupt */
-//  rt_interrupt_enter();
-//  /* lock_shell exti isr */
-//  if(EXTI_GetITStatus(EXTI_Line5) == SET)
-//  {
-//    extern gpio_device lock_shell_device;
-//		
-//    rt_hw_gpio_isr(&lock_shell_device);
-//    EXTI_ClearITPendingBit(EXTI_Line5);
-//  }
-//  /* motor status exti isr */
-//  if(EXTI_GetITStatus(EXTI_Line8) == SET)
-//  {
-//    extern gpio_device motor_status_device;
-//		
-//    rt_hw_gpio_isr(&motor_status_device);
-//    EXTI_ClearITPendingBit(EXTI_Line8);
-//  }
-//  if(EXTI_GetITStatus(EXTI_Line6) == SET)
-//  {
-//    extern gpio_device key2_device;
-//    rt_hw_gpio_isr(&key2_device);
-//    EXTI_ClearITPendingBit(EXTI_Line6);
-//  }
-//  /* leave interrupt */
-//  rt_interrupt_leave();
-//}
-///* camera photosensor exti isr */
-//void EXTI0_IRQHandler(void)
-//{
-//  extern void rt_hw_gpio_isr(gpio_device *gpio);
-//  
-//  /* enter interrupt */
-//  rt_interrupt_enter();
-//  if(EXTI_GetITStatus(EXTI_Line0) == SET)
-//  {
-//    extern gpio_device camera_photosensor_device;
-//		
-//    rt_hw_gpio_isr(&camera_photosensor_device);
-//    EXTI_ClearITPendingBit(EXTI_Line0);
-//  }
-//  /* leave interrupt */
-//  rt_interrupt_leave();
-//}
-///* camera irda sensor exti isr */
-//void EXTI1_IRQHandler(void)
-//{
-//  extern void rt_hw_gpio_isr(gpio_device *gpio);
-//  
-//  /* enter interrupt */
-//  rt_interrupt_enter();
-//  if(EXTI_GetITStatus(EXTI_Line1) == SET)
-//  {
-//    extern gpio_device camera_irdasensor_device;
-//		
-//    rt_hw_gpio_isr(&camera_irdasensor_device);
-//    EXTI_ClearITPendingBit(EXTI_Line1);
-//  }
-//  /* leave interrupt */
-//  rt_interrupt_leave();
-//}
-///* rfid key detect exti isr */
-//void EXTI15_10_IRQHandler(void)
-//{
-//  extern void rt_hw_gpio_isr(gpio_device *gpio);
-//  
-//  /* enter interrupt */
-//  rt_interrupt_enter();
-//  /* rfid_key_detect exti isr */
-//  if(EXTI_GetITStatus(EXTI_Line10) == SET)
-//  {
-//    extern gpio_device rfid_key_detect_device;
-//		
-//    rt_hw_gpio_isr(&rfid_key_detect_device);
-//    EXTI_ClearITPendingBit(EXTI_Line10);
-//  }
-//  if(EXTI_GetITStatus(EXTI_Line12) == SET)
-//  {
-//    extern gpio_device lock_gate_device;
-//		
-//    rt_hw_gpio_isr(&lock_gate_device);
-//    EXTI_ClearITPendingBit(EXTI_Line12);
-//  }
-//  if(EXTI_GetITStatus(EXTI_Line14) == SET)
-//  {
-//    extern gpio_device lock_temperature_device;
-//		
-//    rt_hw_gpio_isr(&lock_temperature_device);
-//    EXTI_ClearITPendingBit(EXTI_Line14);
-//  }
-//  if(EXTI_GetITStatus(EXTI_Line15) == SET)
-//  {
-//    extern gpio_device gate_temperature_device;
-//		
-//    rt_hw_gpio_isr(&gate_temperature_device);
-//    EXTI_ClearITPendingBit(EXTI_Line15);
-//  }
-//  /* leave interrupt */
-//  rt_interrupt_leave();
-//}
-//
-//void TIM1_BRK_IRQHandler(void)
-//{
-//
-//}
-//
-///* voice data device isr */
-//void TIM1_UP_IRQHandler(void)
-//{
-//  extern struct gpio_pwm_user_data voice_data_user_data;
-//  /* enter interrupt */
-//  rt_interrupt_enter();
-//  /* tim1 update isr */
-//  if(TIM_GetITStatus(voice_data_user_data.timx, TIM_IT_Update) == SET)
-//  {
-//    TIM_ClearITPendingBit(voice_data_user_data.timx, TIM_IT_Update);
-//    if (voice_data_user_data.tim_pulse_counts == 0)
-//    {
-//      TIM_CCxCmd(voice_data_user_data.timx, voice_data_user_data.tim_oc_channel, TIM_CCx_Disable);
-//      TIM_Cmd(voice_data_user_data.timx, DISABLE);
-//    }    
-//  }  
-//  /* leave interrupt */
-//  rt_interrupt_leave();
-//}
-//void TIM1_TRG_COM_IRQHandler(void)
-//{
-//
-//}
-///* voice data device isr */
-//void TIM1_CC_IRQHandler(void)
-//{
-//  extern struct gpio_pwm_user_data voice_data_user_data;
-//  /* enter interrupt */
-//  rt_interrupt_enter();
-//  /* tim1 cc4 isr */
-//  if(TIM_GetITStatus(voice_data_user_data.timx, TIM_IT_CC4) == SET)
-//  {
-//    TIM_ClearITPendingBit(voice_data_user_data.timx, TIM_IT_CC4);
-//    if (voice_data_user_data.tim_pulse_counts > 0)
-//    {
-//      voice_data_user_data.tim_pulse_counts--;
-//    }
-//  }
-//  /* leave interrupt */
-//  rt_interrupt_leave();
-//
-//}
-//
-//void TIM3_IRQHandler(void)
-//{
-//  extern struct gpio_pwm_user_data pwm1_user_data;
-//  /* enter interrupt */
-//  rt_interrupt_enter();
-//  /* pwm1 update isr */
-//  if(TIM_GetITStatus(pwm1_user_data.timx, TIM_IT_CC1) == SET)
-//  {
-//    //rt_hw_gpio_isr(&rfid_key_detect_device);
-//    TIM_ClearITPendingBit(pwm1_user_data.timx, TIM_IT_CC1);
-//    if (pwm1_user_data.tim_pulse_counts > 0)
-//    {
-//      pwm1_user_data.tim_pulse_counts--;
-//    }
-//    else
-//    {
-//      //TIM_Cmd(pwm1_user_data.timx, DISABLE);
-//      //TIM_CCxCmd(pwm1_user_data.timx, TIM_Channel_1, TIM_CCx_Disable);
-//    }
-//    
-//  }
-//  if(TIM_GetITStatus(pwm1_user_data.timx, TIM_IT_Update) == SET)
-//  {
-//    //rt_hw_gpio_isr(&rfid_key_detect_device);
-//    TIM_ClearITPendingBit(pwm1_user_data.timx, TIM_IT_Update);
-//    if (pwm1_user_data.tim_pulse_counts == 0)
-//    {
-//      //TIM_Cmd(pwm1_user_data.timx, DISABLE);
-//      //TIM_CCxCmd(pwm1_user_data.timx, TIM_Channel_1, TIM_CCx_Disable);
-//      TIM_CCxCmd(pwm1_user_data.timx, TIM_Channel_1, TIM_CCx_Disable);
-//      TIM_Cmd(pwm1_user_data.timx, DISABLE);
-//    }
-//    
-//  }  
-//  /* leave interrupt */
-//  rt_interrupt_leave();
-//}
-//
-///* motor pwm device irq */
-//void TIM8_UP_IRQHandler(void)
-//{
-//  extern struct gpio_pwm_user_data motor_a_pulse_user_data;
-//  extern struct gpio_pwm_user_data motor_b_pulse_user_data;
-//  /* enter interrupt */
-//  rt_interrupt_enter();
-//  /* tim8 update isr */
-//  if(TIM_GetITStatus(motor_a_pulse_user_data.timx, TIM_IT_Update) == SET)
-//  {
-//    TIM_ClearITPendingBit(motor_a_pulse_user_data.timx, TIM_IT_Update);
-//    if (motor_a_pulse_user_data.tim_pulse_counts == 0)
-//    {
-//      TIM_CCxCmd(motor_a_pulse_user_data.timx, motor_a_pulse_user_data.tim_oc_channel, TIM_CCx_Disable);
-//      TIM_Cmd(motor_a_pulse_user_data.timx, DISABLE);
-//    }    
-//    if (motor_b_pulse_user_data.tim_pulse_counts == 0)
-//    {
-//      TIM_CCxCmd(motor_b_pulse_user_data.timx, motor_b_pulse_user_data.tim_oc_channel, TIM_CCx_Disable);
-//      TIM_Cmd(motor_b_pulse_user_data.timx, DISABLE);
-//    }
-//  }  
-//  /*
-//  if(TIM_GetITStatus(motor_b_pulse_user_data.timx, TIM_IT_Update) == SET)
-//  {
-//    TIM_ClearITPendingBit(motor_b_pulse_user_data.timx, TIM_IT_Update);
-//    if (motor_b_pulse_user_data.tim_pulse_counts == 0)
-//    {
-//      TIM_CCxCmd(motor_b_pulse_user_data.timx, motor_b_pulse_user_data.tim_oc_chanel, TIM_CCx_Disable);
-//      TIM_Cmd(motor_b_pulse_user_data.timx, DISABLE);
-//    }
-//    
-//  }
-//  */
-//  /* leave interrupt */
-//  rt_interrupt_leave();
-//}
-//void TIM8_CC_IRQHandler(void)
-//{
-//  extern struct gpio_pwm_user_data motor_a_pulse_user_data;
-//  extern struct gpio_pwm_user_data motor_b_pulse_user_data;
-//  /* enter interrupt */
-//  rt_interrupt_enter();
-//  /* tim8 cc3 isr */
-//  if(TIM_GetITStatus(motor_a_pulse_user_data.timx, TIM_IT_CC3) == SET)
-//  {
-//    TIM_ClearITPendingBit(motor_a_pulse_user_data.timx, TIM_IT_CC3);
-//    if (motor_a_pulse_user_data.tim_pulse_counts > 0)
-//    {
-//      motor_a_pulse_user_data.tim_pulse_counts--;
-//    }
-//  }
-//  if(TIM_GetITStatus(motor_b_pulse_user_data.timx, TIM_IT_CC4) == SET)
-//  {
-//    TIM_ClearITPendingBit(motor_b_pulse_user_data.timx, TIM_IT_CC4);
-//    if (motor_b_pulse_user_data.tim_pulse_counts > 0)
-//    {
-//      motor_b_pulse_user_data.tim_pulse_counts--;
-//    }
-//  }
-//  /* leave interrupt */
-//  rt_interrupt_leave();
-//}
+
+#if defined(RT_USING_DFS) && STM32_USE_SDIO
+/*******************************************************************************
+ * Function Name  : SDIO_IRQHandler
+ * Description    : This function handles SDIO global interrupt request.
+ * Input          : None
+ * Output         : None
+ * Return         : None
+ *******************************************************************************/
+void SDIO_IRQHandler(void)
+{
+  extern int SD_ProcessIRQSrc(void);
+
+  /* enter interrupt */
+  rt_interrupt_enter();
+
+  /* Process All SDIO Interrupt Sources */
+  SD_ProcessIRQSrc();
+
+  /* leave interrupt */
+  rt_interrupt_leave();
+}
+#endif
+
+#ifdef RT_USING_LWIP
+#ifdef STM32F10X_CL
+/*******************************************************************************
+ * Function Name  : ETH_IRQHandler
+ * Description    : This function handles ETH interrupt request.
+ * Input          : None
+ * Output         : None
+ * Return         : None
+ *******************************************************************************/
+void ETH_IRQHandler(void)
+{
+  extern void rt_hw_stm32_eth_isr(void);
+
+  /* enter interrupt */
+  rt_interrupt_enter();
+
+  rt_hw_stm32_eth_isr();
+
+  /* leave interrupt */
+  rt_interrupt_leave();
+}
+#else
+#if (STM32_ETH_IF == 0)
+/*******************************************************************************
+ * Function Name  : EXTI0_IRQHandler
+ * Description    : This function handles External interrupt Line 0 request.
+ * Input          : None
+ * Output         : None
+ * Return         : None
+ *******************************************************************************/
+void EXTI2_IRQHandler(void)
+{
+  extern void enc28j60_isr(void);
+
+  /* enter interrupt */
+  rt_interrupt_enter();
+
+  enc28j60_isr();
+
+  /* Clear the Key Button EXTI line pending bit */
+  EXTI_ClearITPendingBit(EXTI_Line2);
+
+  /* leave interrupt */
+  rt_interrupt_leave();
+}
+#endif
+
+#if (STM32_ETH_IF == 1)
+/*******************************************************************************
+ * Function Name  : EXTI4_IRQHandler
+ * Description    : This function handles External lines 9 to 5 interrupt request.
+ * Input          : None
+ * Output         : None
+ * Return         : None
+ *******************************************************************************/
+void EXTI4_IRQHandler(void)
+{
+  extern void rt_dm9000_isr(void);
+
+  /* enter interrupt */
+  rt_interrupt_enter();
+
+  /* Clear the DM9000A EXTI line pending bit */
+  EXTI_ClearITPendingBit(EXTI_Line4);
+
+  rt_dm9000_isr();
+
+  /* leave interrupt */
+  rt_interrupt_leave();
+}
+#endif
+#endif
+#endif /* end of RT_USING_LWIP */
+
+/**
+ * @}
+ */
+
+void EXTI9_5_IRQHandler(void)
+{
+  extern void rt_hw_gpio_isr(gpio_device *gpio);
+  
+  /* enter interrupt */
+  rt_interrupt_enter();
+  /* lock_shell exti isr */
+  if(EXTI_GetITStatus(EXTI_Line5) == SET)
+  {
+    extern gpio_device lock_shell_device;
+		
+    rt_hw_gpio_isr(&lock_shell_device);
+    EXTI_ClearITPendingBit(EXTI_Line5);
+  }
+  /* motor status exti isr */
+  if(EXTI_GetITStatus(EXTI_Line8) == SET)
+  {
+    extern gpio_device motor_status_device;
+		
+    rt_hw_gpio_isr(&motor_status_device);
+    EXTI_ClearITPendingBit(EXTI_Line8);
+  }
+  if(EXTI_GetITStatus(EXTI_Line6) == SET)
+  {
+    extern gpio_device key2_device;
+    rt_hw_gpio_isr(&key2_device);
+    EXTI_ClearITPendingBit(EXTI_Line6);
+  }
+  /* leave interrupt */
+  rt_interrupt_leave();
+}
+/* camera photosensor exti isr */
+void EXTI0_IRQHandler(void)
+{
+  extern void rt_hw_gpio_isr(gpio_device *gpio);
+  
+  /* enter interrupt */
+  rt_interrupt_enter();
+  if(EXTI_GetITStatus(EXTI_Line0) == SET)
+  {
+    extern gpio_device camera_photosensor_device;
+		
+    rt_hw_gpio_isr(&camera_photosensor_device);
+    EXTI_ClearITPendingBit(EXTI_Line0);
+  }
+  /* leave interrupt */
+  rt_interrupt_leave();
+}
+/* camera irda sensor exti isr */
+void EXTI1_IRQHandler(void)
+{
+  extern void rt_hw_gpio_isr(gpio_device *gpio);
+  
+  /* enter interrupt */
+  rt_interrupt_enter();
+  if(EXTI_GetITStatus(EXTI_Line1) == SET)
+  {
+    extern gpio_device camera_irdasensor_device;
+		
+    rt_hw_gpio_isr(&camera_irdasensor_device);
+    EXTI_ClearITPendingBit(EXTI_Line1);
+  }
+  /* leave interrupt */
+  rt_interrupt_leave();
+}
+/* rfid key detect exti isr */
+void EXTI15_10_IRQHandler(void)
+{
+  extern void rt_hw_gpio_isr(gpio_device *gpio);
+  
+  /* enter interrupt */
+  rt_interrupt_enter();
+  /* rfid_key_detect exti isr */
+  if(EXTI_GetITStatus(EXTI_Line10) == SET)
+  {
+    extern gpio_device rfid_key_detect_device;
+		
+    rt_hw_gpio_isr(&rfid_key_detect_device);
+    EXTI_ClearITPendingBit(EXTI_Line10);
+  }
+  if(EXTI_GetITStatus(EXTI_Line12) == SET)
+  {
+    extern gpio_device lock_gate_device;
+		
+    rt_hw_gpio_isr(&lock_gate_device);
+    EXTI_ClearITPendingBit(EXTI_Line12);
+  }
+  if(EXTI_GetITStatus(EXTI_Line14) == SET)
+  {
+    extern gpio_device lock_temperature_device;
+		
+    rt_hw_gpio_isr(&lock_temperature_device);
+    EXTI_ClearITPendingBit(EXTI_Line14);
+  }
+  if(EXTI_GetITStatus(EXTI_Line15) == SET)
+  {
+    extern gpio_device gate_temperature_device;
+		
+    rt_hw_gpio_isr(&gate_temperature_device);
+    EXTI_ClearITPendingBit(EXTI_Line15);
+  }
+  /* leave interrupt */
+  rt_interrupt_leave();
+}
+
+void TIM1_BRK_IRQHandler(void)
+{
+
+}
+
+/* voice data device isr */
+void TIM1_UP_IRQHandler(void)
+{
+  extern struct gpio_pwm_user_data voice_data_user_data;
+  /* enter interrupt */
+  rt_interrupt_enter();
+  /* tim1 update isr */
+  if(TIM_GetITStatus(voice_data_user_data.timx, TIM_IT_Update) == SET)
+  {
+    TIM_ClearITPendingBit(voice_data_user_data.timx, TIM_IT_Update);
+    if (voice_data_user_data.tim_pulse_counts == 0)
+    {
+      TIM_CCxCmd(voice_data_user_data.timx, voice_data_user_data.tim_oc_channel, TIM_CCx_Disable);
+      TIM_Cmd(voice_data_user_data.timx, DISABLE);
+    }    
+  }  
+  /* leave interrupt */
+  rt_interrupt_leave();
+}
+void TIM1_TRG_COM_IRQHandler(void)
+{
+
+}
+/* voice data device isr */
+void TIM1_CC_IRQHandler(void)
+{
+  extern struct gpio_pwm_user_data voice_data_user_data;
+  /* enter interrupt */
+  rt_interrupt_enter();
+  /* tim1 cc4 isr */
+  if(TIM_GetITStatus(voice_data_user_data.timx, TIM_IT_CC4) == SET)
+  {
+    TIM_ClearITPendingBit(voice_data_user_data.timx, TIM_IT_CC4);
+    if (voice_data_user_data.tim_pulse_counts > 0)
+    {
+      voice_data_user_data.tim_pulse_counts--;
+    }
+  }
+  /* leave interrupt */
+  rt_interrupt_leave();
+
+}
+
+void TIM3_IRQHandler(void)
+{
+  extern struct gpio_pwm_user_data pwm1_user_data;
+  /* enter interrupt */
+  rt_interrupt_enter();
+  /* pwm1 update isr */
+  if(TIM_GetITStatus(pwm1_user_data.timx, TIM_IT_CC1) == SET)
+  {
+    //rt_hw_gpio_isr(&rfid_key_detect_device);
+    TIM_ClearITPendingBit(pwm1_user_data.timx, TIM_IT_CC1);
+    if (pwm1_user_data.tim_pulse_counts > 0)
+    {
+      pwm1_user_data.tim_pulse_counts--;
+    }
+    else
+    {
+      //TIM_Cmd(pwm1_user_data.timx, DISABLE);
+      //TIM_CCxCmd(pwm1_user_data.timx, TIM_Channel_1, TIM_CCx_Disable);
+    }
+    
+  }
+  if(TIM_GetITStatus(pwm1_user_data.timx, TIM_IT_Update) == SET)
+  {
+    //rt_hw_gpio_isr(&rfid_key_detect_device);
+    TIM_ClearITPendingBit(pwm1_user_data.timx, TIM_IT_Update);
+    if (pwm1_user_data.tim_pulse_counts == 0)
+    {
+      //TIM_Cmd(pwm1_user_data.timx, DISABLE);
+      //TIM_CCxCmd(pwm1_user_data.timx, TIM_Channel_1, TIM_CCx_Disable);
+      TIM_CCxCmd(pwm1_user_data.timx, TIM_Channel_1, TIM_CCx_Disable);
+      TIM_Cmd(pwm1_user_data.timx, DISABLE);
+    }
+    
+  }  
+  /* leave interrupt */
+  rt_interrupt_leave();
+}
+
+/* motor pwm device irq */
+void TIM8_UP_IRQHandler(void)
+{
+  extern struct gpio_pwm_user_data motor_a_pulse_user_data;
+  extern struct gpio_pwm_user_data motor_b_pulse_user_data;
+  /* enter interrupt */
+  rt_interrupt_enter();
+  /* tim8 update isr */
+  if(TIM_GetITStatus(motor_a_pulse_user_data.timx, TIM_IT_Update) == SET)
+  {
+    TIM_ClearITPendingBit(motor_a_pulse_user_data.timx, TIM_IT_Update);
+    if (motor_a_pulse_user_data.tim_pulse_counts == 0)
+    {
+      TIM_CCxCmd(motor_a_pulse_user_data.timx, motor_a_pulse_user_data.tim_oc_channel, TIM_CCx_Disable);
+      if (motor_b_pulse_user_data.tim_pulse_counts == 0)
+      {
+        TIM_Cmd(motor_a_pulse_user_data.timx, DISABLE);
+      }
+    }    
+    if (motor_b_pulse_user_data.tim_pulse_counts == 0)
+    {
+      TIM_CCxCmd(motor_b_pulse_user_data.timx, motor_b_pulse_user_data.tim_oc_channel, TIM_CCx_Disable);
+      if (motor_a_pulse_user_data.tim_pulse_counts == 0)
+      {
+        TIM_Cmd(motor_b_pulse_user_data.timx, DISABLE);
+      }
+    }
+  }  
+  /*
+  if(TIM_GetITStatus(motor_b_pulse_user_data.timx, TIM_IT_Update) == SET)
+  {
+    TIM_ClearITPendingBit(motor_b_pulse_user_data.timx, TIM_IT_Update);
+    if (motor_b_pulse_user_data.tim_pulse_counts == 0)
+    {
+      TIM_CCxCmd(motor_b_pulse_user_data.timx, motor_b_pulse_user_data.tim_oc_chanel, TIM_CCx_Disable);
+      TIM_Cmd(motor_b_pulse_user_data.timx, DISABLE);
+    }
+    
+  }
+  */
+  /* leave interrupt */
+  rt_interrupt_leave();
+}
+void TIM8_CC_IRQHandler(void)
+{
+  extern struct gpio_pwm_user_data motor_a_pulse_user_data;
+  extern struct gpio_pwm_user_data motor_b_pulse_user_data;
+  /* enter interrupt */
+  rt_interrupt_enter();
+  /* tim8 cc3 isr */
+  if(TIM_GetITStatus(motor_a_pulse_user_data.timx, TIM_IT_CC3) == SET)
+  {
+    TIM_ClearITPendingBit(motor_a_pulse_user_data.timx, TIM_IT_CC3);
+    if (motor_a_pulse_user_data.tim_pulse_counts > 0)
+    {
+      motor_a_pulse_user_data.tim_pulse_counts--;
+    }
+  }
+  if(TIM_GetITStatus(motor_b_pulse_user_data.timx, TIM_IT_CC4) == SET)
+  {
+    TIM_ClearITPendingBit(motor_b_pulse_user_data.timx, TIM_IT_CC4);
+    if (motor_b_pulse_user_data.tim_pulse_counts > 0)
+    {
+      motor_b_pulse_user_data.tim_pulse_counts--;
+    }
+  }
+  /* leave interrupt */
+  rt_interrupt_leave();
+}
 
 /******************* (C) COPYRIGHT 2009 STMicroelectronics *****END OF FILE****/

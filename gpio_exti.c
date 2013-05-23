@@ -38,37 +38,38 @@ struct gpio_exti_user_data
  */
 static void __gpio_nvic_configure(gpio_device *gpio,FunctionalState new_status)
 {
-  NVIC_InitTypeDef nvic_initstructure;
+  NVIC_InitTypeDef nvic_init_structure;
   struct gpio_exti_user_data* user = (struct gpio_exti_user_data *)gpio->parent.user_data;
 	
-  nvic_initstructure.NVIC_IRQChannel = user->nvic_channel;
-  nvic_initstructure.NVIC_IRQChannelPreemptionPriority = user->nvic_preemption_priority;
-  nvic_initstructure.NVIC_IRQChannelSubPriority = user->nvic_subpriority;
-  nvic_initstructure.NVIC_IRQChannelCmd = new_status;
-  NVIC_Init(&nvic_initstructure);
+  nvic_init_structure.NVIC_IRQChannel = user->nvic_channel;
+  nvic_init_structure.NVIC_IRQChannelPreemptionPriority = user->nvic_preemption_priority;
+  nvic_init_structure.NVIC_IRQChannelSubPriority = user->nvic_subpriority;
+  nvic_init_structure.NVIC_IRQChannelCmd = new_status;
+  NVIC_Init(&nvic_init_structure);
 }
 
 static void __gpio_exti_configure(gpio_device *gpio,FunctionalState new_status)
 {	
-  EXTI_InitTypeDef exti_initstructure;
+  EXTI_InitTypeDef exti_init_structure;
   struct gpio_exti_user_data* user = (struct gpio_exti_user_data *)gpio->parent.user_data;
-	
-  exti_initstructure.EXTI_Line = user->exti_line;
-  exti_initstructure.EXTI_Mode = user->exti_mode;
-  exti_initstructure.EXTI_Trigger = user->exti_trigger;
-  exti_initstructure.EXTI_LineCmd = new_status;
-  EXTI_Init(&exti_initstructure);
+  EXTI_StructInit(&exti_init_structure);
+  exti_init_structure.EXTI_Line = user->exti_line;
+  exti_init_structure.EXTI_Mode = user->exti_mode;
+  exti_init_structure.EXTI_Trigger = user->exti_trigger;
+  exti_init_structure.EXTI_LineCmd = new_status;
+  EXTI_Init(&exti_init_structure);
 }
 
 static void __gpio_pin_configure(gpio_device *gpio)
 {
-  GPIO_InitTypeDef gpio_initstructure;
+  GPIO_InitTypeDef gpio_init_structure;
   struct gpio_exti_user_data *user = (struct gpio_exti_user_data*)gpio->parent.user_data;
+  GPIO_StructInit(&gpio_init_structure);
   RCC_APB2PeriphClockCmd(user->gpio_clock,ENABLE);
-  gpio_initstructure.GPIO_Mode = user->gpio_mode;
-  gpio_initstructure.GPIO_Pin = user->gpio_pinx;
-  gpio_initstructure.GPIO_Speed = user->gpio_speed;
-  GPIO_Init(user->gpiox,&gpio_initstructure);
+  gpio_init_structure.GPIO_Mode = user->gpio_mode;
+  gpio_init_structure.GPIO_Pin = user->gpio_pinx;
+  gpio_init_structure.GPIO_Speed = user->gpio_speed;
+  GPIO_Init(user->gpiox,&gpio_init_structure);
   GPIO_EXTILineConfig(user->gpio_port_source,user->gpio_pin_source);		
 }
 /*

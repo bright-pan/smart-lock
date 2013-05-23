@@ -6,7 +6,7 @@
 
 
 #define CM_BUFFER_LEN									2000
-#define CM_SEM_BUF_WAIT_TIME					100
+#define CM_SEM_BUF_WAIT_TIME					30
 #define CM_OUTTIME_NUM								10
 #define CM_CONTINUOUS_PHOTO_TIME			1000
 

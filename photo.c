@@ -486,7 +486,7 @@ void photo_thread_entry(void *arg)
 			/*first open power  need 10ms after  */
 			if(result == -RT_ETIMEOUT)
 			{
-			//	camera_power_control(&photo,0);	
+				camera_power_control(&photo,0);	
 				timeout = RT_WAITING_FOREVER;
 				rt_kprintf("close power\n");
 				continue;
@@ -509,7 +509,7 @@ void photo_thread_entry(void *arg)
 			
 			photo_deal(&photo,&recv_mq);	
 
-		//	camera_power_control(&photo,0);		//close camera power
+			camera_power_control(&photo,0);		//close camera power
 	}
 }
 
