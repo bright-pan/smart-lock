@@ -192,9 +192,9 @@ void rt_hw_board_init()
 	rt_hw_camera_uart_register();
 	rt_hw_camera_led_register();
 	rt_hw_camera_power_register();
-//  rt_hw_gsm_usart_register();
+  rt_hw_gsm_usart_register();
 //  rt_hw_gsm_led_register();
-//  rt_hw_gsm_power_register();
+  rt_hw_gsm_power_register();
 //  rt_hw_gsm_status_register();
   /* rfid device register */
   //rt_hw_rfid_uart_register();

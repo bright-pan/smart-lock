@@ -426,9 +426,9 @@
               <FilePath>.\sdcard.c</FilePath>
             </File>
             <File>
-              <FileName>cameraspi.c</FileName>
+              <FileName>photo.c</FileName>
               <FileType>1</FileType>
-              <FilePath>.\cameraspi.c</FilePath>
+              <FilePath>.\photo.c</FilePath>
             </File>
           </Files>
         </Group>

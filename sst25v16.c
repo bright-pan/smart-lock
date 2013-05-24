@@ -87,9 +87,9 @@ void rt_hw_spi_init(void)
 		GPIO_InitTypeDef						gpio_initstructure;
    
 		/*		configure CS clock port pin		*/
-		spi_cs.GPIOx = SPI2_CS_PORT;        
-		spi_cs.GPIO_Pin = SPI2_CS_PIN;     
-		RCC_APB2PeriphClockCmd(SPI2_CS_CLOCK, ENABLE);        
+		spi_cs.GPIOx = SPI2_CS1_PORT;        
+		spi_cs.GPIO_Pin = SPI2_CS1_PIN;     
+		RCC_APB2PeriphClockCmd(SPI2_CS1_CLOCK, ENABLE);        
 		
 		gpio_initstructure.GPIO_Mode = GPIO_Mode_Out_PP;    
 		gpio_initstructure.GPIO_Pin = spi_cs.GPIO_Pin;        
@@ -98,7 +98,7 @@ void rt_hw_spi_init(void)
 		
 		GPIO_Init(spi_cs.GPIOx, &gpio_initstructure);     
 		/* 	add cs devie go to spi bus devie	*/
-		rt_spi_bus_attach_device(&spi_device,SPI2_CS_NAME1, SPI2_BUS_NAME, (void*)&spi_cs);
+		rt_spi_bus_attach_device(&spi_device,SPI2_CS1_NAME1, SPI2_BUS_NAME, (void*)&spi_cs);
 		
 	}
 }
@@ -506,7 +506,7 @@ rt_err_t rt_flash_register(const char * flash_device_name, const char * spi_devi
 void rt_spi_flash_init(void)
 {
 	rt_hw_spi_init();
-	rt_flash_register(FLASH_DEVICE_NAME,SPI2_CS_NAME1);
+	rt_flash_register(FLASH1_DEVICE_NAME,SPI2_CS1_NAME1);
 }
 
 
