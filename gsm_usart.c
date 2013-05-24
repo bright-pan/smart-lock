@@ -353,7 +353,7 @@ static rt_err_t gsm_usart_pos_configure(struct rt_serial_device *serial, struct 
       }
   }
   /* set hardware flow control */
-  USART_InitStructure.USART_HardwareFlowControl = USART_HardwareFlowControl_None;
+  USART_InitStructure.USART_HardwareFlowControl = USART_HardwareFlowControl_RTS_CTS;
   USART_InitStructure.USART_Mode = USART_Mode_Rx | USART_Mode_Tx;
   USART_ClockStructInit(&USART_ClockInitStructure);
   USART_ClockInitStructure.USART_Clock = USART_Clock_Disable;
@@ -432,8 +432,9 @@ static char temp[100];
 
 void gsm(rt_int8_t cmd, const char *str)
 {
+  rt_uint8_t i = 0;
   rt_device_t device;
-  memset(temp, '\xFF', 100);
+  memset(temp, '\0', 100);
   device = rt_device_find(DEVICE_NAME_GSM_USART);
   if (device != RT_NULL)
   {
@@ -442,7 +443,17 @@ void gsm(rt_int8_t cmd, const char *str)
       
       rt_device_read(device, 0, temp, 20);
       temp[99] = '\0';
-      rt_kprintf(temp);
+      while(i < 20)
+      {
+        rt_kprintf("%c", temp[i++]);
+      }
+      rt_kprintf("\n");
+      i = 0;
+      while(i < 20)
+      {
+        rt_kprintf("%02X ", temp[i++]);
+      }
+      rt_kprintf("\n");
     }
     else if (cmd == 1)
     {

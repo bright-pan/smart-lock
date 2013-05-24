@@ -24,9 +24,10 @@
 #define RT_DEVICE_CTRL_DISABLE_CONVERT   0x15    /* disable adc convert */
 #define RT_DEVICE_CTRL_GET_CONVERT_VALUE 0x16    /* get adc converted value */
 
-#define DEVICE_NAME_BATTERY = "bat" /* BATTERY DEVICE NAME */
+#define DEVICE_NAME_BATTERY_ADC "bat_adc" /* BATTERY DEVICE NAME */
 
 
 void rt_hw_adc11_register(void);
+void rt_hw_battery_adc_register(void);
 
 #endif
