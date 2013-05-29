@@ -127,8 +127,26 @@ int rt_application_init()
   rt_thread_t sms_mail_process_thread;
   rt_thread_t gprs_mail_process_thread;
   rt_thread_t local_mail_process_thread;
+  rt_thread_t gsm_process_thread;
+  rt_thread_t gsm_at_process_thread;
 
-
+  /* alarm mail process thread */
+  gsm_process_thread = rt_thread_create("gsm",
+                                  gsm_process_thread_entry, RT_NULL,
+                                  2048, 17, 20);
+  if (gsm_process_thread != RT_NULL)
+  {
+    rt_thread_startup(gsm_process_thread);
+  }
+  /* alarm mail process thread 
+  gsm_at_process_thread = rt_thread_create("g_at",
+                                  gsm_at_process_thread_entry, RT_NULL,
+                                  512, 18, 20);
+  if (gsm_at_process_thread != RT_NULL)
+  {
+    rt_thread_startup(gsm_at_process_thread);
+  }
+  */
   /* alarm mail process thread */
   alarm_mail_process_thread = rt_thread_create("alarm",
                                   alarm_mail_process_thread_entry, RT_NULL,

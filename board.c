@@ -209,13 +209,13 @@ void rt_hw_board_init()
   //rt_hw_motor_a_pulse_register();
   //rt_hw_motor_b_pulse_register();
   /* voice device register */
-  rt_hw_voice_data_register();
-  rt_hw_voice_reset_register();
-  rt_hw_voice_switch_register();
-  rt_hw_voice_amp_register();
+  //rt_hw_voice_data_register();
+  //rt_hw_voice_reset_register();
+  //rt_hw_voice_switch_register();
+  //rt_hw_voice_amp_register();
   //rt_hw_pwm1_register();
   /* adc device register */
-  rt_hw_battery_adc_register();
+  //rt_hw_battery_adc_register();
   //rt_hw_adc11_register();
   /* logo device register */
   //rt_hw_logo_led_register();
