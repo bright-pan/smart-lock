@@ -13,12 +13,14 @@
 
 #include "alarm.h"
 #include "gprs.h"
+#include "gsm.h"
 
 rt_mq_t gprs_mq;
 
 void gprs_mail_process_thread_entry(void *parameter)
 {
   rt_err_t result;
+  rt_uint32_t event;
   /* malloc a buff for process mail */
   GPRS_MAIL_TYPEDEF *gprs_mail_buf = (GPRS_MAIL_TYPEDEF *)rt_malloc(sizeof(GPRS_MAIL_TYPEDEF));
   /* initial msg queue */
@@ -34,6 +36,23 @@ void gprs_mail_process_thread_entry(void *parameter)
     if (result == RT_EOK)
     {
       rt_kprintf("receive gprs mail < time: %d alarm_type: %d >\n", gprs_mail_buf->time, gprs_mail_buf->alarm_type);
+
+      rt_mutex_take(mutex_gsm_mode, RT_WAITING_FOREVER);
+      if (!(gsm_mode_get() & EVENT_GSM_MODE_GPRS))
+      {
+        rt_event_send(event_gsm_mode_request, EVENT_GSM_MODE_GPRS);
+        rt_event_recv(event_gsm_mode_response, EVENT_GSM_MODE_GPRS, RT_EVENT_FLAG_AND | RT_EVENT_FLAG_CLEAR, RT_WAITING_FOREVER , &event);
+      }
+
+      rt_kprintf("\nsend gprs data!!!\n");
+
+      if (!(gsm_mode_get() & EVENT_GSM_MODE_GPRS))
+      {
+        rt_event_send(event_gsm_mode_request, EVENT_GSM_MODE_GPRS);
+        rt_event_recv(event_gsm_mode_response, EVENT_GSM_MODE_GPRS, RT_EVENT_FLAG_AND | RT_EVENT_FLAG_CLEAR, RT_WAITING_FOREVER , &event);
+      }
+      rt_mutex_release(mutex_gsm_mode);
+
     }
     else
     {

@@ -14,12 +14,14 @@
 #include "sms.h"
 #include "alarm.h"
 #include <ctype.h>
+#include "gsm.h"
 
 rt_mq_t sms_mq;
 
 void sms_mail_process_thread_entry(void *parameter)
 {
-  rt_err_t result;  
+  rt_err_t result;
+  rt_uint32_t event;
   /* malloc a buff for process mail */
   SMS_MAIL_TYPEDEF *sms_mail_buf = (SMS_MAIL_TYPEDEF *)rt_malloc(sizeof(SMS_MAIL_TYPEDEF));
   /* initial msg queue */
@@ -36,7 +38,22 @@ void sms_mail_process_thread_entry(void *parameter)
                         RT_WAITING_FOREVER);
     if (result == RT_EOK)
     {
-      rt_kprintf("receive sms mail < time: %d alarm_type: %d >\n", sms_mail_buf->time, sms_mail_buf->alarm_type);
+      rt_kprintf("\nreceive sms mail < time: %d alarm_type: %d >\n", sms_mail_buf->time, sms_mail_buf->alarm_type);
+      rt_mutex_take(mutex_gsm_mode, RT_WAITING_FOREVER);
+      if (gsm_mode_get() & EVENT_GSM_MODE_GPRS)
+      {
+        rt_event_send(event_gsm_mode_request, EVENT_GSM_MODE_GPRS_CMD);
+        rt_event_recv(event_gsm_mode_response, EVENT_GSM_MODE_GPRS_CMD, RT_EVENT_FLAG_AND | RT_EVENT_FLAG_CLEAR, RT_WAITING_FOREVER , &event);
+      }
+
+      rt_kprintf("\nsend sms!!!\n");
+
+      if (!(gsm_mode_get() & EVENT_GSM_MODE_GPRS))
+      {
+        rt_event_send(event_gsm_mode_request, EVENT_GSM_MODE_GPRS);
+        rt_event_recv(event_gsm_mode_response, EVENT_GSM_MODE_GPRS, RT_EVENT_FLAG_AND | RT_EVENT_FLAG_CLEAR, RT_WAITING_FOREVER , &event);
+      }
+      rt_mutex_release(mutex_gsm_mode);
     }
     else
     {
@@ -460,5 +477,5 @@ void Send_PDU_To_GSM(SMS_SEND_PDU_FRAME *sms_pdu, SMS_HEAD_6 *sms_head)
   /*
    *	发送结束字符;
    */
-  send_to_gsm("\x1A", 1);
+  //send_to_gsm("\x1A", 1);
 }
