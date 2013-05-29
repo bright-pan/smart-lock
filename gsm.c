@@ -17,7 +17,6 @@
 #include "untils.h"
 #include "board.h"
 #include <string.h>
-#include "slre.h"
 #include <stdio.h>
 
 #define GSM_SEND_MAX_MSGS 20
@@ -25,10 +24,12 @@
 
 #define RECV_BUF_SIZE 256
 
-rt_mq_t gsm_send_mq;
-rt_mq_t gsm_recv_mq;
+rt_event_t event_gsm_mode_request;
+rt_event_t event_gsm_mode_response;
 
-rt_event_t event_gsm_mode;
+rt_mutex_t mutex_gsm_mode;
+
+static volatile rt_uint32_t gsm_mode = 0;
 
 const char *at_command[] =
 {
@@ -441,104 +442,196 @@ ATCommandStatus gsm_send_at_csca(void)
 
 void gsm_process_thread_entry(void *parameters)
 {
+  rt_uint32_t event;
+  rt_err_t result;
   ATCommandStatus response;
 
-  event_gsm_mode = rt_event_create("evt_gsm", RT_IPC_FLAG_FIFO);
+  event_gsm_mode_request = rt_event_create("evt_g_mrq", RT_IPC_FLAG_FIFO);
+  event_gsm_mode_response = rt_event_create("evt_g_mrp", RT_IPC_FLAG_FIFO);  
+  mutex_gsm_mode = rt_mutex_create("mut_g_m", RT_IPC_FLAG_FIFO);
+  rt_event_send(event_gsm_mode_request, EVENT_GSM_MODE_CMD);
+  gsm_mode_set(EVENT_GSM_MODE_CMD);
   gsm_reset();
   while (1)
   {
-    if (gsm_setup(ENABLE) == GSM_SETUP_ENABLE_SUCCESS)
+    result = rt_event_recv(event_gsm_mode_request,
+                           EVENT_GSM_MODE_GPRS | EVENT_GSM_MODE_CMD | EVENT_GSM_MODE_GPRS_CMD,
+                           RT_EVENT_FLAG_OR | RT_EVENT_FLAG_CLEAR, 50, &event);
+    if (result == RT_EOK)
     {
-      rt_thread_delay(200);
-      /* at */
-      response = gsm_send_at();
-      if (response == AT_OK)
+      if (gsm_mode_get() & EVENT_GSM_MODE_CMD)
       {
-
-      }
-      else if (response == AT_NO_RESPONSE)
-      {
-        if (gsm_setup(DISABLE) == GSM_SETUP_DISABLE_SUCCESS)
+        if (event & EVENT_GSM_MODE_GPRS)
         {
-          rt_thread_delay(200);
+          // cmd -> gprs
+          rt_kprintf("\ngsm mode switch cmd -> gprs\n");
+          gsm_mode_set(EVENT_GSM_MODE_GPRS);
+          rt_event_send(event_gsm_mode_response, EVENT_GSM_MODE_GPRS);
         }
-        else
+        else if (event & EVENT_GSM_MODE_GPRS_CMD)
         {
-          rt_kprintf("gsm can`t disable!!!\n");
+          //cmd -> gprs_cmd
+          rt_kprintf("\ngsm mode switch cmd -> gprs_cmd\n");          
+          gsm_mode_set(EVENT_GSM_MODE_GPRS_CMD);
         }
-        rt_thread_delay(200);
-        continue;
-      }
-      else
-      {
-        continue;
-      }
-      /* AT+CNMI */
-      response = gsm_send_at_cnmi();
-      if (response == AT_OK)
-      {
-
-      }
-      else if (response == AT_NO_RESPONSE)
-      {
-        if (gsm_setup(DISABLE) == GSM_SETUP_DISABLE_SUCCESS)
+        else if (event & EVENT_GSM_MODE_CMD)
         {
-          rt_thread_delay(200);
+          rt_kprintf("\ngsm mode switch cmd -> cmd\n");
+          //cmd -> cmd
         }
-        else
+      }
+      else if (gsm_mode_get() & EVENT_GSM_MODE_GPRS)
+      {
+        if (event & EVENT_GSM_MODE_GPRS)
         {
-          rt_kprintf("gsm can`t disable!!!\n");
+          // gprs -> gprs
+          rt_kprintf("\ngsm mode switch gprs -> gprs\n");
         }
-        rt_thread_delay(200);
-        continue;
-      }
-      else
-      {
-        continue;
-      }
-      /* AT+CSCA */
-      response = gsm_send_at_csca();
-      if (response == AT_OK)
-      {
-
-      }
-      else if (response == AT_NO_RESPONSE)
-      {
-        if (gsm_setup(DISABLE) == GSM_SETUP_DISABLE_SUCCESS)
+        else if (event & EVENT_GSM_MODE_GPRS_CMD)
         {
-          rt_thread_delay(200);
+          //gprs -> gprs_cmd
+          rt_kprintf("\ngsm mode switch gprs -> gprs_cmd\n");
+          gsm_mode_set(EVENT_GSM_MODE_GPRS_CMD);
+          rt_event_send(event_gsm_mode_response, EVENT_GSM_MODE_GPRS_CMD);
         }
-        else
+        else if (event & EVENT_GSM_MODE_CMD)
         {
-          rt_kprintf("gsm can`t disable!!!\n");
+          //gprs -> cmd
+          rt_kprintf("\ngsm mode switch gprs -> cmd\n");
+          gsm_mode_set(EVENT_GSM_MODE_CMD);
+          rt_event_send(event_gsm_mode_response, EVENT_GSM_MODE_CMD);
         }
-        rt_thread_delay(200);
-        continue;
       }
-      else
+      else if (gsm_mode_get() & EVENT_GSM_MODE_GPRS_CMD)
       {
-        continue;
+        if (event & EVENT_GSM_MODE_GPRS)
+        {
+          // gprs_cmd -> gprs
+          rt_kprintf("\ngsm mode switch gprs_cmd -> gprs\n");
+          gsm_mode_set(EVENT_GSM_MODE_GPRS);
+          rt_event_send(event_gsm_mode_response, EVENT_GSM_MODE_CMD);          
+        }
+        else if (event & EVENT_GSM_MODE_GPRS_CMD)
+        {
+          //gprs_cmd -> gprs_cmd
+          rt_kprintf("\ngsm mode switch gprs_cmd -> gprs_cmd\n");
+        }
+        else if (event & EVENT_GSM_MODE_CMD)
+        {
+          //gprs_cmd -> cmd
+          rt_kprintf("\ngsm mode switch gprs_cmd -> cmd\n");
+          gsm_mode_set(EVENT_GSM_MODE_CMD);
+        }
       }
     }
-    else
+    else// gsm mode is maintain
     {
-      rt_thread_delay(1000);
+      if (gsm_mode_get() & EVENT_GSM_MODE_GPRS)
+      {
+        //gprs
+        rt_kprintf("\ngsm mode is gprs\n");
+      }
+      else if (gsm_mode_get() & EVENT_GSM_MODE_GPRS_CMD)
+      {
+        //gprs_cmd
+        rt_kprintf("\ngsm mode is gprs_cmd\n");
+      }
+      else if (gsm_mode_get() & EVENT_GSM_MODE_CMD)
+      {
+        //cmd
+        rt_kprintf("\ngsm mode is cmd\n");
+        if (gsm_setup(ENABLE) == GSM_SETUP_ENABLE_SUCCESS)
+        {
+          rt_thread_delay(200);
+          /* at */
+          response = gsm_send_at();
+          if (response == AT_OK)
+          {
+
+          }
+          else if (response == AT_NO_RESPONSE)
+          {
+            if (gsm_setup(DISABLE) == GSM_SETUP_DISABLE_SUCCESS)
+            {
+              rt_thread_delay(200);
+            }
+            else
+            {
+              rt_kprintf("gsm can`t disable!!!\n");
+            }
+            rt_thread_delay(200);
+            continue;
+          }
+          else
+          {
+            continue;
+          }
+          /* AT+CNMI */
+          response = gsm_send_at_cnmi();
+          if (response == AT_OK)
+          {
+
+          }
+          else if (response == AT_NO_RESPONSE)
+          {
+            if (gsm_setup(DISABLE) == GSM_SETUP_DISABLE_SUCCESS)
+            {
+              rt_thread_delay(200);
+            }
+            else
+            {
+              rt_kprintf("gsm can`t disable!!!\n");
+            }
+            rt_thread_delay(200);
+            continue;
+          }
+          else
+          {
+            continue;
+          }
+          /* AT+CSCA */
+          response = gsm_send_at_csca();
+          if (response == AT_OK)
+          {
+
+          }
+          else if (response == AT_NO_RESPONSE)
+          {
+            if (gsm_setup(DISABLE) == GSM_SETUP_DISABLE_SUCCESS)
+            {
+              rt_thread_delay(200);
+            }
+            else
+            {
+              rt_kprintf("gsm can`t disable!!!\n");
+            }
+            rt_thread_delay(200);
+            continue;
+          }
+          else
+          {
+            continue;
+          }
+          rt_event_send(event_gsm_mode_request, EVENT_GSM_MODE_GPRS);
+        }
+        else
+        {
+          rt_thread_delay(1000);
+        }
+      }
+
+
+      }
     }
-  }
 }
 
-
-
-void gsm_sms_recv_process_thread_entry(void *parameters)
+rt_uint32_t gsm_mode_get(void)
 {
-  rt_err_t result;
-  rt_size_t recv_size;
-  rt_device_t device_gsm_usart = rt_device_find(DEVICE_NAME_GSM_USART);
-  char *recv_buf;
-  char *match;
-  
-  while (1)
-  {
-    
-  }
+  return gsm_mode;
 }
+
+void gsm_mode_set(rt_uint32_t mode)
+{
+  gsm_mode = mode;
+}
+

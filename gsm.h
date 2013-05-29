@@ -30,6 +30,11 @@ typedef enum {
   GSM_SMS_SEND_FAILURE,
 }GsmStatus;
 
+extern rt_mutex_t mutex_gsm_mode;
+extern rt_event_t event_gsm_mode_request;
+extern rt_event_t event_gsm_mode_response;
+
+
 typedef enum
 {
   AT = 0,// AT
@@ -39,8 +44,9 @@ typedef enum
 
 typedef enum
 {
-  EVENT_GSM_MODE_GPRS_ONLINE = 0x01,// AT
-  EVENT_GSM_MODE_GPRS_HOLD = 0x02,
+  EVENT_GSM_MODE_GPRS = 0x01,// AT
+  EVENT_GSM_MODE_CMD = 0x02,
+  EVENT_GSM_MODE_GPRS_CMD = 0x04,
 }EVENT_GSM_MODE_TYPEDEF;
 
 
@@ -66,6 +72,8 @@ GsmStatus gsm_setup(FunctionalState state);
 void gsm_power(FunctionalState state);
 
 void gsm_process_thread_entry(void *parameters);
-void gsm_at_process_thread_entry(void *parameters);
+
+rt_uint32_t gsm_mode_get(void);
+void gsm_mode_set(rt_uint32_t mode);
 
 #endif
