@@ -3,7 +3,7 @@ Import('RTT_ROOT')
 from building import *
 
 src_bsp = ['application.c', 'startup.c', 'board.c', 'stm32f10x_it.c']
-src_drv = ['rtc.c', 'usart.c', 'gpio.c', 'gpio_pin.c', 'gpio_exti.c', 'gpio_pwm.c', 'gpio_adc.c', 'alarm.c', 'sms.c', 'gprs.c', 'local.c', 'gsm_usart.c', 'rfid_uart.c', 'camera_uart.c', 'untils.c', 'gsm.c']
+src_drv = ['rtc.c', 'usart.c', 'gpio.c', 'gpio_pin.c', 'gpio_exti.c', 'gpio_pwm.c', 'gpio_adc.c', 'alarm.c', 'sms.c', 'gprs.c', 'local.c', 'gsm_usart.c', 'rfid_uart.c', 'camera_uart.c', 'untils.c', 'gsm.c', 'mms.c']
 
 if GetDepend('RT_USING_DFS'):
 	if rtconfig.STM32_TYPE == 'STM32F10X_HD':

@@ -157,7 +157,7 @@ rt_err_t rfid_key_detect_rx_ind(rt_device_t dev, rt_size_t size)
   /* produce mail */
   rt_device_control(rtc_device, RT_DEVICE_CTRL_RTC_GET_TIME, &(buf.time));
   buf.alarm_type = ALARM_TYPE_RFID_KEY_DETECT;
-  buf.alarm_process_flag = ALARM_PROCESS_FLAG_SMS | ALARM_PROCESS_FLAG_GPRS | ALARM_PROCESS_FLAG_LOCAL;
+  buf.alarm_process_flag = ALARM_PROCESS_FLAG_SMS | ALARM_PROCESS_FLAG_MMS | ALARM_PROCESS_FLAG_GPRS | ALARM_PROCESS_FLAG_LOCAL;
   buf.gpio_value = gpio->pin_value;
   /* send mail */
   if (alarm_mq != NULL)
@@ -218,7 +218,7 @@ rt_err_t motor_status_rx_ind(rt_device_t dev, rt_size_t size)
   /* produce mail */
   rt_device_control(rtc_device, RT_DEVICE_CTRL_RTC_GET_TIME, &(buf.time));
   buf.alarm_type = ALARM_TYPE_MOTOR_STATUS;
-  buf.alarm_process_flag = ALARM_PROCESS_FLAG_SMS | ALARM_PROCESS_FLAG_GPRS | ALARM_PROCESS_FLAG_LOCAL;
+  buf.alarm_process_flag = ALARM_PROCESS_FLAG_SMS | ALARM_PROCESS_FLAG_MMS | ALARM_PROCESS_FLAG_GPRS | ALARM_PROCESS_FLAG_LOCAL;
   buf.gpio_value = gpio->pin_value;
   /* send mail */
   if (alarm_mq != NULL)
@@ -279,7 +279,7 @@ rt_err_t camera_photosensor_rx_ind(rt_device_t dev, rt_size_t size)
   rt_device_control(rtc_device, RT_DEVICE_CTRL_RTC_GET_TIME, &(buf.time));
   /* send mail */  
   buf.alarm_type = ALARM_TYPE_CAMERA_PHOTOSENSOR;
-  buf.alarm_process_flag = ALARM_PROCESS_FLAG_SMS | ALARM_PROCESS_FLAG_GPRS | ALARM_PROCESS_FLAG_LOCAL;
+  buf.alarm_process_flag = ALARM_PROCESS_FLAG_SMS | ALARM_PROCESS_FLAG_MMS | ALARM_PROCESS_FLAG_GPRS | ALARM_PROCESS_FLAG_LOCAL;
   buf.gpio_value = gpio->pin_value;
   if (alarm_mq != NULL)
   {
@@ -339,7 +339,7 @@ rt_err_t camera_irdasensor_rx_ind(rt_device_t dev, rt_size_t size)
   rt_device_control(rtc_device, RT_DEVICE_CTRL_RTC_GET_TIME, &(buf.time));
   /* send mail */  
   buf.alarm_type = ALARM_TYPE_CAMERA_IRDASENSOR;
-  buf.alarm_process_flag = ALARM_PROCESS_FLAG_SMS | ALARM_PROCESS_FLAG_GPRS | ALARM_PROCESS_FLAG_LOCAL;
+  buf.alarm_process_flag = ALARM_PROCESS_FLAG_SMS | ALARM_PROCESS_FLAG_MMS | ALARM_PROCESS_FLAG_GPRS | ALARM_PROCESS_FLAG_LOCAL;
   buf.gpio_value = gpio->pin_value;
   if (alarm_mq != NULL)
   {
@@ -400,7 +400,7 @@ rt_err_t gsm_ring_rx_ind(rt_device_t dev, rt_size_t size)
   rt_device_control(rtc_device, RT_DEVICE_CTRL_RTC_GET_TIME, &(buf.time));
 
   buf.alarm_type = ALARM_TYPE_GSM_RING;
-  buf.alarm_process_flag = ALARM_PROCESS_FLAG_SMS | ALARM_PROCESS_FLAG_GPRS | ALARM_PROCESS_FLAG_LOCAL;
+  buf.alarm_process_flag = ALARM_PROCESS_FLAG_SMS | ALARM_PROCESS_FLAG_MMS | ALARM_PROCESS_FLAG_GPRS | ALARM_PROCESS_FLAG_LOCAL;
   buf.gpio_value = gpio->pin_value;
   /* send mail */
   if (alarm_mq != NULL)
@@ -460,7 +460,7 @@ rt_err_t lock_gate_rx_ind(rt_device_t dev, rt_size_t size)
   rt_device_control(rtc_device, RT_DEVICE_CTRL_RTC_GET_TIME, &(buf.time));
 
   buf.alarm_type = ALARM_TYPE_LOCK_GATE;
-  buf.alarm_process_flag = ALARM_PROCESS_FLAG_SMS | ALARM_PROCESS_FLAG_GPRS | ALARM_PROCESS_FLAG_LOCAL;
+  buf.alarm_process_flag = ALARM_PROCESS_FLAG_SMS | ALARM_PROCESS_FLAG_MMS | ALARM_PROCESS_FLAG_GPRS | ALARM_PROCESS_FLAG_LOCAL;
   buf.gpio_value = gpio->pin_value;
   /* send mail */
   if (alarm_mq != NULL)
@@ -522,7 +522,7 @@ rt_err_t lock_shell_rx_ind(rt_device_t dev, rt_size_t size)
   rt_device_control(rtc_device, RT_DEVICE_CTRL_RTC_GET_TIME, &(buf.time));
 
   buf.alarm_type = ALARM_TYPE_LOCK_SHELL;
-  buf.alarm_process_flag = ALARM_PROCESS_FLAG_SMS | ALARM_PROCESS_FLAG_GPRS | ALARM_PROCESS_FLAG_LOCAL;
+  buf.alarm_process_flag = ALARM_PROCESS_FLAG_SMS | ALARM_PROCESS_FLAG_MMS | ALARM_PROCESS_FLAG_GPRS | ALARM_PROCESS_FLAG_LOCAL;
   buf.gpio_value = gpio->pin_value;
   /* send mail */
   if (alarm_mq != NULL)
@@ -583,7 +583,7 @@ rt_err_t gate_temperature_rx_ind(rt_device_t dev, rt_size_t size)
   /* produce mail */
   rt_device_control(rtc_device, RT_DEVICE_CTRL_RTC_GET_TIME, &(buf.time));
   buf.alarm_type = ALARM_TYPE_GATE_TEMPERATURE;
-  buf.alarm_process_flag = ALARM_PROCESS_FLAG_SMS | ALARM_PROCESS_FLAG_GPRS | ALARM_PROCESS_FLAG_LOCAL;
+  buf.alarm_process_flag = ALARM_PROCESS_FLAG_SMS | ALARM_PROCESS_FLAG_MMS | ALARM_PROCESS_FLAG_GPRS | ALARM_PROCESS_FLAG_LOCAL;
   buf.gpio_value = gpio->pin_value;
   /* send mail */
   if (alarm_mq != NULL)
@@ -643,7 +643,7 @@ rt_err_t lock_temperature_rx_ind(rt_device_t dev, rt_size_t size)
   /* produce mail */
   rt_device_control(rtc_device, RT_DEVICE_CTRL_RTC_GET_TIME, &(buf.time));
   buf.alarm_type = ALARM_TYPE_LOCK_TEMPERATURE;
-  buf.alarm_process_flag = ALARM_PROCESS_FLAG_SMS | ALARM_PROCESS_FLAG_GPRS | ALARM_PROCESS_FLAG_LOCAL;
+  buf.alarm_process_flag = ALARM_PROCESS_FLAG_SMS | ALARM_PROCESS_FLAG_MMS | ALARM_PROCESS_FLAG_GPRS | ALARM_PROCESS_FLAG_LOCAL;
   buf.gpio_value = gpio->pin_value;
   /* send mail */
   if (alarm_mq != NULL)

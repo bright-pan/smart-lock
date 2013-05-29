@@ -14,13 +14,14 @@
 #include "alarm.h"
 #include "sms.h"
 #include "gprs.h"
+#include "mms.h"
 #include "local.h"
 #include <wchar.h>
 #include <locale.h>
 #include <stdlib.h>
 
 rt_mq_t alarm_mq;
-char s[512];
+//char s[512];
 void alarm_mail_process_thread_entry(void *parameter)
 {
   rt_err_t result;
@@ -29,6 +30,7 @@ void alarm_mail_process_thread_entry(void *parameter)
   SMS_MAIL_TYPEDEF *sms_mail_buf = (SMS_MAIL_TYPEDEF *)rt_malloc(sizeof(SMS_MAIL_TYPEDEF));
   GPRS_MAIL_TYPEDEF *gprs_mail_buf = (GPRS_MAIL_TYPEDEF *)rt_malloc(sizeof(GPRS_MAIL_TYPEDEF));
   LOCAL_MAIL_TYPEDEF *local_mail_buf = (LOCAL_MAIL_TYPEDEF *)rt_malloc(sizeof(LOCAL_MAIL_TYPEDEF));
+  MMS_MAIL_TYPEDEF *mms_mail_buf = (MMS_MAIL_TYPEDEF *)rt_malloc(sizeof(MMS_MAIL_TYPEDEF));
   /* initial alarm msg queue */
   alarm_mq = rt_mq_create("alarm", sizeof(ALARM_MAIL_TYPEDEF), ALARM_MAIL_MAX_MSGS, RT_IPC_FLAG_FIFO);
   
@@ -52,6 +54,14 @@ void alarm_mail_process_thread_entry(void *parameter)
         gprs_mail_buf->alarm_type = alarm_mail_buf->alarm_type;
         /* send to gprs_mq */
         rt_mq_send(gprs_mq, gprs_mail_buf, sizeof(GPRS_MAIL_TYPEDEF));
+      }
+      if (alarm_mail_buf->alarm_process_flag & ALARM_PROCESS_FLAG_MMS)
+      {
+        /* produce mail */
+        mms_mail_buf->time = alarm_mail_buf->time;
+        mms_mail_buf->alarm_type = alarm_mail_buf->alarm_type;
+        /* send to mms_mq */
+        rt_mq_send(mms_mq, mms_mail_buf, sizeof(MMS_MAIL_TYPEDEF));
       }
       if (alarm_mail_buf->alarm_process_flag & ALARM_PROCESS_FLAG_LOCAL)
       {
@@ -96,4 +106,5 @@ void alarm_mail_process_thread_entry(void *parameter)
   rt_free(sms_mail_buf);
   rt_free(gprs_mail_buf);
   rt_free(local_mail_buf);
+  rt_free(mms_mail_buf);
 }

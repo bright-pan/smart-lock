@@ -59,6 +59,7 @@ typedef enum
   ALARM_PROCESS_FLAG_SMS = 0x01,// sms process
   ALARM_PROCESS_FLAG_GPRS = 0x02,// gprs process
   ALARM_PROCESS_FLAG_LOCAL = 0x04,// local process
+  ALARM_PROCESS_FLAG_MMS = 0x08,// local process
 }ALARM_PROCESS_FLAG_TYPEDEF;
 
 /*
