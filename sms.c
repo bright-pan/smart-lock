@@ -15,6 +15,7 @@
 #include "alarm.h"
 #include <ctype.h>
 #include "gsm.h"
+#include <string.h>
 
 rt_mq_t sms_mq;
 
@@ -31,33 +32,63 @@ void sms_mail_process_thread_entry(void *parameter)
 
   while (1)
   {
-    
-    /* process mail */
-    result = rt_mq_recv(sms_mq, sms_mail_buf, \
-                        sizeof(SMS_MAIL_TYPEDEF), \
-                        RT_WAITING_FOREVER);
+    result = rt_event_recv(event_gsm_mode_response, EVENT_GSM_MODE_SETUP, RT_EVENT_FLAG_AND, RT_WAITING_FOREVER , &event);
     if (result == RT_EOK)
     {
-      rt_kprintf("\nreceive sms mail < time: %d alarm_type: %d >\n", sms_mail_buf->time, sms_mail_buf->alarm_type);
-      rt_mutex_take(mutex_gsm_mode, RT_WAITING_FOREVER);
-      if (gsm_mode_get() & EVENT_GSM_MODE_GPRS)
+      /* process mail */
+      memset(sms_mail_buf, 0, sizeof(SMS_MAIL_TYPEDEF));
+      result = rt_mq_recv(sms_mq, sms_mail_buf, \
+                          sizeof(SMS_MAIL_TYPEDEF), \
+                          100);
+      if (result == RT_EOK)
       {
-        rt_event_send(event_gsm_mode_request, EVENT_GSM_MODE_GPRS_CMD);
-        rt_event_recv(event_gsm_mode_response, EVENT_GSM_MODE_GPRS_CMD, RT_EVENT_FLAG_AND | RT_EVENT_FLAG_CLEAR, RT_WAITING_FOREVER , &event);
+        rt_kprintf("\nreceive sms mail < time: %d alarm_type: %d >\n", sms_mail_buf->time, sms_mail_buf->alarm_type);
+        rt_mutex_take(mutex_gsm_mode, RT_WAITING_FOREVER);
+        if (gsm_mode_get() & EVENT_GSM_MODE_GPRS)
+        {
+          rt_event_recv(event_gsm_mode_response, EVENT_GSM_MODE_GPRS_CMD, RT_EVENT_FLAG_AND | RT_EVENT_FLAG_CLEAR, RT_WAITING_NO, &event);
+          rt_event_send(event_gsm_mode_request, EVENT_GSM_MODE_GPRS_CMD);
+          result = rt_event_recv(event_gsm_mode_response, EVENT_GSM_MODE_GPRS_CMD, RT_EVENT_FLAG_AND | RT_EVENT_FLAG_CLEAR, 800 , &event);
+          if (result != RT_EOK)
+          {
+            rt_kprintf("\ngsm mode switch to gprs_cmd is error, and try resend|\n");
+            rt_mq_urgent(sms_mq, sms_mail_buf, sizeof(SMS_MAIL_TYPEDEF));
+            rt_mutex_release(mutex_gsm_mode);
+            continue;
+          }
+        }
+
+        rt_kprintf("\nsend sms!!!\n");
+        /*
+          if (!(gsm_mode_get() & EVENT_GSM_MODE_CMD))
+          {
+          rt_mutex_release(mutex_gsm_mode);
+          break;
+          }
+        
+
+
+          if (!(gsm_mode_get() & EVENT_GSM_MODE_GPRS))
+          {
+          rt_event_send(event_gsm_mode_request, EVENT_GSM_MODE_GPRS);
+          result = rt_event_recv(event_gsm_mode_response, EVENT_GSM_MODE_GPRS, RT_EVENT_FLAG_AND | RT_EVENT_FLAG_CLEAR, 800 , &event);
+          if (result != RT_EOK)
+          {
+          rt_kprintf("\ngsm mode switch to gprs is error\n");
+          continue;
+          }
+
+          }
+        */
+        rt_mutex_release(mutex_gsm_mode);
       }
-
-      rt_kprintf("\nsend sms!!!\n");
-
-      if (!(gsm_mode_get() & EVENT_GSM_MODE_GPRS))
+      else
       {
-        rt_event_send(event_gsm_mode_request, EVENT_GSM_MODE_GPRS);
-        rt_event_recv(event_gsm_mode_response, EVENT_GSM_MODE_GPRS, RT_EVENT_FLAG_AND | RT_EVENT_FLAG_CLEAR, RT_WAITING_FOREVER , &event);
+        /* mail receive error */
       }
-      rt_mutex_release(mutex_gsm_mode);
     }
     else
     {
-      /* mail receive error */
     }
   }
   rt_free(sms_mail_buf);
@@ -427,13 +458,13 @@ void Send_Hex_Char_To_GSM(uint8_t *Hex_char, uint16_t Hex_len, uint16_t off_set)
   while(Hex_len--)
   {
     /*    USART_SendData(GSM_USART3, HEX_CHAR_MAP[*Hex_char >> 4]);
-    while(USART_GetFlagStatus(GSM_USART3, USART_FLAG_TXE) == RESET)
-    {
-    }
-    USART_SendData(GSM_USART3, HEX_CHAR_MAP[*Hex_char++ & 0x0f]);
-    while(USART_GetFlagStatus(GSM_USART3, USART_FLAG_TXE) == RESET)
-    {
-    }*/
+          while(USART_GetFlagStatus(GSM_USART3, USART_FLAG_TXE) == RESET)
+          {
+          }
+          USART_SendData(GSM_USART3, HEX_CHAR_MAP[*Hex_char++ & 0x0f]);
+          while(USART_GetFlagStatus(GSM_USART3, USART_FLAG_TXE) == RESET)
+          {
+          }*/
   }
 }
 
@@ -479,3 +510,122 @@ void Send_PDU_To_GSM(SMS_SEND_PDU_FRAME *sms_pdu, SMS_HEAD_6 *sms_head)
    */
   //send_to_gsm("\x1A", 1);
 }
+/*
+GsmStatus sms_send(SMS_SEND_PDU_FRAME *sms_send_pdu_frame, uint16_t sms_data_length)
+{
+  char *match = NULL;
+  //uint16_t sms_length = sms_send_pdu_frame->TPDU.TP_UDL;
+  SMS_HEAD_6 sms_head = {0x05, 0x00, 0x03, 0x86, 0x00, 0x00};
+  uint16_t temp;
+  uint8_t sms_index;
+  sms_head.sms_numbers = sms_data_length / 140;
+
+  if(sms_head.sms_numbers)
+  {
+    if(sms_data_length % 140)
+    {
+      sms_head.sms_numbers++;
+    }
+    else
+    {
+      if(sms_head.sms_numbers == 1)
+        goto PROCESS;
+    }
+    temp = sms_data_length + sms_head.sms_numbers * sizeof(SMS_HEAD_6);
+
+    sms_head.sms_numbers = temp / 140;
+
+    if(temp % 140)
+    {
+      sms_head.sms_numbers++;
+			
+    }
+  }
+	
+PROCESS:	
+
+
+  if(sms_head.sms_numbers <= 1)
+  {
+    //单条短信
+    sms_send_pdu_frame->TPDU.TP_UDL = sms_data_length;
+    siprintf((char *)GSM_SEND_BUF, \
+             "AT+CMGS=%d\x0D", \
+             sms_send_pdu_frame->TPDU.TP_UDL + \
+             (sizeof(sms_send_pdu_frame->TPDU) - sizeof(sms_send_pdu_frame->TPDU.TP_UD)));
+    send_to_gsm((char *)GSM_SEND_BUF, GSM_SEND_BUF_SIZE);
+    OSTimeDlyHMSM(0, 0, 0, 500);
+    memset((void *)GSM_RECEIVE_BUF, '\0', GSM_RECEIVE_BUF_SIZE);
+    receive_from_gsm((char *)GSM_RECEIVE_BUF, GSM_RECEIVE_BUF_SIZE);
+    match = memchr((char *)GSM_RECEIVE_BUF, '>', GSM_RECEIVE_BUF_SIZE);
+    if(!match)
+    {
+      send_to_gsm("\x1B", 1);//取消发送
+      return GSM_SMS_SEND_FAILURE;
+    }
+    memset((void *)match, 2, 5);
+    Send_PDU_To_GSM(sms_send_pdu_frame, &sms_head);
+    OSTimeDlyHMSM(0, 0, 0, 500);
+    memset((void *)GSM_RECEIVE_BUF, '\0', GSM_RECEIVE_BUF_SIZE);
+    receive_from_gsm((char *)GSM_RECEIVE_BUF, GSM_RECEIVE_BUF_SIZE);
+    match = strstr((char *)GSM_RECEIVE_BUF, "ERROR");
+    if(!match)
+    {
+      return GSM_SMS_SEND_SUCCESS;
+    }
+  }
+  else
+  {
+    //多条短信
+    for (sms_index = 1; sms_index <= sms_head.sms_numbers; sms_index++)
+    {
+
+      //处理短信帧头
+      sms_head.sms_index = sms_index;
+      if(sms_index == sms_head.sms_numbers)
+      {
+        sms_send_pdu_frame->TPDU.TP_UDL = (sms_data_length + sms_head.sms_numbers * sizeof(SMS_HEAD_6)) % 140;
+
+      }
+      else
+      {
+        sms_send_pdu_frame->TPDU.TP_UDL = 140;
+      }
+			
+      siprintf((char *)GSM_SEND_BUF, \
+               "AT+CMGS=%d\x0D", \
+               sms_send_pdu_frame->TPDU.TP_UDL + \
+               (sizeof(sms_send_pdu_frame->TPDU) - sizeof(sms_send_pdu_frame->TPDU.TP_UD)));
+      send_to_gsm((char *)GSM_SEND_BUF, GSM_SEND_BUF_SIZE);
+      OSTimeDlyHMSM(0, 0, 0, 500);
+      memset((void *)GSM_RECEIVE_BUF, '\0', GSM_RECEIVE_BUF_SIZE);
+
+      receive_from_gsm((char *)GSM_RECEIVE_BUF, GSM_RECEIVE_BUF_SIZE);
+      match = memchr((char *)GSM_RECEIVE_BUF, '>', GSM_RECEIVE_BUF_SIZE);
+						
+      if(!match)
+      {
+        send_to_gsm("\x1B", 1);//取消发送
+        return GSM_SMS_SEND_FAILURE;
+      }
+      memset((void *)match, 2, 5);
+      Send_PDU_To_GSM(sms_send_pdu_frame, &sms_head);
+      OSTimeDlyHMSM(0, 0, 0, 500);
+      memset((void *)GSM_RECEIVE_BUF, '\0', GSM_RECEIVE_BUF_SIZE);
+
+      receive_from_gsm((char *)GSM_RECEIVE_BUF, GSM_RECEIVE_BUF_SIZE);
+      match = strstr((char *)GSM_RECEIVE_BUF, "ERROR");
+      if(!match)
+      {
+        return GSM_SMS_SEND_SUCCESS;
+      }
+    }
+  }
+  return GSM_SMS_SEND_FAILURE;
+}
+
+sms_pdu_ucs_send(char *phone_address, uint16_t *content, uint8_t length)
+{
+  SMS_SEND_PDU_FRAME *send_pdu_frame;
+}
+*/

@@ -108,6 +108,7 @@ typedef struct {
   uint8_t TP_OA_Address_Value[7];
 
 }TP_OA_TYPE;
+
 typedef struct {
 
   uint8_t TP_DA_Length;//计算方式不同;
@@ -129,12 +130,14 @@ typedef struct {
 }TP_SCTS_TYPE;
 
 typedef struct{
+
   uint8_t sms_head_length;
   uint8_t sms_laber_length;
   uint8_t sms_head_surplus_length;
   uint8_t sms_laber;
   uint8_t sms_numbers;
   uint8_t sms_index;
+
 }SMS_HEAD_6;
 
 
@@ -148,22 +151,19 @@ typedef struct {
   TP_SCTS_TYPE TP_SCTS;//7字节;
   uint8_t TP_UDL;//用户长度必须小于140 个字节;
   uint8_t TP_UD[140];
+
 }SMS_RECEIVE_TPDU_TYPE;
-
-
-
-
 
 typedef struct {
 
   uint8_t 	First_Octet;
-  uint8_t		TP_MR;
-  TP_DA_TYPE		TP_DA;//9字节;
+  uint8_t	TP_MR;
+  TP_DA_TYPE	TP_DA;//9字节;
   uint8_t 	TP_PID;
   uint8_t 	TP_DCS;
-  uint8_t		TP_VP;// 1个字节;
-  uint8_t		TP_UDL;//用户长度必须小于420 个字节;
-  uint8_t		TP_UD[420];
+  uint8_t	TP_VP;// 1个字节;
+  uint8_t	TP_UDL;//用户长度必须小于140个字节;
+  uint8_t	TP_UD[420];
 
 }SMS_SEND_TPDU_TYPE;
 
@@ -180,7 +180,6 @@ typedef struct {
   SMS_SEND_TPDU_TYPE TPDU;
 
 }SMS_SEND_PDU_FRAME;
-
 
 
 typedef struct {
