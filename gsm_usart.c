@@ -29,6 +29,9 @@
  * 
  * 
  */
+
+#define GSM_USART_USE_HW_CONTROL
+
 #define GSM_USART_DR_Base              0x40004404
 /* USART2_REMAP = 1 */
 #define GSM_USART_GPIO_PIN_CTS		GPIO_Pin_3
@@ -67,6 +70,7 @@ struct rt_uart_ops gsm_usart_pos =
 struct serial_configure gsm_usart_default_config =
 {
   BAUD_RATE_115200, /* 115200 bits/s */
+  //BAUD_RATE_9600, /* 115200 bits/s */
   DATA_BITS_8,      /* 8 databits */
   STOP_BITS_1,      /* 1 stopbit */
   PARITY_NONE,      /* No parity  */
@@ -116,15 +120,21 @@ static void GPIO_Configuration(struct rt_serial_device *serial)
   */
   /* Configure USART2 Rx CTS as input floating */
   GPIO_StructInit(&GPIO_InitStructure);
-  //GPIO_InitStructure.GPIO_Pin = GSM_USART_GPIO_PIN_RX | GSM_USART_GPIO_PIN_CTS;
+#ifdef GSM_USART_USE_HW_CONTROL
+  GPIO_InitStructure.GPIO_Pin = GSM_USART_GPIO_PIN_RX | GSM_USART_GPIO_PIN_CTS;
+#else
   GPIO_InitStructure.GPIO_Pin = GSM_USART_GPIO_PIN_RX;
+#endif
   GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN_FLOATING;
   GPIO_Init(GSM_USART_GPIO, &GPIO_InitStructure);
 
   /* Configure USART2 Tx RTS as alternate function push-pull */
   GPIO_StructInit(&GPIO_InitStructure);
-  //GPIO_InitStructure.GPIO_Pin = GSM_USART_GPIO_PIN_TX | GSM_USART_GPIO_PIN_RTS;
+#ifdef GSM_USART_USE_HW_CONTROL
+  GPIO_InitStructure.GPIO_Pin = GSM_USART_GPIO_PIN_TX | GSM_USART_GPIO_PIN_RTS;
+#else
   GPIO_InitStructure.GPIO_Pin = GSM_USART_GPIO_PIN_TX;
+#endif
   GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP;
   GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
   GPIO_Init(GSM_USART_GPIO, &GPIO_InitStructure);
@@ -353,7 +363,11 @@ static rt_err_t gsm_usart_pos_configure(struct rt_serial_device *serial, struct 
       }
   }
   /* set hardware flow control */
+#ifdef GSM_USART_USE_HW_CONTROL
   USART_InitStructure.USART_HardwareFlowControl = USART_HardwareFlowControl_RTS_CTS;
+#else
+  USART_InitStructure.USART_HardwareFlowControl = USART_HardwareFlowControl_None;
+#endif
   USART_InitStructure.USART_Mode = USART_Mode_Rx | USART_Mode_Tx;
   USART_ClockStructInit(&USART_ClockInitStructure);
   USART_ClockInitStructure.USART_Clock = USART_Clock_Disable;
