@@ -11,7 +11,7 @@
 #define RT_ALIGN_SIZE	4
 
 /* PRIORITY_MAX */
-#define RT_THREAD_PRIORITY_MAX	32
+#define RT_THREAD_PRIORITY_MAX	256
 
 /* Tick per Second */
 #define RT_TICK_PER_SECOND	100
