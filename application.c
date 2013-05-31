@@ -133,7 +133,7 @@ int rt_application_init()
   /* alarm mail process thread */
   gsm_process_thread = rt_thread_create("gsm",
                                   gsm_process_thread_entry, RT_NULL,
-                                  2048, 30, 20);
+                                  2048, 100, 20);
   if (gsm_process_thread != RT_NULL)
   {
     rt_thread_startup(gsm_process_thread);
@@ -141,7 +141,7 @@ int rt_application_init()
   /* alarm mail process thread */
   alarm_mail_process_thread = rt_thread_create("alarm",
                                   alarm_mail_process_thread_entry, RT_NULL,
-                                  512, 31, 20);
+                                  512, 101, 20);
   if (alarm_mail_process_thread != RT_NULL)
   {
     rt_thread_startup(alarm_mail_process_thread);
@@ -149,7 +149,7 @@ int rt_application_init()
   /* sms mail process thread */
   sms_mail_process_thread = rt_thread_create("sms",
                                   sms_mail_process_thread_entry, RT_NULL,
-                                  1024, 35, 20);
+                                  1024, 105, 20);
   if (sms_mail_process_thread != RT_NULL)
   {
     rt_thread_startup(sms_mail_process_thread);
@@ -157,7 +157,7 @@ int rt_application_init()
   /* mms mail process thread */
   mms_mail_process_thread = rt_thread_create("mms",
                                   mms_mail_process_thread_entry, RT_NULL,
-                                  1024, 37, 20);
+                                  1024, 107, 20);
   if (mms_mail_process_thread != RT_NULL)
   {
     rt_thread_startup(mms_mail_process_thread);
@@ -165,7 +165,7 @@ int rt_application_init()
   /* gprs mail process thread */
   gprs_mail_process_thread = rt_thread_create("gprs",
                                   gprs_mail_process_thread_entry, RT_NULL,
-                                  1024, 36, 20);
+                                  1024, 106, 20);
   if (gprs_mail_process_thread != RT_NULL)
   {
     rt_thread_startup(gprs_mail_process_thread);
@@ -173,7 +173,7 @@ int rt_application_init()
   /* local mail process thread */
   local_mail_process_thread = rt_thread_create("local",
                                   local_mail_process_thread_entry, RT_NULL,
-                                  1024, 32, 20);
+                                  1024, 102, 20);
   if (local_mail_process_thread != RT_NULL)
   {
     rt_thread_startup(local_mail_process_thread);
