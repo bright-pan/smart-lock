@@ -12,6 +12,7 @@
  ********************************************************************/
 
 #include "gpio_exti.h"
+#include "gpio_pin.h"
 
 struct gpio_exti_user_data
 {
@@ -394,6 +395,9 @@ rt_err_t gsm_ring_rx_ind(rt_device_t dev, rt_size_t size)
   ALARM_MAIL_TYPEDEF buf;
   rt_err_t result;
   gpio_device *gpio = RT_NULL;
+  uint8_t dat;
+  rt_device_t device = RT_NULL;
+
   RT_ASSERT(dev != RT_NULL);
   gpio = (gpio_device *)dev;
   /* produce mail */
@@ -402,6 +406,23 @@ rt_err_t gsm_ring_rx_ind(rt_device_t dev, rt_size_t size)
   buf.alarm_type = ALARM_TYPE_GSM_RING;
   buf.alarm_process_flag = ALARM_PROCESS_FLAG_SMS | ALARM_PROCESS_FLAG_MMS | ALARM_PROCESS_FLAG_GPRS | ALARM_PROCESS_FLAG_LOCAL;
   buf.gpio_value = gpio->pin_value;
+
+  device = rt_device_find(DEVICE_NAME_GSM_STATUS);
+  if (device != RT_NULL)
+  {
+    rt_device_read(device,0,&dat,0);
+    if (dat == 0)
+    {
+      // if gsm status is 0, this alarm is ignore
+      return RT_EOK;
+    }
+  }
+  else
+  {
+#ifdef RT_USING_FINSH
+    rt_kprintf("the gpio device %s is not found!\n", DEVICE_NAME_GSM_STATUS);
+#endif
+  }
   /* send mail */
   if (alarm_mq != NULL)
   {
