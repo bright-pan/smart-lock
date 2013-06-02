@@ -77,4 +77,6 @@ void gsm_process_thread_entry(void *parameters);
 rt_uint32_t gsm_mode_get(void);
 void gsm_mode_set(rt_uint32_t mode);
 
+extern char smsc[20];
+
 #endif

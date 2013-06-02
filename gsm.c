@@ -31,6 +31,8 @@ rt_mutex_t mutex_gsm_mode;
 
 static volatile rt_uint32_t gsm_mode = 0;
 
+char smsc[20] = {0,};
+
 const char *at_command[] =
 {
   "AT\r",
@@ -64,6 +66,8 @@ void gsm_put_hex(const char *str, uint16_t length)
   }
   rt_kprintf("\n");
 }
+
+
 #define NO_INSERT_SIM "%*[^+]+CPIN: %[^+]"
 
 ATCommandStatus gsm_recv_setup(void)
@@ -305,7 +309,7 @@ ATCommandStatus gsm_send_at(void)
       temp = (char *)rt_malloc(RECV_BUF_SIZE);
       memset(temp, '\0', RECV_BUF_SIZE);
       match_error = sscanf(recv_buf, "%*[^\r]\r\r\n%[^\r]\r\n", temp);
-      
+
       if (match_error != 1)
       {
         rt_kprintf("Error parsing\n");
@@ -435,7 +439,7 @@ ATCommandStatus gsm_send_at_csca(void)
       /* parse at response */
       temp = (char *)rt_malloc(RECV_BUF_SIZE);
       memset(temp, '\0', RECV_BUF_SIZE);
-      match_error = sscanf(recv_buf, "%*[^86]86%[^\"]", temp);
+      match_error = sscanf(recv_buf, "%*[^\"]\"+%[^\"]", temp);
 
       if (match_error != 1)
       {
@@ -448,6 +452,11 @@ ATCommandStatus gsm_send_at_csca(void)
       {
         rt_kprintf("Success parsing\n");
         gsm_put_char(temp, RECV_BUF_SIZE);
+        /*        uint16_t data[] = {0x5DE5,0x4F5C,0x6109,0x5FEB,0xFF01};
+        sms_pdu_ucs_send("8613316975697",temp,data, 5);
+        */
+        memcpy(smsc, temp, 20);
+        gsm_put_char(smsc, 20);
         rt_free(temp);
         rt_free(recv_buf);
         return AT_OK;

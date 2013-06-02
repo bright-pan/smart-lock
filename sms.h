@@ -21,12 +21,13 @@
 #include "alarm.h"
 
 
+
 /* PDU构造 */
 #define	INTERNATIONAL_ADDRESS_TYPE		0x91
 #define	LOCAL_ADDRESS_TYPE				0xA1
 
+#define SMSC_LENGTH_DEFAULT 						0x08
 
-#define SMSC_DEFAULT 						0x08
 #define FIRST_OCTET_DEFAULT				0x11
 #define	TP_MR_DEFAULT						0x00
 #define	TP_TYPE_DEFAULT					INTERNATIONAL_ADDRESS_TYPE//国际地址;
@@ -87,11 +88,6 @@
 #define MODBUS_DATA_QUERY 		0x03
 #define MODBUS_TIME_SET			0x10
 
-
-
-typedef struct {
-  uint16_t STI[8];
-}STRING_TO_INT;
 
 typedef struct {
 
@@ -182,84 +178,6 @@ typedef struct {
 }SMS_SEND_PDU_FRAME;
 
 
-typedef struct {
-
-  uint16_t ZXSOFT[6];
-  uint16_t SIGN_1;
-  uint16_t SET[2];
-  uint16_t SIGN_2;
-  uint16_t PASSWORD[6];
-  uint16_t SIGN_3;
-  uint16_t FUCTION_CODE[2];
-  uint16_t SIGN_4;
-  uint16_t DATA[50];
-
-}SMS_SET_FRAME;
-
-typedef struct {
-
-  uint16_t ZXSOFT[6];
-  uint16_t SIGN_1;
-  uint16_t LIST[2];
-  uint16_t SIGN_2;	
-  uint16_t FUCTION_CODE[2];
-  uint16_t SIGN_3;
-  uint16_t DATA[50];
-
-}SMS_LIST_FRAME;
-/*
-  typedef struct{
-  uint8_t second;
-  uint8_t minute;
-  uint8_t hour;
-  uint8_t day;
-  uint8_t month;
-  uint8_t week;
-  uint8_t year;
-  }TIME_FRAME;
-*/
-
-typedef struct {
- 
-  uint8_t device_id;
-  uint8_t function_code;
-  uint16_t address;
-  uint16_t length;
-  uint16_t crc;
-
-}MODBUS_DATA_QUERY_FRAME;
-typedef struct {
-  int16_t temperature;
-  uint8_t state;
-  struct tm time;
-}SMS_ALARM_FRAME;
-typedef struct {
-  TP_OA_TYPE		TP_OA;//9字节;
-  uint8_t function_code;
-}SMS_QUERY_FRAME;
-
-
-typedef struct {
-  uint16_t sms_mail_type;
-  union {
-    SMS_ALARM_FRAME sms_alarm_frame;
-    SMS_QUERY_FRAME sms_query_frame;
-  };
-}SMS_MAIL_FRAME;
-
-extern uint16_t NUM_UCS_MAP[16];
-
-void String_To_Hex(uint8_t *str_dest, uint8_t *str_src, uint16_t len);
-uint8_t *String_To_Semi_Octet(uint8_t *str_dest, uint8_t *str_src, uint8_t len);
-uint8_t UCS_Len(uint16_t *UCS, uint16_t end_sign);
-uint8_t *UCS_To_String(uint16_t *UCS, uint8_t * str, uint8_t UCS_len);
-uint16_t *UCS_Char(uint16_t *UCS, uint16_t ucs_char, uint8_t UCS_len);
-void TP_Str_To_Octet(uint8_t *TP_octet, uint8_t *TP_str, uint8_t TP_type, uint8_t TP_len);
-
-void Alarm_Mail_Data_To_UCS(uint16_t *UCS, SMS_ALARM_FRAME *sms_alarm_mail, uint16_t *UCS_Len);
-uint16_t *SMS_Send_User_Data_Copy(uint16_t *UCS, uint8_t *data_src, uint16_t *UCS_Len, uint16_t data_max_len);
-
-void Send_PDU_To_GSM(SMS_SEND_PDU_FRAME *sms_pdu, SMS_HEAD_6 *sms_head);
 
 
 typedef struct
@@ -273,5 +191,7 @@ typedef struct
 extern rt_mq_t sms_mq;
 
 void sms_mail_process_thread_entry(void *parameter);
+
+int8_t sms_pdu_ucs_send(char *dest_address, char *smsc_address, uint16_t *content, uint8_t length);
 
 #endif

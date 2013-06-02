@@ -16,19 +16,63 @@
 #include <ctype.h>
 #include "gsm.h"
 #include <string.h>
+#include "gsm_usart.h"
+#include <stdio.h>
 
 rt_mq_t sms_mq;
+
+typedef struct {
+  char *data;
+  uint8_t length;
+}SMS_DATA_TYPEDEF;
+
+SMS_DATA_TYPEDEF sms_data[50];
+    
+static void sms_data_init(SMS_DATA_TYPEDEF sms_data[])
+{
+  //lock shell
+  sms_data[ALARM_TYPE_LOCK_SHELL].data = "";
+  sms_data[ALARM_TYPE_LOCK_SHELL].length = 0;
+  // lock temperature
+  sms_data[ALARM_TYPE_LOCK_TEMPERATURE].data = "";
+  sms_data[ALARM_TYPE_LOCK_TEMPERATURE].length = 0;
+  // lock gate status
+  sms_data[ALARM_TYPE_LOCK_GATE].data = "";
+  sms_data[ALARM_TYPE_LOCK_GATE].length = 0;
+  // rfid key detect alarm type
+  sms_data[ALARM_TYPE_RFID_KEY_DETECT].data = "";
+  sms_data[ALARM_TYPE_RFID_KEY_DETECT].length = 0;
+  // camera irda sensor alarm
+  sms_data[ALARM_TYPE_CAMERA_IRDASENSOR].data = "";
+  sms_data[ALARM_TYPE_CAMERA_IRDASENSOR].length = 0;
+
+  // battry working 20 min
+  sms_data[ALARM_TYPE_BATTERY_WORKING_20M].data = "";
+  sms_data[ALARM_TYPE_BATTERY_WORKING_20M].length = 0;
+  // battry remain 50%
+  sms_data[ALARM_TYPE_BATTERY_REMAIN_50P].data = "";
+  sms_data[ALARM_TYPE_BATTERY_REMAIN_50P].length = 0;
+  // battry working 20%
+  sms_data[ALARM_TYPE_BATTERY_REMAIN_20P].data = "";
+  sms_data[ALARM_TYPE_BATTERY_REMAIN_20P].length = 0;
+  // battry working 5%
+  sms_data[ALARM_TYPE_BATTERY_REMAIN_5P].data = "";
+  sms_data[ALARM_TYPE_BATTERY_REMAIN_5P].length = 0;
+}
 
 void sms_mail_process_thread_entry(void *parameter)
 {
   rt_err_t result;
   rt_uint32_t event;
+  struct tm tm_time;
   /* malloc a buff for process mail */
   SMS_MAIL_TYPEDEF *sms_mail_buf = (SMS_MAIL_TYPEDEF *)rt_malloc(sizeof(SMS_MAIL_TYPEDEF));
   /* initial msg queue */
   sms_mq = rt_mq_create("sms", sizeof(SMS_MAIL_TYPEDEF), \
                         SMS_MAIL_MAX_MSGS, \
                         RT_IPC_FLAG_FIFO);
+
+  sms_data_init(sms_data);
 
   while (1)
   {
@@ -43,6 +87,12 @@ void sms_mail_process_thread_entry(void *parameter)
       if (result == RT_EOK)
       {
         rt_kprintf("\nreceive sms mail < time: %d alarm_type: %d >\n", sms_mail_buf->time, sms_mail_buf->alarm_type);
+
+        gmtime_r(&(sms_mail_buf->time), &tm_time);
+  
+        tm_time.tm_year += 1900;
+        tm_time.tm_mon += 1;
+
         rt_mutex_take(mutex_gsm_mode, RT_WAITING_FOREVER);
         if (gsm_mode_get() & EVENT_GSM_MODE_GPRS)
         {
@@ -130,502 +180,155 @@ static uint8_t ALPHA_MAP[7] = {
 
 };
 
-
-uint8_t *String_To_Semi_Octet(uint8_t *str_dest, uint8_t *str_src, uint8_t len)
+static void sms_pdu_phone_address_init(uint8_t *octet, const char *phone_address)
 {
+  int8_t length = strlen(phone_address);
+  int8_t temp = 0;
+  char *buf = NULL;
+  char *buf_bk = NULL;
+  
+  temp = (length & 0x01) ? (length + 1) : length;
+  buf = (char *)rt_malloc(temp);
+  buf_bk = buf;
+  memcpy(buf, phone_address, length);
+  
+  temp >>= 1;
+  //*octet_length = temp; // octect length
 
-  STRING_TO_INT *temp = (STRING_TO_INT *)str_src;
-  register int16_t len_bk = len >> 1;
-
-  for (; len_bk >= 0;len_bk--)
+  while (temp-- > 0)
   {
-    str_dest[len_bk] = (uint8_t)((temp->STI[len_bk] & 0x0f00) >> 4) | ((temp->STI[len_bk] & 0x000f));
+    *octet = (*buf++ - '0') & 0x0f;
+    *octet++ |= ((*buf++ - '0') << 4) & 0xf0;
   }
-  len >>= 1;
-  str_dest[len++] |= 0xf0;
-  str_dest[len] = '\0';
-  return str_dest;
+  if (length & 0x01)
+  {
+    *--octet |= 0xf0;
+  }
+
+  rt_free(buf_bk);
 }
 
-void String_To_Hex(uint8_t *str_dest, uint8_t *str_src, uint16_t len)
+static void sms_pdu_head_init(char *smsc_address, char *dest_address, SMS_SEND_PDU_FRAME *pdu, uint8_t tp_udl)
 {
+  // SMSC initial
+  pdu->SMSC.SMSC_Length = 0x08;
+  pdu->SMSC.SMSC_Type_Of_Address = 0x91;
+  sms_pdu_phone_address_init(pdu->SMSC.SMSC_Address_Value, smsc_address);
 
-  len = len >> 1;
-
-  for(; len > 0; --len)
-  {
-    if(isdigit(*str_src))
-      *str_dest = NUM_MAP[(*str_src++ & 0x0f)] << 4;
-    else
-      *str_dest = ALPHA_MAP[(*str_src++ & 0x0f)] << 4;
-    if(isdigit(*str_src))
-      *str_dest++ |= NUM_MAP[(*str_src++ & 0x0f)];
-    else
-      *str_dest++ |= ALPHA_MAP[(*str_src++ & 0x0f)];
-  }
-  *str_dest = '\0';
+  pdu->TPDU.First_Octet = 0x11;
+  pdu->TPDU.TP_MR = 0x00;
+  // DA initial
+  pdu->TPDU.TP_DA.TP_DA_Length = 0x0D;
+  pdu->TPDU.TP_DA.TP_DA_Type_Of_Address = 0x91;
+  sms_pdu_phone_address_init(pdu->TPDU.TP_DA.TP_DA_Address_Value, dest_address);
+  
+  pdu->TPDU.TP_PID = 0x00;
+  pdu->TPDU.TP_DCS = 0x08;
+  pdu->TPDU.TP_VP = 0xC2;
+  pdu->TPDU.TP_UDL = tp_udl;
+  
 }
 
-uint8_t UCS_Len(uint16_t *UCS, uint16_t end_sign)
+static void hex_to_string(char *string, uint8_t *hex, uint8_t hex_length)
 {
-
-  uint8_t length = 0;
-
-  while(*UCS++ != end_sign)
-    length++;
-
-  return length;
-
-}
-
-uint8_t UCS_Len_Restraints(uint16_t *UCS, uint16_t end_sign, uint8_t max_len)
-{
-
-  uint8_t length = 0;
-
-  while(*UCS++ != end_sign)
+  while (hex_length-- > 0)
   {
-    if(++length >= max_len)
-      break;
-  }
-
-  return length;
-
-}
-
-uint8_t *UCS_To_String(uint16_t *UCS, uint8_t * str, uint8_t UCS_len)
-{
-
-  uint8_t *str_dest = str;
-  uint8_t *str_src = (uint8_t *)UCS;
-
-  while(UCS_len--)
-  {
-    *str_dest++ = *++str_src;
-
-    str_src++;
-  }
-  *str_dest++ = '#';
-  *str_dest = '\0';
-  return str;
-
-}
-
-uint16_t *UCS_Char(uint16_t *UCS, uint16_t ucs_char, uint8_t UCS_len)
-{
-
-  while(UCS_len--)
-  {
-
-    if(*UCS++ == ucs_char)
-      return UCS;
-
-  }
-  return NULL;
-}
-
-void TP_Str_To_Octet(uint8_t *TP_octet, uint8_t *TP_str, uint8_t TP_type, uint8_t TP_len)
-{
-  uint8_t length = ((TP_len & 0x01) ? TP_len + 1 : TP_len) >> 1;
-  uint8_t *TP_octet_bk = TP_octet;
-  if(TP_type == INTERNATIONAL_ADDRESS_TYPE)
-  {
-    *TP_octet++ = 0X68;//国际地址开头为86;
-    while(length--)
-    {
-      *TP_octet = *(TP_str + 1) << 4;
-      *TP_octet++ |= *TP_str++ & 0x0f;
-      TP_str++;
-    }
-    if(TP_len & 0x01)
-    {
-      TP_len++;
-      TP_len >>= 1;
-      TP_octet_bk[TP_len] |= 0xf0;
-
-    }
-  }
-  else
-  {
-    while(length--)
-    {
-      *TP_octet = *(TP_str + 1) << 4;
-      *TP_octet++ |= *TP_str++ & 0x0f;
-      TP_str++;
-    }
-    if(TP_len & 0x01)
-    {
-      TP_len++;
-      TP_len >>= 1;
-      TP_octet_bk[TP_len] |= 0xf0;
-
-    }
-  }	
-}
-
-uint16_t *SMS_Send_User_Data_Copy(uint16_t *UCS, uint8_t *data_src, uint16_t *UCS_Len, uint16_t data_max_len)
-{
-  uint8_t *data_dest = (uint8_t *)UCS;
-  data_max_len >>= 1;
-  while(data_max_len--)
-  {
-    if(*data_src == 0 && *(data_src+ 1) == 0)
-      break;
-    *data_dest++ = *data_src++;
-    *data_dest++ = *data_src++;
-    (*UCS_Len) ++;
-  }
-  return (uint16_t *)data_dest;
-}
-void Alarm_Mail_Data_To_UCS(uint16_t *UCS, SMS_ALARM_FRAME *sms_alarm_mail, uint16_t *UCS_Len)
-{
-  int temp;
-  /* 邮件时间解析格式为20XX-XX-XX,XX:XX:XX*/
-  *UCS++ = YU;//于
-  *UCS_Len += 1;
-  temp = sms_alarm_mail->time.tm_year;
-  *UCS++ = NUM_UCS_MAP[temp / 1000];
-  temp %= 1000;
-  *UCS++ = NUM_UCS_MAP[temp / 100];
-  temp %= 100;
-  *UCS++ = NUM_UCS_MAP[temp / 10];
-  *UCS++ = NUM_UCS_MAP[temp % 10];
-  *UCS++ = YEAR;// 年;
-  temp = sms_alarm_mail->time.tm_mon;
-  *UCS++ = NUM_UCS_MAP[temp / 10];
-  *UCS++ = NUM_UCS_MAP[temp % 10];
-  *UCS++ = MONTH;// 月;
-  temp = sms_alarm_mail->time.tm_mday;
-  *UCS++ = NUM_UCS_MAP[temp / 10];
-  *UCS++ = NUM_UCS_MAP[temp % 10];
-  *UCS++ = DAY;// 日;
-  temp = sms_alarm_mail->time.tm_hour;
-  *UCS++ = NUM_UCS_MAP[temp / 10];
-  *UCS++ = NUM_UCS_MAP[temp % 10];
-  *UCS++ = HOUR;// 时;
-  temp = sms_alarm_mail->time.tm_min;
-  *UCS++ = NUM_UCS_MAP[temp / 10];
-  *UCS++ = NUM_UCS_MAP[temp % 10];
-  *UCS++ = MINUTE;// 分;
-  temp = sms_alarm_mail->time.tm_sec;
-  *UCS++ = NUM_UCS_MAP[temp / 10];
-  *UCS++ = NUM_UCS_MAP[temp % 10];
-  *UCS++ = SECOND;// 秒;
-  *UCS_Len += 20;
-  *UCS++ = FAN;
-  *UCS++ = SHENG;
-  *UCS_Len += 2;
-  /* 线缆通断状态解析{接通,断开} */
-  if(sms_alarm_mail->state == RESET)
-  {
-    /* 断开 */
-    *UCS++ = UCS2_DUAN;
-    *UCS++ = UCS2_KAI;
-  }
-  else
-  {
-    /* 连通 */
-    *UCS++ = UCS2_LIAN;
-    *UCS++ = UCS2_TONG;
-  }
-  *UCS_Len += 2;
-
-  *UCS++ = SHI;
-  *UCS++ = JIAN;
-  *UCS_Len += 2;
-
-  *UCS++ = COMMA_SIGN;
-  *UCS++ = QING;
-  *UCS++ = JIN;
-  *UCS++ = KUAI;
-  *UCS++ = CHU;
-  *UCS++ = LI;
-  *UCS_Len += 6;
-
-  *UCS++ = POUND_SIGN;
-  *UCS_Len += 1;
-  /*
-  // 线缆带电状况{有电,无电} 
-  if(sms_alarm_mail->current_on_off == CURRENT_ON)
-  {
-  // 有电
-  *UCS++ = UCS2_YOU;
-  *UCS++ = UCS2_DIAN;
-  }
-  else
-  {
-  //无电 
-  *UCS++ = UCS2_WU;
-  *UCS++ = UCS2_DIAN;
-  }
-  *UCS++ = POUND_SIGN;
-  *UCS_Len += 3;	
-
-  //  线缆温度解析 XXX度/XX度
-  switch(sms_alarm_mail->temperature & 0xf800)
-  {
-  case 0x0000 : {
-  sms_alarm_mail->temperature &=  0x07FF;
-  sms_alarm_mail->temperature >>= 4;
-  if(sms_alarm_mail->temperature <= 9)
-  {
-  *UCS++ = NUM_UCS_MAP[sms_alarm_mail->temperature];
-  *UCS++ = UCS2_DU;
-  *UCS++ = POUND_SIGN;
-  *UCS_Len += 3;				
-
-  }
-  else if(sms_alarm_mail->temperature <= 99)
-  {
-  *UCS++ = NUM_UCS_MAP[sms_alarm_mail->temperature / 10];
-  *UCS++ = NUM_UCS_MAP[sms_alarm_mail->temperature % 10];
-  *UCS++ = UCS2_DU;
-  *UCS++ = POUND_SIGN;
-  *UCS_Len += 4;				
-
-  }else if(sms_alarm_mail->temperature <= 999)
-  {
-				
-  *UCS++ = NUM_UCS_MAP[sms_alarm_mail->temperature / 100];//百位;
-  sms_alarm_mail->temperature %= 100;
-  *UCS++ = NUM_UCS_MAP[sms_alarm_mail->temperature / 10];
-  *UCS++ = NUM_UCS_MAP[sms_alarm_mail->temperature % 10];
-  *UCS++ = UCS2_DU;
-  *UCS++ = POUND_SIGN;
-  *UCS_Len += 5;
-  }
-			
-  break;
-  }
-
-  case 0xf800 : {
-
-  sms_alarm_mail->temperature &=  0x07FF;
-  sms_alarm_mail->temperature >>= 4;
-  if(sms_alarm_mail->temperature <= 9)
-  {
-  *UCS++ = LINE_SIGN;
-  *UCS++ = NUM_UCS_MAP[sms_alarm_mail->temperature];
-  *UCS++ = UCS2_DU;
-  *UCS++ = POUND_SIGN;
-  *UCS_Len += 4;				
-
-  }
-  else if(sms_alarm_mail->temperature <= 99)
-  {
-  *UCS++ = LINE_SIGN;
-  *UCS++ = NUM_UCS_MAP[sms_alarm_mail->temperature / 10];
-  *UCS++ = NUM_UCS_MAP[sms_alarm_mail->temperature % 10];
-  *UCS++ = UCS2_DU;
-  *UCS++ = POUND_SIGN;
-  *UCS_Len += 5;				
-
-  }else if(sms_alarm_mail->temperature <= 999)
-  {
-  *UCS++ = LINE_SIGN;
-  *UCS++ = NUM_UCS_MAP[sms_alarm_mail->temperature / 100];//百位;
-  sms_alarm_mail->temperature %= 100;
-  *UCS++ = NUM_UCS_MAP[sms_alarm_mail->temperature / 10];
-  *UCS++ = NUM_UCS_MAP[sms_alarm_mail->temperature % 10];
-  *UCS++ = UCS2_DU;
-  *UCS++ = POUND_SIGN;
-  *UCS_Len += 6;
-  }
-  break;
-  }
-  case 0xA000 : {
-
-  break;
-  }
-  case 0xB000 : {
-
-  break;
-  }
-  default : {
-
-  break;
-  }
-  }
-  */
-}
-
-void Send_Hex_Char_To_GSM(uint8_t *Hex_char, uint16_t Hex_len, uint16_t off_set)
-{
-  //  uint8_t err;
-
-  Hex_char += off_set;
-
-  while(Hex_len--)
-  {
-    /*    USART_SendData(GSM_USART3, HEX_CHAR_MAP[*Hex_char >> 4]);
-          while(USART_GetFlagStatus(GSM_USART3, USART_FLAG_TXE) == RESET)
-          {
-          }
-          USART_SendData(GSM_USART3, HEX_CHAR_MAP[*Hex_char++ & 0x0f]);
-          while(USART_GetFlagStatus(GSM_USART3, USART_FLAG_TXE) == RESET)
-          {
-          }*/
+    *string++ = HEX_CHAR_MAP[(*hex >> 4) & 0x0f];
+    *string++ = HEX_CHAR_MAP[*hex++ & 0x0f];
   }
 }
 
-void Send_PDU_To_GSM(SMS_SEND_PDU_FRAME *sms_pdu, SMS_HEAD_6 *sms_head)
-{
-
-  /* SMSC头的发送
-   *  如果长度为0，只需要发送长度那个字节;
-   *  否则则发送全部SMSC头;
-   */
-  if(sms_pdu->SMSC.SMSC_Length)
-  {
-    Send_Hex_Char_To_GSM(&(sms_pdu->SMSC.SMSC_Length), 1, 0);
-    Send_Hex_Char_To_GSM(&(sms_pdu->SMSC.SMSC_Type_Of_Address), sms_pdu->SMSC.SMSC_Length, 0);
-  }
-  else
-  {
-    Send_Hex_Char_To_GSM(&(sms_pdu->SMSC.SMSC_Length), 1, 0);
-  }
-
-  /*
-   * 	发送TPDU 头;
-   */
-  Send_Hex_Char_To_GSM(&(sms_pdu->TPDU.First_Octet), sizeof(sms_pdu->TPDU) - sizeof(sms_pdu->TPDU.TP_UD), 0);
-
-  /* 
-   * 	发送短信数据;
-   */
- 	
-  if(sms_head->sms_numbers > 1)
-  {
-    Send_Hex_Char_To_GSM((uint8_t *)sms_head, sizeof(SMS_HEAD_6), 0);
-    Send_Hex_Char_To_GSM(sms_pdu->TPDU.TP_UD, sms_pdu->TPDU.TP_UDL - sizeof(SMS_HEAD_6), (sms_head->sms_index - 1)*(140 - sizeof(SMS_HEAD_6)));
-  }
-  else
-  {
-    Send_Hex_Char_To_GSM(sms_pdu->TPDU.TP_UD, sms_pdu->TPDU.TP_UDL, 0);
-
-  }
-
-  /*
-   *	发送结束字符;
-   */
-  //send_to_gsm("\x1A", 1);
-}
-/*
-GsmStatus sms_send(SMS_SEND_PDU_FRAME *sms_send_pdu_frame, uint16_t sms_data_length)
-{
-  char *match = NULL;
-  //uint16_t sms_length = sms_send_pdu_frame->TPDU.TP_UDL;
-  SMS_HEAD_6 sms_head = {0x05, 0x00, 0x03, 0x86, 0x00, 0x00};
-  uint16_t temp;
-  uint8_t sms_index;
-  sms_head.sms_numbers = sms_data_length / 140;
-
-  if(sms_head.sms_numbers)
-  {
-    if(sms_data_length % 140)
-    {
-      sms_head.sms_numbers++;
-    }
-    else
-    {
-      if(sms_head.sms_numbers == 1)
-        goto PROCESS;
-    }
-    temp = sms_data_length + sms_head.sms_numbers * sizeof(SMS_HEAD_6);
-
-    sms_head.sms_numbers = temp / 140;
-
-    if(temp % 140)
-    {
-      sms_head.sms_numbers++;
-			
-    }
-  }
-	
-PROCESS:	
-
-
-  if(sms_head.sms_numbers <= 1)
-  {
-    //单条短信
-    sms_send_pdu_frame->TPDU.TP_UDL = sms_data_length;
-    siprintf((char *)GSM_SEND_BUF, \
-             "AT+CMGS=%d\x0D", \
-             sms_send_pdu_frame->TPDU.TP_UDL + \
-             (sizeof(sms_send_pdu_frame->TPDU) - sizeof(sms_send_pdu_frame->TPDU.TP_UD)));
-    send_to_gsm((char *)GSM_SEND_BUF, GSM_SEND_BUF_SIZE);
-    OSTimeDlyHMSM(0, 0, 0, 500);
-    memset((void *)GSM_RECEIVE_BUF, '\0', GSM_RECEIVE_BUF_SIZE);
-    receive_from_gsm((char *)GSM_RECEIVE_BUF, GSM_RECEIVE_BUF_SIZE);
-    match = memchr((char *)GSM_RECEIVE_BUF, '>', GSM_RECEIVE_BUF_SIZE);
-    if(!match)
-    {
-      send_to_gsm("\x1B", 1);//取消发送
-      return GSM_SMS_SEND_FAILURE;
-    }
-    memset((void *)match, 2, 5);
-    Send_PDU_To_GSM(sms_send_pdu_frame, &sms_head);
-    OSTimeDlyHMSM(0, 0, 0, 500);
-    memset((void *)GSM_RECEIVE_BUF, '\0', GSM_RECEIVE_BUF_SIZE);
-    receive_from_gsm((char *)GSM_RECEIVE_BUF, GSM_RECEIVE_BUF_SIZE);
-    match = strstr((char *)GSM_RECEIVE_BUF, "ERROR");
-    if(!match)
-    {
-      return GSM_SMS_SEND_SUCCESS;
-    }
-  }
-  else
-  {
-    //多条短信
-    for (sms_index = 1; sms_index <= sms_head.sms_numbers; sms_index++)
-    {
-
-      //处理短信帧头
-      sms_head.sms_index = sms_index;
-      if(sms_index == sms_head.sms_numbers)
-      {
-        sms_send_pdu_frame->TPDU.TP_UDL = (sms_data_length + sms_head.sms_numbers * sizeof(SMS_HEAD_6)) % 140;
-
-      }
-      else
-      {
-        sms_send_pdu_frame->TPDU.TP_UDL = 140;
-      }
-			
-      siprintf((char *)GSM_SEND_BUF, \
-               "AT+CMGS=%d\x0D", \
-               sms_send_pdu_frame->TPDU.TP_UDL + \
-               (sizeof(sms_send_pdu_frame->TPDU) - sizeof(sms_send_pdu_frame->TPDU.TP_UD)));
-      send_to_gsm((char *)GSM_SEND_BUF, GSM_SEND_BUF_SIZE);
-      OSTimeDlyHMSM(0, 0, 0, 500);
-      memset((void *)GSM_RECEIVE_BUF, '\0', GSM_RECEIVE_BUF_SIZE);
-
-      receive_from_gsm((char *)GSM_RECEIVE_BUF, GSM_RECEIVE_BUF_SIZE);
-      match = memchr((char *)GSM_RECEIVE_BUF, '>', GSM_RECEIVE_BUF_SIZE);
-						
-      if(!match)
-      {
-        send_to_gsm("\x1B", 1);//取消发送
-        return GSM_SMS_SEND_FAILURE;
-      }
-      memset((void *)match, 2, 5);
-      Send_PDU_To_GSM(sms_send_pdu_frame, &sms_head);
-      OSTimeDlyHMSM(0, 0, 0, 500);
-      memset((void *)GSM_RECEIVE_BUF, '\0', GSM_RECEIVE_BUF_SIZE);
-
-      receive_from_gsm((char *)GSM_RECEIVE_BUF, GSM_RECEIVE_BUF_SIZE);
-      match = strstr((char *)GSM_RECEIVE_BUF, "ERROR");
-      if(!match)
-      {
-        return GSM_SMS_SEND_SUCCESS;
-      }
-    }
-  }
-  return GSM_SMS_SEND_FAILURE;
-}
-
-sms_pdu_ucs_send(char *phone_address, uint16_t *content, uint8_t length)
+int8_t sms_pdu_ucs_send(char *dest_address, char *smsc_address, uint16_t *content, uint8_t length)
 {
   SMS_SEND_PDU_FRAME *send_pdu_frame;
+  uint8_t *pdu_data;
+  char *send_pdu_string;
+  char *at_temp;
+  uint8_t sms_pdu_length;
+  rt_device_t device;
+
+  device = rt_device_find(DEVICE_NAME_GSM_USART);
+  if (device == RT_NULL)
+  {
+    return -1;
+  }
+
+  if (length > 70)
+  {
+    length = 70;
+  }
+
+  send_pdu_frame = (SMS_SEND_PDU_FRAME *)rt_malloc(sizeof(SMS_SEND_PDU_FRAME));
+  memset(send_pdu_frame, 0, sizeof(SMS_SEND_PDU_FRAME));
+  
+  pdu_data = send_pdu_frame->TPDU.TP_UD;
+
+  send_pdu_string = (char *)rt_malloc(512);
+  memset(send_pdu_string, '\0', 512);
+
+  at_temp = (char *)rt_malloc(50);
+  memset(at_temp, '\0', 50);
+
+  sms_pdu_head_init(smsc_address, dest_address, send_pdu_frame, length << 1);
+
+  sms_pdu_length = send_pdu_frame->TPDU.TP_UDL + sizeof(send_pdu_frame->SMSC) + sizeof(send_pdu_frame->TPDU) - sizeof(send_pdu_frame->TPDU.TP_UD);
+  
+  while (length-- > 0)
+  {
+    *pdu_data++ = (uint8_t)(0x00ff & (*content >> 8));
+    *pdu_data++ = (uint8_t)(0x00ff & *content++);
+  }
+
+  hex_to_string(send_pdu_string, (uint8_t *)send_pdu_frame, sms_pdu_length);
+
+  //gsm_put_char(send_pdu_string, strlen(send_pdu_string));
+  
+  siprintf(at_temp,
+             "AT+CMGS=%d\x0D",
+             send_pdu_frame->TPDU.TP_UDL + (sizeof(send_pdu_frame->TPDU) - sizeof(send_pdu_frame->TPDU.TP_UD)));
+  //gsm_put_char(at_temp, strlen(at_temp));
+  rt_device_write(device, 0, "AT+CMGF=0\r", strlen(at_temp));
+  rt_thread_delay(50);
+  rt_device_write(device, 0, at_temp, strlen(at_temp));
+  rt_thread_delay(50);
+  rt_device_read(device, 0, at_temp , 50);
+  rt_device_write(device, 0, send_pdu_string, strlen(send_pdu_string));
+  rt_device_write(device, 0, "\x1A", 1);
+  rt_thread_delay(50);
+  
+  rt_free(send_pdu_frame);
+  rt_free(send_pdu_string);
+  rt_free(at_temp);
+  return 0;
 }
-*/
+
+#ifdef RT_USING_FINSH
+#include <finsh.h>
+
+static char temp[100];
+
+uint16_t default_data[] = {0x5DE5,0x4F5C,0x6109,0x5FEB,0xFF01};
+
+void sms(char *address, short *data, char length)
+{
+  rt_device_t device;
+  memset(temp, '\0', 100);
+  device = rt_device_find(DEVICE_NAME_GSM_USART);
+  if (device != RT_NULL)
+  {
+    if (length == 0)
+    {
+      sms_pdu_ucs_send(address,smsc,default_data, 5);
+    }
+    else
+    {
+      sms_pdu_ucs_send(address,smsc,default_data, length);
+    }
+  }
+  else
+  {
+    rt_kprintf("device %s is not exist!\n", DEVICE_NAME_GSM_USART);
+  }
+}
+FINSH_FUNCTION_EXPORT(sms, sms[address data length])
+#endif
