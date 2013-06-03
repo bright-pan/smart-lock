@@ -149,7 +149,7 @@ int rt_application_init()
   /* sms mail process thread */
   sms_mail_process_thread = rt_thread_create("sms",
                                   sms_mail_process_thread_entry, RT_NULL,
-                                  1024, 105, 20);
+                                  2048, 105, 20);
   if (sms_mail_process_thread != RT_NULL)
   {
     rt_thread_startup(sms_mail_process_thread);
