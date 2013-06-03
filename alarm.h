@@ -21,6 +21,7 @@
 
 #define ALARM_MAIL_MAX_MSGS 20
 
+#define ALARM_INTERVAL 10
 /*
  * alarm type and items
  *

@@ -194,7 +194,7 @@ void rt_hw_board_init()
   //rt_hw_rfid_power_register();
   //rt_hw_rfid_key_detect_register();
   /* lock device register */
-  //rt_hw_lock_shell_register();
+  rt_hw_lock_shell_register();
   //rt_hw_lock_gate_register();
   //rt_hw_lock_temperature_register();
   //rt_hw_key2_register();

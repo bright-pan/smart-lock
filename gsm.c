@@ -733,6 +733,8 @@ void gsm_process_thread_entry(void *parameters)
         {
           // gprs -> gprs
           rt_kprintf("\ngsm mode switch gprs -> gprs\n");
+          gsm_mode_set(EVENT_GSM_MODE_GPRS);
+          rt_event_send(event_gsm_mode_response, EVENT_GSM_MODE_GPRS);
         }
         else if (request_event & EVENT_GSM_MODE_GPRS_CMD)
         {
@@ -756,18 +758,21 @@ void gsm_process_thread_entry(void *parameters)
           // gprs_cmd -> gprs
           rt_kprintf("\ngsm mode switch gprs_cmd -> gprs\n");
           gsm_mode_set(EVENT_GSM_MODE_GPRS);
-          rt_event_send(event_gsm_mode_response, EVENT_GSM_MODE_CMD);          
+          rt_event_send(event_gsm_mode_response, EVENT_GSM_MODE_GPRS);
         }
         else if (request_event & EVENT_GSM_MODE_GPRS_CMD)
         {
           //gprs_cmd -> gprs_cmd
           rt_kprintf("\ngsm mode switch gprs_cmd -> gprs_cmd\n");
+          gsm_mode_set(EVENT_GSM_MODE_GPRS);
+          rt_event_send(event_gsm_mode_response, EVENT_GSM_MODE_GPRS);
         }
         else if (request_event & EVENT_GSM_MODE_CMD)
         {
           //gprs_cmd -> cmd
           rt_kprintf("\ngsm mode switch gprs_cmd -> cmd\n");
           gsm_mode_set(EVENT_GSM_MODE_CMD);
+          rt_event_send(event_gsm_mode_response, EVENT_GSM_MODE_CMD);
         }
       }
     }

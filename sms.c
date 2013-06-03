@@ -18,46 +18,237 @@
 #include <string.h>
 #include "gsm_usart.h"
 #include <stdio.h>
+#include "untils.h"
 
 rt_mq_t sms_mq;
 
+/*
+智能锁自动断电，将自动启动电池供电
+0x667A,0x80FD,0x9501,0x81EA,0x52A8,0x65AD,0x7535,0xFF0C,0x5C06,0x81EA,0x52A8,0x542F,0x52A8,0x7535,0x6C60,0x4F9B,0x7535
+
+智能锁电池电量还剩50%，请尽快充电
+0x667A,0x80FD,0x9501,0x7535,0x6C60,0x7535,0x91CF,0x8FD8,0x5269,0x0035,0x0030,0x0025,0xFF0C,0x8BF7,0x5C3D,0x5FEB,0x5145,0x7535
+
+智能锁电池电量还剩20%，请注意安全并尽快充电
+0x667A,0x80FD,0x9501,0x7535,0x6C60,0x7535,0x91CF,0x8FD8,0x5269,0x0032,0x0030,0x0025,0xFF0C,0x8BF7,0x6CE8,0x610F,0x5B89,0x5168,0x5E76,0x5C3D,0x5FEB,0x5145,0x7535
+
+智能锁摄像头被遮挡，请注意安全
+0x667A,0x80FD,0x9501,0x6444,0x50CF,0x5934,0x88AB,0x906E,0x6321,0xFF0C,0x8BF7,0x6CE8,0x610F,0x5B89,0x5168
+
+智能锁正在被切割开启，清注意安全
+0x667A,0x80FD,0x9501,0x6B63,0x5728,0x88AB,0x5207,0x5272,0x5F00,0x542F,0xFF0C,0x6E05,0x6CE8,0x610F,0x5B89,0x5168
+
+智能锁正被暴力开启，请注意安全
+0x667A,0x80FD,0x9501,0x6B63,0x88AB,0x66B4,0x529B,0x5F00,0x542F,0xFF0C,0x8BF7,0x6CE8,0x610F,0x5B89,0x5168
+
+智能锁正被非法开启，请注意安全
+0x667A,0x80FD,0x9501,0x6B63,0x88AB,0x975E,0x6CD5,0x5F00,0x542F,0xFF0C,0x8BF7,0x6CE8,0x610F,0x5B89,0x5168
+
+摄像头模块故障，请联系经销商或厂家
+0x6444,0x50CF,0x5934,0x6A21,0x5757,0x6545,0x969C,0xFF0C,0x8BF7,0x8054,0x7CFB,0x7ECF,0x9500,0x5546,0x6216,0x5382,0x5BB6
+
+RFID模块故障，请联系经销商或厂家
+0x0052,0x0046,0x0049,0x0044,0x6A21,0x5757,0x6545,0x969C,0xFF0C,0x8BF7,0x8054,0x7CFB,0x7ECF,0x9500,0x5546,0x6216,0x5382,0x5BB6
+
+GSM模块故障，请联系经销商或厂家
+0x0047,0x0053,0x004D,0x6A21,0x5757,0x6545,0x969C,0xFF0C,0x8BF7,0x8054,0x7CFB,0x7ECF,0x9500,0x5546,0x6216,0x5382,0x5BB6
+
+距离传感器故障，请联系经销商或厂家
+0x8DDD,0x79BB,0x4F20,0x611F,0x5668,0x6545,0x969C,0xFF0C,0x8BF7,0x8054,0x7CFB,0x7ECF,0x9500,0x5546,0x6216,0x5382,0x5BB6
+
+电源供电模块故障，请联系经销商或厂家
+0x7535,0x6E90,0x4F9B,0x7535,0x6A21,0x5757,0x6545,0x969C,0xFF0C,0x8BF7,0x8054,0x7CFB,0x7ECF,0x9500,0x5546,0x6216,0x5382,0x5BB6
+
+锁舌电机故障，请联系经销商或厂家
+0x9501,0x820C,0x7535,0x673A,0x6545,0x969C,0xFF0C,0x8BF7,0x8054,0x7CFB,0x7ECF,0x9500,0x5546,0x6216,0x5382,0x5BB6
+
+尊敬的用户，你的门没有锁好，请注意安全
+0x5C0A,0x656C,0x7684,0x7528,0x6237,0xFF0C,0x4F60,0x7684,0x95E8,0x6CA1,0x6709,0x9501,0x597D,0xFF0C,0x8BF7,0x6CE8,0x610F,0x5B89,0x5168
+
+尊敬的用户，你的门钥没有拔取，请注意安全
+0x5C0A,0x656C,0x7684,0x7528,0x6237,0xFF0C,0x4F60,0x7684,0x95E8,0x94A5,0x6CA1,0x6709,0x62D4,0x53D6,0xFF0C,0x8BF7,0x6CE8,0x610F,0x5B89,0x5168
+*/
+
+const uint16_t NUM_UCS_MAP[16] = {
+
+0x0030,0x0031,0x0032,0x0033,0x0034,
+0x0035,0x0036,0x0037,0x0038,0x0039
+
+};
+
+const uint16_t sms_content_lock_shell[] = {
+
+  0x667A,0x80FD,0x9501,0x6B63,0x88AB,
+  0x66B4,0x529B,0x5F00,0x542F,0xFF0C,
+  0x8BF7,0x6CE8,0x610F,0x5B89,0x5168
+};
+const uint16_t sms_content_lock_temperature[] = {
+
+  0x667A,0x80FD,0x9501,0x6B63,0x5728,
+  0x88AB,0x5207,0x5272,0x5F00,0x542F,
+  0xFF0C,0x6E05,0x6CE8,0x610F,0x5B89,
+  0x5168
+};
+const uint16_t sms_content_lock_gate[] = {
+
+  0x5C0A,0x656C,0x7684,0x7528,0x6237,
+  0xFF0C,0x4F60,0x7684,0x95E8,0x6CA1,
+  0x6709,0x9501,0x597D,0xFF0C,0x8BF7,
+  0x6CE8,0x610F,0x5B89,0x5168
+};
+const uint16_t sms_content_rfid_key_detect[] = {
+
+  0x667A,0x80FD,0x9501,0x6B63,0x88AB,
+  0x975E,0x6CD5,0x5F00,0x542F,0xFF0C,
+  0x8BF7,0x6CE8,0x610F,0x5B89,0x5168
+};
+const uint16_t sms_content_camera_idrasensor[] = {
+
+  0x667A,0x80FD,0x9501,0x6444,0x50CF,
+  0x5934,0x88AB,0x906E,0x6321,0xFF0C,
+  0x8BF7,0x6CE8,0x610F,0x5B89,0x5168
+};
+
+const uint16_t sms_content_battery_working_20m[] = {
+
+  0x667A,0x80FD,0x9501,0x81EA,0x52A8,
+  0x65AD,0x7535,0xFF0C,0x5C06,0x81EA,
+  0x52A8,0x542F,0x52A8,0x7535,0x6C60,
+  0x4F9B,0x7535
+};
+const uint16_t sms_content_battery_remain_50p[] = {
+
+  0x667A,0x80FD,0x9501,0x7535,0x6C60,
+  0x7535,0x91CF,0x8FD8,0x5269,0x0035,
+  0x0030,0x0025,0xFF0C,0x8BF7,0x5C3D,
+  0x5FEB,0x5145,0x7535
+};
+const uint16_t sms_content_battery_remain_20p[] = {
+
+  0x667A,0x80FD,0x9501,0x7535,0x6C60,
+  0x7535,0x91CF,0x8FD8,0x5269,0x0032,
+  0x0030,0x0025,0xFF0C,0x8BF7,0x6CE8,
+  0x610F,0x5B89,0x5168,0x5E76,0x5C3D,
+  0x5FEB,0x5145,0x7535
+};
+const uint16_t sms_content_battery_remain_5p[] = {0,0};
+
+
+const uint16_t sms_content_time_prefix[] = {
+
+  0x3010
+};
+
+const uint16_t sms_content_time_suffix[] = {
+
+  0x60A6,0x5FB7,0x667A,0x80FD,0x3011
+};
+
 typedef struct {
-  char *data;
-  uint8_t length;
+
+  const uint16_t *data;
+  uint16_t length;
+
 }SMS_DATA_TYPEDEF;
 
 SMS_DATA_TYPEDEF sms_data[50];
-    
+
+
+/*
+ *  sms content table initialing
+ *
+ */
 static void sms_data_init(SMS_DATA_TYPEDEF sms_data[])
 {
   //lock shell
-  sms_data[ALARM_TYPE_LOCK_SHELL].data = "";
-  sms_data[ALARM_TYPE_LOCK_SHELL].length = 0;
+  sms_data[ALARM_TYPE_LOCK_SHELL].data = sms_content_lock_shell;
+  sms_data[ALARM_TYPE_LOCK_SHELL].length = sizeof(sms_content_lock_shell) / sizeof(uint16_t);
   // lock temperature
-  sms_data[ALARM_TYPE_LOCK_TEMPERATURE].data = "";
-  sms_data[ALARM_TYPE_LOCK_TEMPERATURE].length = 0;
+  sms_data[ALARM_TYPE_LOCK_TEMPERATURE].data = sms_content_lock_temperature;
+  sms_data[ALARM_TYPE_LOCK_TEMPERATURE].length = sizeof(sms_content_lock_temperature) / sizeof(uint16_t);
   // lock gate status
-  sms_data[ALARM_TYPE_LOCK_GATE].data = "";
-  sms_data[ALARM_TYPE_LOCK_GATE].length = 0;
+  sms_data[ALARM_TYPE_LOCK_GATE].data = sms_content_lock_gate;
+  sms_data[ALARM_TYPE_LOCK_GATE].length = sizeof(sms_content_lock_gate) / sizeof(uint16_t);
   // rfid key detect alarm type
-  sms_data[ALARM_TYPE_RFID_KEY_DETECT].data = "";
-  sms_data[ALARM_TYPE_RFID_KEY_DETECT].length = 0;
+  sms_data[ALARM_TYPE_RFID_KEY_DETECT].data = sms_content_rfid_key_detect;
+  sms_data[ALARM_TYPE_RFID_KEY_DETECT].length = sizeof(sms_content_rfid_key_detect) / sizeof(uint16_t);
   // camera irda sensor alarm
-  sms_data[ALARM_TYPE_CAMERA_IRDASENSOR].data = "";
-  sms_data[ALARM_TYPE_CAMERA_IRDASENSOR].length = 0;
+  sms_data[ALARM_TYPE_CAMERA_IRDASENSOR].data = sms_content_camera_idrasensor;
+  sms_data[ALARM_TYPE_CAMERA_IRDASENSOR].length = sizeof(sms_content_camera_idrasensor) / sizeof(uint16_t);
 
   // battry working 20 min
-  sms_data[ALARM_TYPE_BATTERY_WORKING_20M].data = "";
-  sms_data[ALARM_TYPE_BATTERY_WORKING_20M].length = 0;
+  sms_data[ALARM_TYPE_BATTERY_WORKING_20M].data = sms_content_battery_working_20m;
+  sms_data[ALARM_TYPE_BATTERY_WORKING_20M].length = sizeof(sms_content_battery_working_20m) / sizeof(uint16_t);
   // battry remain 50%
-  sms_data[ALARM_TYPE_BATTERY_REMAIN_50P].data = "";
-  sms_data[ALARM_TYPE_BATTERY_REMAIN_50P].length = 0;
+  sms_data[ALARM_TYPE_BATTERY_REMAIN_50P].data = sms_content_battery_remain_50p;
+  sms_data[ALARM_TYPE_BATTERY_REMAIN_50P].length = sizeof(sms_content_battery_remain_50p) / sizeof(uint16_t);
   // battry working 20%
-  sms_data[ALARM_TYPE_BATTERY_REMAIN_20P].data = "";
-  sms_data[ALARM_TYPE_BATTERY_REMAIN_20P].length = 0;
+  sms_data[ALARM_TYPE_BATTERY_REMAIN_20P].data = sms_content_battery_remain_20p;
+  sms_data[ALARM_TYPE_BATTERY_REMAIN_20P].length = sizeof(sms_content_battery_remain_20p) / sizeof(uint16_t);
   // battry working 5%
-  sms_data[ALARM_TYPE_BATTERY_REMAIN_5P].data = "";
-  sms_data[ALARM_TYPE_BATTERY_REMAIN_5P].length = 0;
+  sms_data[ALARM_TYPE_BATTERY_REMAIN_5P].data = sms_content_battery_remain_5p;
+  sms_data[ALARM_TYPE_BATTERY_REMAIN_5P].length = sizeof(sms_content_battery_remain_5p) / sizeof(uint16_t);
+}
+
+
+/*
+ * convert time to ucs for sms
+ *
+ */
+uint16_t *sms_time_ucs(const struct tm *tm_time,
+                       const uint16_t *prefix, uint8_t prefix_length,
+                       const uint16_t *suffix, uint8_t suffix_length,
+                       uint8_t *length)
+{
+  uint16_t *time_ucs = (uint16_t *)rt_malloc(256);
+  uint16_t year;
+  uint16_t *time_ucs_bk = time_ucs;
+  
+  *length += prefix_length;
+  while (prefix_length-- > 0)
+  {
+    *time_ucs++ = *prefix++;
+  }
+  // year
+  year = tm_time->tm_year;
+  year %= 10000;
+  *time_ucs++ = NUM_UCS_MAP[year / 1000];
+  year %= 1000;
+  *time_ucs++ = NUM_UCS_MAP[year / 100];
+  year %= 100;
+  *time_ucs++ = NUM_UCS_MAP[year / 10];
+  *time_ucs++ = NUM_UCS_MAP[year % 10];
+  *time_ucs++ = 0x002D;// -
+  // month
+  *time_ucs++ = NUM_UCS_MAP[tm_time->tm_mon / 10];
+  *time_ucs++ = NUM_UCS_MAP[tm_time->tm_mon % 10];
+  *time_ucs++ = 0x002D;// -
+  // day
+  *time_ucs++ = NUM_UCS_MAP[tm_time->tm_mday / 10];
+  *time_ucs++ = NUM_UCS_MAP[tm_time->tm_mday % 10];
+  *time_ucs++ = 0x0020;// 0x0020
+  // hour
+  *time_ucs++ = NUM_UCS_MAP[tm_time->tm_hour / 10];
+  *time_ucs++ = NUM_UCS_MAP[tm_time->tm_hour % 10];
+  *time_ucs++ = 0x003A;// 0x003A
+  // minute
+  *time_ucs++ = NUM_UCS_MAP[tm_time->tm_min / 10];
+  *time_ucs++ = NUM_UCS_MAP[tm_time->tm_min % 10];
+  *time_ucs++ = 0x003A;// 0x003A
+  // second
+  *time_ucs++ = NUM_UCS_MAP[tm_time->tm_sec / 10];
+  *time_ucs++ = NUM_UCS_MAP[tm_time->tm_sec % 10];
+  *time_ucs++ = 0x0020;// 0x0020
+
+  *length += 20;
+
+  *length += suffix_length;
+  while (suffix_length-- > 0)
+  {
+    *time_ucs++ = *suffix++;
+  }
+
+  return time_ucs_bk;
 }
 
 void sms_mail_process_thread_entry(void *parameter)
@@ -65,6 +256,12 @@ void sms_mail_process_thread_entry(void *parameter)
   rt_err_t result;
   rt_uint32_t event;
   struct tm tm_time;
+  uint16_t *time_ucs, *sms_ucs, *sms_ucs_bk;
+  const uint16_t *temp_ucs;
+  uint8_t time_ucs_length, sms_ucs_length, temp_ucs_length;
+  int8_t resend_counts = 0;
+  int8_t alarm_telephone_counts = 0;
+
   /* malloc a buff for process mail */
   SMS_MAIL_TYPEDEF *sms_mail_buf = (SMS_MAIL_TYPEDEF *)rt_malloc(sizeof(SMS_MAIL_TYPEDEF));
   /* initial msg queue */
@@ -88,10 +285,37 @@ void sms_mail_process_thread_entry(void *parameter)
       {
         rt_kprintf("\nreceive sms mail < time: %d alarm_type: %d >\n", sms_mail_buf->time, sms_mail_buf->alarm_type);
 
+        // sms content process
+        sms_ucs = (uint16_t *)rt_malloc(256);
+        sms_ucs_bk = sms_ucs;
+        sms_ucs_length = 0;
+
+        temp_ucs = sms_data[sms_mail_buf->alarm_type].data;
+        temp_ucs_length = sms_data[sms_mail_buf->alarm_type].length;
+        sms_ucs_length += temp_ucs_length;
+        while (temp_ucs_length-- > 0)
+        {
+          *sms_ucs_bk++ = *temp_ucs++;
+        }
+
+        // sms time process
         gmtime_r(&(sms_mail_buf->time), &tm_time);
-  
+
         tm_time.tm_year += 1900;
         tm_time.tm_mon += 1;
+        time_ucs_length = 0;
+        time_ucs = sms_time_ucs(&tm_time,
+                                sms_content_time_prefix, sizeof(sms_content_time_prefix)/sizeof(uint16_t),
+                                sms_content_time_suffix, sizeof(sms_content_time_suffix)/sizeof(uint16_t),
+                                &time_ucs_length);
+        temp_ucs = time_ucs;
+        sms_ucs_length += time_ucs_length;
+        while (time_ucs_length-- > 0)
+        {
+          *sms_ucs_bk++ = *temp_ucs++;
+        }
+
+        rt_free(time_ucs);
 
         rt_mutex_take(mutex_gsm_mode, RT_WAITING_FOREVER);
         if (gsm_mode_get() & EVENT_GSM_MODE_GPRS)
@@ -101,35 +325,69 @@ void sms_mail_process_thread_entry(void *parameter)
           result = rt_event_recv(event_gsm_mode_response, EVENT_GSM_MODE_GPRS_CMD, RT_EVENT_FLAG_AND | RT_EVENT_FLAG_CLEAR, 800 , &event);
           if (result != RT_EOK)
           {
-            rt_kprintf("\ngsm mode switch to gprs_cmd is error, and try resend|\n");
+            rt_kprintf("\ngsm mode gprs switch to gprs_cmd is error, and try resend|\n");
+
+            rt_event_recv(event_gsm_mode_response, EVENT_GSM_MODE_SETUP, RT_EVENT_FLAG_AND|RT_EVENT_FLAG_CLEAR, RT_WAITING_FOREVER , &event);
+            if (!(gsm_mode_get() & EVENT_GSM_MODE_CMD))
+            {
+              rt_event_recv(event_gsm_mode_response, EVENT_GSM_MODE_CMD, RT_EVENT_FLAG_AND | RT_EVENT_FLAG_CLEAR, RT_WAITING_NO, &event);
+              rt_event_send(event_gsm_mode_request, EVENT_GSM_MODE_CMD);
+              result = rt_event_recv(event_gsm_mode_response, EVENT_GSM_MODE_CMD, RT_EVENT_FLAG_AND | RT_EVENT_FLAG_CLEAR, 800 , &event);
+              if (result != RT_EOK)
+              {
+                rt_kprintf("\ngsm mode switch to cmd is error, and try resend|\n");
+              }
+            }
+            rt_event_send(event_gsm_mode_request, EVENT_GSM_MODE_CMD);
+
             rt_mq_urgent(sms_mq, sms_mail_buf, sizeof(SMS_MAIL_TYPEDEF));
+            rt_free(sms_ucs);
             rt_mutex_release(mutex_gsm_mode);
             continue;
           }
         }
 
         rt_kprintf("\nsend sms!!!\n");
-        /*
-          if (!(gsm_mode_get() & EVENT_GSM_MODE_CMD))
-          {
-          rt_mutex_release(mutex_gsm_mode);
-          break;
-          }
-        
 
-
-          if (!(gsm_mode_get() & EVENT_GSM_MODE_GPRS))
+        alarm_telephone_counts = TELEPHONE_NUMBERS;
+        while (alarm_telephone_counts > 0)
+        {
+          if (device_parameters.alarm_telephone[alarm_telephone_counts].flag)
           {
-          rt_event_send(event_gsm_mode_request, EVENT_GSM_MODE_GPRS);
-          result = rt_event_recv(event_gsm_mode_response, EVENT_GSM_MODE_GPRS, RT_EVENT_FLAG_AND | RT_EVENT_FLAG_CLEAR, 800 , &event);
-          if (result != RT_EOK)
-          {
-          rt_kprintf("\ngsm mode switch to gprs is error\n");
-          continue;
+            rt_kprintf((char *)(device_parameters.alarm_telephone[alarm_telephone_counts].address));
+            resend_counts = 5;
+            while (resend_counts-- > 0)
+            {
+              //              if (!sms_pdu_ucs_send(device_parameters.alarm_telephone.address, smsc, sms_ucs, sms_ucs_length))
+              if (0)
+              {
+                break;
+              }
+            }
+            rt_kprintf("\nresend counts :%d\n", resend_counts);
+            if (resend_counts < 0)
+            {
+              rt_kprintf("\nsend sms failure!!!\n");
+              // send failure
+              rt_event_recv(event_gsm_mode_response, EVENT_GSM_MODE_SETUP, RT_EVENT_FLAG_AND|RT_EVENT_FLAG_CLEAR, RT_WAITING_FOREVER , &event);
+              if (!(gsm_mode_get() & EVENT_GSM_MODE_CMD))
+              {
+                rt_event_recv(event_gsm_mode_response, EVENT_GSM_MODE_CMD, RT_EVENT_FLAG_AND | RT_EVENT_FLAG_CLEAR, RT_WAITING_NO, &event);
+                rt_event_send(event_gsm_mode_request, EVENT_GSM_MODE_CMD);
+                result = rt_event_recv(event_gsm_mode_response, EVENT_GSM_MODE_CMD, RT_EVENT_FLAG_AND | RT_EVENT_FLAG_CLEAR, 800 , &event);
+                if (result != RT_EOK)
+                {
+                  rt_kprintf("\ngsm mode switch to cmd is error, and try resend|\n");
+                }
+              }
+              rt_event_send(event_gsm_mode_request, EVENT_GSM_MODE_CMD);
+              rt_mq_urgent(sms_mq, sms_mail_buf, sizeof(SMS_MAIL_TYPEDEF));
+              break;
+            }
           }
-
-          }
-        */
+          alarm_telephone_counts--;
+        }
+        rt_free(sms_ucs);
         rt_mutex_release(mutex_gsm_mode);
       }
       else
@@ -144,21 +402,7 @@ void sms_mail_process_thread_entry(void *parameter)
   rt_free(sms_mail_buf);
 }
 
-
-
-uint16_t NUM_UCS_MAP[16] = {
-
-  0X3000,  0X3100, 
-  0X3200,  0X3300,
-  0X3400,  0X3500,
-  0X3600,  0X3700,
-  0X3800,  0X3900,
-  0X4100,  0X4200,
-  0X4300,  0X4400,
-  0X4500,  0X4600,
-};
-
-static uint8_t HEX_CHAR_MAP[16] = {
+static const uint8_t HEX_CHAR_MAP[16] = {
 
   '0','1','2','3',
   '4','5','6','7',
@@ -166,14 +410,14 @@ static uint8_t HEX_CHAR_MAP[16] = {
   'C','D','E','F'
 };
 
-static uint8_t NUM_MAP[10] = {
+static const uint8_t NUM_MAP[10] = {
 
   '\x00','\x01','\x02','\x03','\x04',
   '\x05','\x06','\x07','\x08','\x09'
 
 };
 
-static uint8_t ALPHA_MAP[7] = {
+static const uint8_t ALPHA_MAP[7] = {
 
   '\x00','\x0a','\x0b','\x0c',
   '\x0d','\x0e','\x0f'
@@ -243,7 +487,7 @@ int8_t sms_pdu_ucs_send(char *dest_address, char *smsc_address, uint16_t *conten
   SMS_SEND_PDU_FRAME *send_pdu_frame;
   uint8_t *pdu_data;
   char *send_pdu_string;
-  char *at_temp;
+  char *at_temp, *process_buf;
   uint8_t sms_pdu_length;
   rt_device_t device;
 
@@ -266,8 +510,10 @@ int8_t sms_pdu_ucs_send(char *dest_address, char *smsc_address, uint16_t *conten
   send_pdu_string = (char *)rt_malloc(512);
   memset(send_pdu_string, '\0', 512);
 
-  at_temp = (char *)rt_malloc(50);
-  memset(at_temp, '\0', 50);
+  at_temp = (char *)rt_malloc(512);
+  memset(at_temp, '\0', 512);
+  process_buf = (char *)rt_malloc(512);
+  memset(process_buf, '\0', 512);
 
   sms_pdu_head_init(smsc_address, dest_address, send_pdu_frame, length << 1);
 
@@ -281,25 +527,77 @@ int8_t sms_pdu_ucs_send(char *dest_address, char *smsc_address, uint16_t *conten
 
   hex_to_string(send_pdu_string, (uint8_t *)send_pdu_frame, sms_pdu_length);
 
-  //gsm_put_char(send_pdu_string, strlen(send_pdu_string));
-  
-  siprintf(at_temp,
-             "AT+CMGS=%d\x0D",
-             send_pdu_frame->TPDU.TP_UDL + (sizeof(send_pdu_frame->TPDU) - sizeof(send_pdu_frame->TPDU.TP_UD)));
-  //gsm_put_char(at_temp, strlen(at_temp));
-  rt_device_write(device, 0, "AT+CMGF=0\r", strlen(at_temp));
+  rt_device_write(device, 0, "AT+CMGF=0\r", strlen("AT+CMGF=0\r"));
   rt_thread_delay(50);
+  rt_device_read(device, 0, process_buf, 512);
+
+  gsm_put_char(process_buf, strlen(process_buf));
+  if (sscanf(process_buf, "%*[^\r]\r\r%[^\r]\r\n", at_temp) == 1)
+  {
+    gsm_put_char(at_temp, strlen(at_temp));
+    //success send
+  }
+  else
+  {
+    //error send
+    goto send_error;
+  }
+
+
+
+  memset(at_temp, '\0', 512);
+  memset(process_buf, '\0', 512);
+  siprintf(at_temp,"AT+CMGS=%d\x0D",
+           send_pdu_frame->TPDU.TP_UDL + (sizeof(send_pdu_frame->TPDU) - sizeof(send_pdu_frame->TPDU.TP_UD)));
   rt_device_write(device, 0, at_temp, strlen(at_temp));
   rt_thread_delay(50);
-  rt_device_read(device, 0, at_temp , 50);
+  rt_device_read(device, 0,  process_buf, 50);
+
+  gsm_put_char(process_buf, strlen(process_buf));
+  if (sscanf(process_buf, "%*[^>]%[>]", at_temp) == 1)
+  {
+    gsm_put_char(at_temp, strlen(at_temp));
+    //success send
+  }
+  else
+  {
+    //error send
+    goto send_error;
+  }
+
+  memset(at_temp, '\0', 512);
+  memset(process_buf, '\0', 512);
   rt_device_write(device, 0, send_pdu_string, strlen(send_pdu_string));
   rt_device_write(device, 0, "\x1A", 1);
-  rt_thread_delay(50);
-  
+  rt_thread_delay(500);
+  rt_device_read(device, 0, process_buf, 512);
+
+  gsm_put_char(process_buf, strlen(process_buf));
+  if (sscanf(process_buf, "%*[^:]:%*[^\r]\r\n%[^\r]", at_temp) == 1)
+  {
+    gsm_put_char(at_temp, strlen(at_temp));
+    //success send
+    
+  }
+  else
+  {
+    //error send
+    goto send_error;
+  }
+
   rt_free(send_pdu_frame);
   rt_free(send_pdu_string);
   rt_free(at_temp);
+  rt_free(process_buf);
   return 0;
+
+send_error:
+  rt_free(send_pdu_frame);
+  rt_free(send_pdu_string);
+  rt_free(at_temp);
+  rt_free(process_buf);
+  return -1;
+
 }
 
 #ifdef RT_USING_FINSH
