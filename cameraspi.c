@@ -265,9 +265,14 @@ rt_bool_t picture_data_deal(camera_t camera,int file_id)
 	int i = 0;
 
 	rt_kprintf("\ncamera->size = %d",camera->size);
+	
+	len = CAMERA_BUFFER_LEN;
+	while(len--)
+	{
+		camera->data[len] = 0;
+	}
 	device  = rt_device_find("camera");
 
-	while(1)
 	{
 		rt_device_read(device,0,camera->data,CAMERA_BUFFER_LEN);
 
@@ -279,7 +284,7 @@ rt_bool_t picture_data_deal(camera_t camera,int file_id)
 
 	}
 
-
+	while(1);
 	num = rt_device_read(camera->device,0,camera->data,CAMERA_BUFFER_LEN);
 	if(num == 0)
 	{

@@ -44,7 +44,7 @@
 #define NRZ_INVERTED                    1       /* Non Return to Zero : inverted mode */
 
 #define UART_RX_BUFFER_SIZE             1024*2
-#define UART_TX_BUFFER_SIZE             64
+#define UART_TX_BUFFER_SIZE             1024*2
 #define SERIAL_RBUFFER_SIZE             1024*2
 
 #define RT_DEVICE_CTRL_CONFIG           0x03    /* configure device */

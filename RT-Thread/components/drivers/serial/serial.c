@@ -319,7 +319,6 @@ static rt_size_t rt_serial_write(struct rt_device *dev,
             {
                 serial->ops->putc(serial, '\r');
             }
-
             serial->ops->putc(serial, *ptr);
 
             ++ ptr;

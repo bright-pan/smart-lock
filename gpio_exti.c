@@ -676,6 +676,19 @@ void rt_hw_key2_register(void)
 }
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
 #ifdef RT_USING_FINSH
 #include <finsh.h>
 void key(rt_int8_t num)

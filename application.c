@@ -14,6 +14,7 @@
 #include <board.h>
 #include <rtthread.h>
 
+
 #ifdef RT_USING_DFS
 /* dfs init */
 #include <dfs_init.h>
@@ -44,6 +45,8 @@ void rt_init_thread_entry(void* parameter)
 {
   /* Filesystem Initialization */
 #ifdef RT_USING_DFS
+#define FILE_SYSTEM_DEVICE_NAME	"flash1"
+#define FILE_SYSTEM_TYPE_NAME		"elm"
   {
     /* init the device filesystem */
     dfs_init();
@@ -53,12 +56,27 @@ void rt_init_thread_entry(void* parameter)
     elm_init();
 
     /* mount sd card fat partition 1 as root directory */
-    if (dfs_mount("flash1", "/", "elm", 0, 0) == 0)
+    if (dfs_mount(FILE_SYSTEM_DEVICE_NAME, "/", FILE_SYSTEM_TYPE_NAME, 0, 0) == 0)
     {
-      rt_kprintf("File System initialized!\n");
+      rt_kprintf("File System initialized ok!\n");
     }
     else
-      rt_kprintf("File System initialzation failed!\n");
+    {
+    	extern int dfs_mkfs(const char *fs_name, const char *device_name);
+    	
+    	if(dfs_mkfs(FILE_SYSTEM_TYPE_NAME,FILE_SYSTEM_DEVICE_NAME) == 0)
+    	{
+				if (dfs_mount("flash1", "/", "elm", 0, 0) == 0)
+				{
+						rt_kprintf("File System initialized ok!\n");
+				}
+    	}
+    	else
+    	{
+				rt_kprintf("File System initialzation failed!\n");
+    	}	
+    }
+     
 #endif
   }
 #endif
@@ -122,12 +140,15 @@ void rt_init_thread_entry(void* parameter)
 		extern void photo_thread_init(void);
 		extern void filesystem_test(void);
 		extern void send_photo_thread_init(void);
+		extern void rt_mms_thread_init(void);
+		
 //		extern void picture_thread_init(void);
 
 //		picture_thread_init();
-		//send_photo_thread_init();
+//		send_photo_thread_init();
 		photo_thread_init();
 //		filesystem_test();
+		rt_mms_thread_init();
 	}
 }
 

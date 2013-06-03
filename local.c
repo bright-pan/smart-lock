@@ -35,6 +35,7 @@ void local_mail_process_thread_entry(void *parameter)
     }
     else
     {
+      break;
       /* receive mail error */
     }
   }

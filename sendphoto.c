@@ -36,7 +36,7 @@ void send_photo_thread_init(void)
 		rt_kprintf("\"dealpic\" create fial\n");
 		return ;
 	}
-	rt_thread_startup(thread_id);
+	//rt_thread_startup(thread_id);
 }
 
 

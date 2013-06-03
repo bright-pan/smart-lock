@@ -48,7 +48,8 @@ struct flash_device
 	struct rt_device                	parent;      /**< RT-Thread device struct */
 	struct rt_device_blk_geometry   	geometry;    /**< sector size, sector count */
 	struct rt_spi_device *          	spi_device;  /**< SPI interface */
-	u32 											max_clock;   /**< MAX SPI clock */
+	u32 															max_clock;   /**< MAX SPI clock */
+	struct rt_mutex										lock;				 /* Flash mutex */
 };
 
 /*spi device*/
@@ -71,7 +72,8 @@ void rt_hw_spi_init(void)
 		GPIO_InitTypeDef 							gpio_initstructure;
 
 		RCC_APB1PeriphClockCmd(SPI2_CLOCK ,ENABLE);
-		RCC_APB2PeriphClockCmd(GPIO_RCC,ENABLE);
+		
+		RCC_APB2PeriphClockCmd(GPIO_RCC ,ENABLE);
 
 		gpio_initstructure.GPIO_Mode = GPIO_Mode_AF_PP;
 		gpio_initstructure.GPIO_Speed = GPIO_Speed_50MHz;
@@ -378,6 +380,17 @@ static void spi_flash_buffer_read(struct rt_spi_device *device,u8* pBuffer, u32 
 
 
 /**************************************** spi flash resiger function **********************************/
+void rt_flash_lock(struct flash_device* flash_dev)
+{
+	rt_mutex_take(&(flash_dev->lock),RT_WAITING_FOREVER);
+}
+
+
+void rt_flash_unlock(struct flash_device* flash_dev)
+{
+	rt_mutex_release(&(flash_dev->lock));
+}
+
 
 static rt_err_t rt_flash_init(rt_device_t dev)
 {
@@ -409,9 +422,15 @@ static rt_err_t rt_flash_close(rt_device_t dev)
 static rt_size_t rt_flash_read(rt_device_t dev, rt_off_t pos, void* buffer, rt_size_t size)
 {
 	struct flash_device* flash = (struct flash_device *)dev;	
+
+	RT_ASSERT(flash != RT_NULL);
+	
+	rt_flash_lock(flash);
 	
 	spi_flash_buffer_read(flash->spi_device,buffer,pos*4096,size*4096);
-	
+
+	rt_flash_unlock(flash);
+		
 	return size;
 }
 
@@ -420,7 +439,13 @@ static rt_size_t rt_flash_write(rt_device_t dev, rt_off_t pos,const void* buffer
 {
 	struct flash_device* flash = (struct flash_device *)dev;	
 	
+	RT_ASSERT(flash != RT_NULL);
+
+	rt_flash_lock(flash);
+	
 	spi_flash_buffer_write(flash->spi_device,buffer,pos*4096,size*4096);
+
+	rt_flash_unlock(flash);
 	
 	return size;
 }
@@ -459,46 +484,56 @@ rt_err_t rt_flash_register(const char * flash_device_name, const char * spi_devi
 		0,																			//reserved
 		36000000/2														//MAX frequency 18MHz
 	};
+	rt_memset(&sst25v16, 0, sizeof(sst25v16));
 
-    spi_device = (struct rt_spi_device *)rt_device_find(spi_device_name);
-    if(spi_device == RT_NULL)
-    {
-    
+	result = rt_mutex_init(&sst25v16.lock,"flash",RT_IPC_FLAG_FIFO);
+	if(result != RT_EOK)
+	{
+	
 #ifdef RT_USING_FINSH
-		rt_kprintf("spi device %s not found!\r\n", spi_device_name);
+		rt_kprintf("flash mutex init fail\n", spi_device_name);
 #endif
 
 		return -RT_ENOSYS;
-    }
-    rt_memset(&sst25v16, 0, sizeof(sst25v16));
-    sst25v16.spi_device = spi_device;
+	}
+  spi_device = (struct rt_spi_device *)rt_device_find(spi_device_name);
+  if(spi_device == RT_NULL)
+  {
+  
+#ifdef RT_USING_FINSH
+	rt_kprintf("spi device %s not found!\n", spi_device_name);
+#endif
+
+	return -RT_ENOSYS;
+  }
+	sst25v16.spi_device = spi_device;
 	sst25v16.max_clock = 18000000;
 	sst25v16.spi_device->config = spi2_configuer;
-    /* register flash device */
-    sst25v16.parent.type    = RT_Device_Class_Block;
+	/* register flash device */
+  sst25v16.parent.type    = RT_Device_Class_Block;
 
-    sst25v16.geometry.bytes_per_sector = 4096;
-    sst25v16.geometry.sector_count = 512;
-    sst25v16.geometry.block_size = 4096;
+  sst25v16.geometry.bytes_per_sector = 4096;
+  sst25v16.geometry.sector_count = 512;
+  sst25v16.geometry.block_size = 4096;
 
-   
+ 
 
-    sst25v16.parent.init    		= rt_flash_init;
-    sst25v16.parent.open    	= rt_flash_open;
-    sst25v16.parent.close   	= rt_flash_close;
-    sst25v16.parent.read    	= rt_flash_read;
-    sst25v16.parent.write   	= rt_flash_write;
-    sst25v16.parent.control 	= rt_flash_control;
+  sst25v16.parent.init    		= rt_flash_init;
+  sst25v16.parent.open    	= rt_flash_open;
+  sst25v16.parent.close   	= rt_flash_close;
+  sst25v16.parent.read    	= rt_flash_read;
+  sst25v16.parent.write   	= rt_flash_write;
+  sst25v16.parent.control 	= rt_flash_control;
 
-    /* no private, no callback */
-    sst25v16.parent.user_data = RT_NULL;
-    sst25v16.parent.rx_indicate = RT_NULL;
-    sst25v16.parent.tx_complete = RT_NULL;
+  /* no private, no callback */
+  sst25v16.parent.user_data = RT_NULL;
+  sst25v16.parent.rx_indicate = RT_NULL;
+  sst25v16.parent.tx_complete = RT_NULL;
 
-    result = rt_device_register(&sst25v16.parent, flash_device_name,
-                                RT_DEVICE_FLAG_RDWR  | RT_DEVICE_FLAG_STANDALONE | RT_DEVICE_FLAG_DMA_RX |RT_DEVICE_FLAG_DMA_TX);
+  result = rt_device_register(&sst25v16.parent, flash_device_name,
+                              RT_DEVICE_FLAG_RDWR  | RT_DEVICE_FLAG_STANDALONE | RT_DEVICE_FLAG_DMA_RX |RT_DEVICE_FLAG_DMA_TX);
 
-    return result;	
+  return result;	
 }
 
 
@@ -588,11 +623,11 @@ void flashwrite(u32 addr,u8 *data, u32 size)
 }
 FINSH_FUNCTION_EXPORT(flashwrite,flashwrite(addr,data,size)--Sectore_Erase);
 
-void sreset()
+void echip()
 {
-	NVIC_SystemReset();
+	spi_flash_chip_erase(sst25v16.spi_device);
 }
-FINSH_FUNCTION_EXPORT(sreset,sreset()--system reset);
+FINSH_FUNCTION_EXPORT(echip,echip()--chip erase);
 
 
 

@@ -1,5 +1,8 @@
----- stm32_serial_data_node 匹配 (4 in 1 文件) ----
-Serial_bk.h (e:\code\smartlock):struct stm32_serial_data_node
-Serial_bk.h (e:\code\smartlock):	struct stm32_serial_data_node *next, *prev;
-Serial_bk.h (e:\code\smartlock):	struct stm32_serial_data_node *list_head, *list_tail;
-Serial_bk.h (e:\code\smartlock):		(sizeof(struct stm32_serial_data_node) + sizeof(void*))];
+---- ls( 匹配 (4 in 3 文件) ----
+Dfs_file.c (e:\code\smartlock\rt-thread\components\dfs\src):void ls(const char *pathname)
+Mmcsd_core.h (e:\code\smartlock\rt-thread\components\drivers\include\drivers): * Note fls(0) = 0, fls(1) = 1, fls(0x80000000) = 32.
+Mmcsd_core.h (e:\code\smartlock\rt-thread\components\drivers\include\drivers):rt_inline rt_uint32_t fls(rt_uint32_t val)
+Stm3210c_eval_lcd.c (e:\code\smartlock):void cls(rt_uint32_t c)
+---- ls( 搜索遇到错误 (1) ----
+以下1个文件不能被处理：
+E:\code\smartlock\JLinkLog.txt : 文件打不开。

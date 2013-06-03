@@ -11,7 +11,7 @@
 
 
 /* hardware define pin port clock -------------*/
-#define SPI2_SCK_PIN										GPIO_Pin_13;
+#define SPI2_SCK_PIN										GPIO_Pin_13
 #define	 SPI2_MISO_PIN									GPIO_Pin_14
 #define SPI2_MOSI_PIN										GPIO_Pin_15
 #define SPI2_GPIO_PORT									GPIOB

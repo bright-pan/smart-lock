@@ -88,6 +88,7 @@ void alarm_mail_process_thread_entry(void *parameter)
     }
     else
     {
+      break;
       /* msg receive error */
     }
   } 

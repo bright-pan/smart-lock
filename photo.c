@@ -92,7 +92,7 @@ void com2_release_buffer(camera_dev_t camera)
 	release_com2_data = 1;
 	while(1)
 	{	
-		result = rt_sem_take(usart_data_sem,50);
+		result = rt_sem_take(usart_data_sem,30);
 		if(-RT_ETIMEOUT == result)
 		{	
 			length = rt_device_read(camera->device,0,camera->data,CM_BUFFER_LEN);
@@ -103,6 +103,14 @@ void com2_release_buffer(camera_dev_t camera)
 
 			release_com2_data = CM_BUFFER_LEN;
 			break;
+		}
+		else if(RT_EOK == result)
+		{
+			length = rt_device_read(camera->device,0,camera->data,CM_BUFFER_LEN);
+			release_com2_data = CM_BUFFER_LEN;
+			test_recv_data(camera->data,length);
+			
+			rt_kprintf("length = .%d\n",length);
 		}
 	}
 }
@@ -485,13 +493,17 @@ void photo_thread_entry(void *arg)
 			/*first open power  need 10ms after  */
 			if(result == -RT_ETIMEOUT)
 			{
-			//	camera_power_control(&photo,0);	
+				camera_power_control(&photo,0);	
 				timeout = RT_WAITING_FOREVER;
 				rt_kprintf("close power\n");
 				continue;
 			}
 
 			camera_power_control(&photo,1);	
+			
+			rt_thread_delay(1);
+
+			photo_reset(&photo);
 
 			/*start camera job */
 			rt_timer_start(pic_timer);
@@ -501,6 +513,8 @@ void photo_thread_entry(void *arg)
 			photo.time = recv_mq.time;
 			rt_device_set_rx_indicate(photo.device,com2_photo_data_rx_indicate);
 			photo.error = CM_RUN_DEAL_OK;
+
+			
 			
 			com2_release_buffer(&photo);
 
@@ -508,7 +522,7 @@ void photo_thread_entry(void *arg)
 			
 			photo_deal(&photo,&recv_mq);	
 
-		//	camera_power_control(&photo,0);		//close camera power
+			camera_power_control(&photo,0);		//close camera power
 	}
 }
 
@@ -591,19 +605,6 @@ void mq(rt_uint32_t time)//(rt_uint8_t time,rt_uint8_t *file_name)
 	rt_mq_send(photo_start_mq,&send_mq,sizeof(send_mq));
 }
 FINSH_FUNCTION_EXPORT(mq, mq(time,name));
-
-
-
-
-void chardevieo(const char *name,rt_int8_t data)
-{
-	rt_device_t device;
-
-	device = rt_device_find(name);
-	
-	rt_device_write(device,0,&data,1);
-}
-FINSH_FUNCTION_EXPORT(chardevieo,chardevieo(name,data)--output char device);
 
 
 #endif

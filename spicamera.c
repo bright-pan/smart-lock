@@ -29,10 +29,10 @@ struct camera_device	camera_mode;
 
 
 
-static void delay(rt_uint32_t t)
-{
-	while(--t);
-}
+//static void delay(rt_uint32_t t)
+//{
+//	while(--t);
+//}
 
 void rt_hw_spi1_init(void)
 {
@@ -106,7 +106,8 @@ static camera_read_buffer_data(struct rt_spi_device*  dev, rt_off_t pos, rt_uint
 		buffer++;
 		size--;
 	}
-	
+
+//	rt_spi_send_then_recv(dev,RT_NULL,0,buffer,size);
 }
 
 /**************************************** spi flash resiger function **********************************/
@@ -161,10 +162,10 @@ rt_err_t rt_camera_register(const char* device_name,const char *cs_name)
 	struct rt_spi_device * spi_device;
 	struct rt_spi_configuration spi1_configuer= 
 	{
-		RT_SPI_MODE_0 | RT_SPI_MSB,										//spi clock and data mode set
-		8,																			//data width
-		0,																			//reserved
-		72000000/8													//MAX frequency 18MHz
+		RT_SPI_MODE_0 | RT_SPI_MSB,								//spi clock and data mode set
+		8,																				//data width
+		0,																				//reserved
+		72000000/8																//MAX frequency 18MHz
 	};
 
 	spi_device = (struct rt_spi_device *)rt_device_find(cs_name);

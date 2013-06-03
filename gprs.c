@@ -37,6 +37,7 @@ void gprs_mail_process_thread_entry(void *parameter)
     }
     else
     {
+      break;
       /* mail receive error */
     }
   }
