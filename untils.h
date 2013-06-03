@@ -21,4 +21,31 @@
 
 void delay_us(uint32_t time);
 
+#define TELEPHONE_NUMBERS 10
+#define TELEPHONE_ADDRESS_LENGTH 20
+
+#define RFID_KEY_NUMBERS 10
+
+typedef struct {
+
+  uint8_t flag;
+  uint8_t address[TELEPHONE_ADDRESS_LENGTH];
+}TELEPHONE_ADDRESS_TYPEDEF;
+
+typedef struct {
+
+  uint8_t flag;
+  uint8_t key[4];
+}RFID_KEY_TYPEDEF;
+
+typedef struct {
+  uint32_t device_id;
+  TELEPHONE_ADDRESS_TYPEDEF alarm_telephone[TELEPHONE_NUMBERS];
+  TELEPHONE_ADDRESS_TYPEDEF call_telephone[TELEPHONE_NUMBERS];
+  RFID_KEY_TYPEDEF rfid_key[RFID_KEY_NUMBERS];
+  
+}DEVICE_PARAMETERS_TYPEDEF;
+
+extern DEVICE_PARAMETERS_TYPEDEF device_parameters;
+
 #endif

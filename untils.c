@@ -21,3 +21,38 @@ void delay_us(uint32_t time)
     for(nCount = 6 ; nCount != 0; nCount--);
   }
 }
+
+
+DEVICE_PARAMETERS_TYPEDEF device_parameters = {
+  //device id
+  0xAAAA,
+  //alarm telephone
+  {
+    {
+      1,
+      "13316975697"
+    },
+    {
+      0,
+      "13316975697"
+    },
+  },
+  //call telephone
+  {
+    {
+      1,
+      "13316975697"
+    },
+    {
+      0,
+      "13316975697"
+    },
+  },
+  // rfid key
+  {
+    {
+      1,
+      "\xAA\xAA\xAA\xAA"
+    },
+  }
+};
