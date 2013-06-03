@@ -534,6 +534,7 @@ void rt_hw_lock_gate_register(void)
 /* lock_shell device */
 rt_err_t lock_shell_rx_ind(rt_device_t dev, rt_size_t size)
 {
+  static time_t time = 0;
   ALARM_MAIL_TYPEDEF buf;
   rt_err_t result;
   gpio_device *gpio = RT_NULL;
@@ -541,10 +542,19 @@ rt_err_t lock_shell_rx_ind(rt_device_t dev, rt_size_t size)
   gpio = (gpio_device *)dev;
   /* produce mail */
   rt_device_control(rtc_device, RT_DEVICE_CTRL_RTC_GET_TIME, &(buf.time));
-
   buf.alarm_type = ALARM_TYPE_LOCK_SHELL;
   buf.alarm_process_flag = ALARM_PROCESS_FLAG_SMS | ALARM_PROCESS_FLAG_MMS | ALARM_PROCESS_FLAG_GPRS | ALARM_PROCESS_FLAG_LOCAL;
   buf.gpio_value = gpio->pin_value;
+
+  if ((buf.time - time) > ALARM_INTERVAL)
+  {
+    time = buf.time;
+  }
+  else
+  {
+    time = buf.time;
+    return RT_EOK;
+  }
   /* send mail */
   if (alarm_mq != NULL)
   {
