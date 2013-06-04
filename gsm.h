@@ -41,6 +41,13 @@ typedef enum
   AT_CNMI,
   AT_CSCA,
   AT_CMGF,
+  AT_CPIN,
+  AT_CSQ,
+  AT_CGREG,
+  AT_CGATT,
+  AT_CSTT,
+  AT_CIICR,
+  AT_CIFSR,
 }AT_INDEX_TYPEDEF;
 
 typedef enum
