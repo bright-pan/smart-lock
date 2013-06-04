@@ -38,6 +38,7 @@ const char *at_command[] =
   "AT\r",
   "AT+CNMI=2,1\r",
   "AT+CSCA?\r",
+  "AT+CMGF=0\r",
 };
 
 void gsm_put_char(const char *str, uint16_t length)
@@ -333,6 +334,70 @@ ATCommandStatus gsm_send_at(void)
     return AT_NO_RESPONSE;
   }
 }
+ATCommandStatus gsm_send_at_cmgf(void)
+{
+  char *recv_buf;
+  char *temp;
+  rt_device_t device_gsm_usart = rt_device_find(DEVICE_NAME_GSM_USART);
+  uint8_t at_command_index = AT_CMGF;
+  uint16_t recv_size;
+  char match_error;
+  
+  if (device_gsm_usart != RT_NULL)
+  {
+    recv_buf = (char *)rt_malloc(RECV_BUF_SIZE);
+    if (recv_buf == RT_NULL)
+    {
+      rt_kprintf("no more memory can use!!!\n");
+      return AT_NO_RESPONSE;
+    }
+    memset(recv_buf, '\0', RECV_BUF_SIZE);
+    rt_kprintf("gsm send : ");
+    gsm_put_char(at_command[at_command_index], strlen(at_command[at_command_index]));
+    rt_device_write(device_gsm_usart, 0, \
+                    at_command[at_command_index], \
+                    strlen(at_command[at_command_index]));
+    rt_thread_delay(50);
+    recv_size = rt_device_read(device_gsm_usart, 0, recv_buf, RECV_BUF_SIZE);
+    if (recv_size <= 0)
+    {
+      rt_free(recv_buf);
+      rt_kprintf("gsm recv is not exist!\n");
+      return AT_NO_RESPONSE;
+    }
+    else
+    {
+      rt_kprintf("gsm recv : ");
+      gsm_put_char(recv_buf, recv_size);
+      gsm_put_hex(recv_buf, recv_size);
+      /* parse at response */
+      temp = (char *)rt_malloc(RECV_BUF_SIZE);
+      memset(temp, '\0', RECV_BUF_SIZE);
+      match_error = sscanf(recv_buf, "%*[^\r]\r\r\n%[^\r]\r\n", temp);
+
+      if (match_error != 1)
+      {
+        rt_kprintf("Error parsing\n");
+        rt_free(temp);
+        rt_free(recv_buf);
+        return AT_ERROR;
+      }
+      else
+      {
+        rt_kprintf("Success parsing\n");
+        gsm_put_char(temp, strlen(temp));
+        rt_free(temp);
+        rt_free(recv_buf);
+        return AT_OK;
+      }
+    }
+  }
+  else
+  {
+    rt_kprintf("gsm usart device is not exist !\n");
+    return AT_NO_RESPONSE;
+  }
+}
 
 ATCommandStatus gsm_send_at_cnmi(void)
 {
@@ -564,6 +629,33 @@ static rt_int8_t gsm_init(void)
       {
         continue;
       }
+      /* AT+CMGF */
+      response = gsm_send_at_cmgf();
+      if (response == AT_OK)
+      {
+
+      }
+      else if (response == AT_NO_RESPONSE)
+      {
+        if (no_response_counts++ > 20)
+        {
+          no_response_counts = 0;
+          if (gsm_setup(DISABLE) == GSM_SETUP_DISABLE_SUCCESS)
+          {
+            rt_thread_delay(200);
+          }
+          else
+          {
+            rt_kprintf("gsm can`t disable!!!\n");
+          }
+        }
+        rt_thread_delay(200);
+        continue;
+      }
+      else
+      {
+        continue;
+      }
       return 1;
     }
     else
@@ -656,6 +748,31 @@ static void gsm_check(void)
       {
         continue;
       }
+
+      /* AT+CMGF */
+      response = gsm_send_at_cmgf();
+      if (response == AT_OK)
+      {
+
+      }
+      else if (response == AT_NO_RESPONSE)
+      {
+        if (gsm_setup(DISABLE) == GSM_SETUP_DISABLE_SUCCESS)
+        {
+          rt_thread_delay(200);
+        }
+        else
+        {
+          rt_kprintf("gsm can`t disable!!!\n");
+        }
+        rt_thread_delay(200);
+        continue;
+      }
+      else
+      {
+        continue;
+      }
+
 
       break;
     }

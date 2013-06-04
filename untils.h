@@ -29,13 +29,13 @@ void delay_us(uint32_t time);
 typedef struct {
 
   uint8_t flag;
-  uint8_t address[TELEPHONE_ADDRESS_LENGTH];
+  char address[TELEPHONE_ADDRESS_LENGTH];
 }TELEPHONE_ADDRESS_TYPEDEF;
 
 typedef struct {
 
   uint8_t flag;
-  uint8_t key[4];
+  uint32_t key;
 }RFID_KEY_TYPEDEF;
 
 typedef struct {

@@ -40,6 +40,7 @@ typedef enum
   AT = 0,// AT
   AT_CNMI,
   AT_CSCA,
+  AT_CMGF,
 }AT_INDEX_TYPEDEF;
 
 typedef enum

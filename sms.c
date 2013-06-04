@@ -273,51 +273,50 @@ void sms_mail_process_thread_entry(void *parameter)
 
   while (1)
   {
-    result = rt_event_recv(event_gsm_mode_response, EVENT_GSM_MODE_SETUP, RT_EVENT_FLAG_AND, RT_WAITING_FOREVER , &event);
+    /* process mail */
+    memset(sms_mail_buf, 0, sizeof(SMS_MAIL_TYPEDEF));
+    result = rt_mq_recv(sms_mq, sms_mail_buf, \
+                        sizeof(SMS_MAIL_TYPEDEF), \
+                        100);
     if (result == RT_EOK)
     {
-      /* process mail */
-      memset(sms_mail_buf, 0, sizeof(SMS_MAIL_TYPEDEF));
-      result = rt_mq_recv(sms_mq, sms_mail_buf, \
-                          sizeof(SMS_MAIL_TYPEDEF), \
-                          100);
+      rt_kprintf("\nreceive sms mail < time: %d alarm_type: %d >\n", sms_mail_buf->time, sms_mail_buf->alarm_type);
+
+      // sms content process
+      sms_ucs = (uint16_t *)rt_malloc(256);
+      sms_ucs_bk = sms_ucs;
+      sms_ucs_length = 0;
+
+      temp_ucs = sms_data[sms_mail_buf->alarm_type].data;
+      temp_ucs_length = sms_data[sms_mail_buf->alarm_type].length;
+      sms_ucs_length += temp_ucs_length;
+      while (temp_ucs_length-- > 0)
+      {
+        *sms_ucs_bk++ = *temp_ucs++;
+      }
+
+      // sms time process
+      gmtime_r(&(sms_mail_buf->time), &tm_time);
+
+      tm_time.tm_year += 1900;
+      tm_time.tm_mon += 1;
+      time_ucs_length = 0;
+      time_ucs = sms_time_ucs(&tm_time,
+                              sms_content_time_prefix, sizeof(sms_content_time_prefix)/sizeof(uint16_t),
+                              sms_content_time_suffix, sizeof(sms_content_time_suffix)/sizeof(uint16_t),
+                              &time_ucs_length);
+      temp_ucs = time_ucs;
+      sms_ucs_length += time_ucs_length;
+      while (time_ucs_length-- > 0)
+      {
+        *sms_ucs_bk++ = *temp_ucs++;
+      }
+      rt_free(time_ucs);
+
+      rt_mutex_take(mutex_gsm_mode, RT_WAITING_FOREVER);
+      result = rt_event_recv(event_gsm_mode_response, EVENT_GSM_MODE_SETUP, RT_EVENT_FLAG_AND, 100, &event);
       if (result == RT_EOK)
       {
-        rt_kprintf("\nreceive sms mail < time: %d alarm_type: %d >\n", sms_mail_buf->time, sms_mail_buf->alarm_type);
-
-        // sms content process
-        sms_ucs = (uint16_t *)rt_malloc(256);
-        sms_ucs_bk = sms_ucs;
-        sms_ucs_length = 0;
-
-        temp_ucs = sms_data[sms_mail_buf->alarm_type].data;
-        temp_ucs_length = sms_data[sms_mail_buf->alarm_type].length;
-        sms_ucs_length += temp_ucs_length;
-        while (temp_ucs_length-- > 0)
-        {
-          *sms_ucs_bk++ = *temp_ucs++;
-        }
-
-        // sms time process
-        gmtime_r(&(sms_mail_buf->time), &tm_time);
-
-        tm_time.tm_year += 1900;
-        tm_time.tm_mon += 1;
-        time_ucs_length = 0;
-        time_ucs = sms_time_ucs(&tm_time,
-                                sms_content_time_prefix, sizeof(sms_content_time_prefix)/sizeof(uint16_t),
-                                sms_content_time_suffix, sizeof(sms_content_time_suffix)/sizeof(uint16_t),
-                                &time_ucs_length);
-        temp_ucs = time_ucs;
-        sms_ucs_length += time_ucs_length;
-        while (time_ucs_length-- > 0)
-        {
-          *sms_ucs_bk++ = *temp_ucs++;
-        }
-
-        rt_free(time_ucs);
-
-        rt_mutex_take(mutex_gsm_mode, RT_WAITING_FOREVER);
         if (gsm_mode_get() & EVENT_GSM_MODE_GPRS)
         {
           rt_event_recv(event_gsm_mode_response, EVENT_GSM_MODE_GPRS_CMD, RT_EVENT_FLAG_AND | RT_EVENT_FLAG_CLEAR, RT_WAITING_NO, &event);
@@ -326,8 +325,8 @@ void sms_mail_process_thread_entry(void *parameter)
           if (result != RT_EOK)
           {
             rt_kprintf("\ngsm mode gprs switch to gprs_cmd is error, and try resend|\n");
-
-            rt_event_recv(event_gsm_mode_response, EVENT_GSM_MODE_SETUP, RT_EVENT_FLAG_AND|RT_EVENT_FLAG_CLEAR, RT_WAITING_FOREVER , &event);
+            // clear gsm setup event, do gsm check or initial for test gsm problem.
+            rt_event_recv(event_gsm_mode_response, EVENT_GSM_MODE_SETUP, RT_EVENT_FLAG_AND|RT_EVENT_FLAG_CLEAR, RT_WAITING_NO, &event);
             if (!(gsm_mode_get() & EVENT_GSM_MODE_CMD))
             {
               rt_event_recv(event_gsm_mode_response, EVENT_GSM_MODE_CMD, RT_EVENT_FLAG_AND | RT_EVENT_FLAG_CLEAR, RT_WAITING_NO, &event);
@@ -339,33 +338,31 @@ void sms_mail_process_thread_entry(void *parameter)
               }
             }
             rt_event_send(event_gsm_mode_request, EVENT_GSM_MODE_CMD);
-
             rt_mq_urgent(sms_mq, sms_mail_buf, sizeof(SMS_MAIL_TYPEDEF));
             rt_free(sms_ucs);
             rt_mutex_release(mutex_gsm_mode);
             continue;
           }
         }
-
+        // send sms
         rt_kprintf("\nsend sms!!!\n");
-
-        alarm_telephone_counts = TELEPHONE_NUMBERS;
-        while (alarm_telephone_counts > 0)
+        alarm_telephone_counts = TELEPHONE_NUMBERS - 1;
+        while (alarm_telephone_counts >= 0)
         {
           if (device_parameters.alarm_telephone[alarm_telephone_counts].flag)
           {
             rt_kprintf((char *)(device_parameters.alarm_telephone[alarm_telephone_counts].address));
             resend_counts = 5;
-            while (resend_counts-- > 0)
+            while (resend_counts > 0)
             {
-              //              if (!sms_pdu_ucs_send(device_parameters.alarm_telephone.address, smsc, sms_ucs, sms_ucs_length))
-              if (0)
+              if (!sms_pdu_ucs_send(device_parameters.alarm_telephone[alarm_telephone_counts].address, smsc, sms_ucs, sms_ucs_length))
               {
                 break;
               }
+              resend_counts--;
             }
             rt_kprintf("\nresend counts :%d\n", resend_counts);
-            if (resend_counts < 0)
+            if (!resend_counts)
             {
               rt_kprintf("\nsend sms failure!!!\n");
               // send failure
@@ -387,17 +384,28 @@ void sms_mail_process_thread_entry(void *parameter)
           }
           alarm_telephone_counts--;
         }
-        rt_free(sms_ucs);
-        rt_mutex_release(mutex_gsm_mode);
       }
-      else
+      else // gsm is not setup
       {
-        /* mail receive error */
+        rt_mq_urgent(sms_mq, sms_mail_buf, sizeof(SMS_MAIL_TYPEDEF));
       }
+      // exit mail process
+      rt_free(sms_ucs);
+      rt_mutex_release(mutex_gsm_mode);
+    }
+    else
+    {
+      /* mail receive error */
+    }
+    /*
+    result = rt_event_recv(event_gsm_mode_response, EVENT_GSM_MODE_SETUP, RT_EVENT_FLAG_AND, RT_WAITING_FOREVER , &event);
+    if (result == RT_EOK)
+    {
     }
     else
     {
     }
+    */
   }
   rt_free(sms_mail_buf);
 }
@@ -526,7 +534,7 @@ int8_t sms_pdu_ucs_send(char *dest_address, char *smsc_address, uint16_t *conten
   }
 
   hex_to_string(send_pdu_string, (uint8_t *)send_pdu_frame, sms_pdu_length);
-
+  /*
   rt_device_write(device, 0, "AT+CMGF=0\r", strlen("AT+CMGF=0\r"));
   rt_thread_delay(50);
   rt_device_read(device, 0, process_buf, 512);
@@ -539,10 +547,11 @@ int8_t sms_pdu_ucs_send(char *dest_address, char *smsc_address, uint16_t *conten
   }
   else
   {
+    gsm_put_char("AT+CMFG=0 is error\n", strlen("AT+CMFG=0 is error\n"));
     //error send
-    goto send_error;
+    //goto send_error;
   }
-
+  */
 
 
   memset(at_temp, '\0', 512);
@@ -562,14 +571,15 @@ int8_t sms_pdu_ucs_send(char *dest_address, char *smsc_address, uint16_t *conten
   else
   {
     //error send
-    goto send_error;
+    gsm_put_char("AT+CMGS is error\n", strlen("AT+CMGS is error\n"));
+    //goto send_error;
   }
 
   memset(at_temp, '\0', 512);
   memset(process_buf, '\0', 512);
   rt_device_write(device, 0, send_pdu_string, strlen(send_pdu_string));
   rt_device_write(device, 0, "\x1A", 1);
-  rt_thread_delay(500);
+  rt_thread_delay(600);
   rt_device_read(device, 0, process_buf, 512);
 
   gsm_put_char(process_buf, strlen(process_buf));
@@ -581,6 +591,7 @@ int8_t sms_pdu_ucs_send(char *dest_address, char *smsc_address, uint16_t *conten
   }
   else
   {
+    gsm_put_char("SEND SMS is error\n", strlen("SEND SMS is error\n"));
     //error send
     goto send_error;
   }
