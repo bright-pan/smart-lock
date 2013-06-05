@@ -26,6 +26,8 @@ void delay_us(uint32_t time);
 
 #define RFID_KEY_NUMBERS 10
 
+#define TCP_DOMAIN_LENGTH 20
+
 typedef struct {
 
   uint8_t flag;
@@ -39,11 +41,18 @@ typedef struct {
 }RFID_KEY_TYPEDEF;
 
 typedef struct {
+  char domain[TCP_DOMAIN_LENGTH];
+  int32_t port;
+}TCP_DEMAIN_TYPEDEF;
+
+typedef struct {
+
   uint32_t device_id;
   TELEPHONE_ADDRESS_TYPEDEF alarm_telephone[TELEPHONE_NUMBERS];
   TELEPHONE_ADDRESS_TYPEDEF call_telephone[TELEPHONE_NUMBERS];
   RFID_KEY_TYPEDEF rfid_key[RFID_KEY_NUMBERS];
-  
+  TCP_DEMAIN_TYPEDEF tcp_domain;
+
 }DEVICE_PARAMETERS_TYPEDEF;
 
 extern DEVICE_PARAMETERS_TYPEDEF device_parameters;

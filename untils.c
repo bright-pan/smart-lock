@@ -54,5 +54,9 @@ DEVICE_PARAMETERS_TYPEDEF device_parameters = {
       1,
       0xAAAAAA
     },
+  },
+  {
+    "iyuet.com",
+    6800
   }
 };

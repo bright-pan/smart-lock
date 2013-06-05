@@ -45,9 +45,14 @@ typedef enum
   AT_CSQ,
   AT_CGREG,
   AT_CGATT,
+  AT_CIPMODE,
   AT_CSTT,
   AT_CIICR,
   AT_CIFSR,
+  AT_CIPSHUT,
+  AT_CIPSTATUS,
+  ATO,
+  PLUS3,
 }AT_INDEX_TYPEDEF;
 
 typedef enum

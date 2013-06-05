@@ -321,8 +321,8 @@ void sms_mail_process_thread_entry(void *parameter)
         {
           rt_event_recv(event_gsm_mode_response, EVENT_GSM_MODE_GPRS_CMD, RT_EVENT_FLAG_AND | RT_EVENT_FLAG_CLEAR, RT_WAITING_NO, &event);
           rt_event_send(event_gsm_mode_request, EVENT_GSM_MODE_GPRS_CMD);
-          result = rt_event_recv(event_gsm_mode_response, EVENT_GSM_MODE_GPRS_CMD, RT_EVENT_FLAG_AND | RT_EVENT_FLAG_CLEAR, 800 , &event);
-          if (result != RT_EOK)
+          result = rt_event_recv(event_gsm_mode_response, EVENT_GSM_MODE_GPRS_CMD, RT_EVENT_FLAG_AND | RT_EVENT_FLAG_CLEAR, RT_WAITING_FOREVER, &event);
+          if ((result == RT_EOK) && !(gsm_mode_get() & EVENT_GSM_MODE_GPRS_CMD))
           {
             rt_kprintf("\ngsm mode gprs switch to gprs_cmd is error, and try resend|\n");
             // clear gsm setup event, do gsm check or initial for test gsm problem.
@@ -331,8 +331,8 @@ void sms_mail_process_thread_entry(void *parameter)
             {
               rt_event_recv(event_gsm_mode_response, EVENT_GSM_MODE_CMD, RT_EVENT_FLAG_AND | RT_EVENT_FLAG_CLEAR, RT_WAITING_NO, &event);
               rt_event_send(event_gsm_mode_request, EVENT_GSM_MODE_CMD);
-              result = rt_event_recv(event_gsm_mode_response, EVENT_GSM_MODE_CMD, RT_EVENT_FLAG_AND | RT_EVENT_FLAG_CLEAR, 800 , &event);
-              if (result != RT_EOK)
+              result = rt_event_recv(event_gsm_mode_response, EVENT_GSM_MODE_CMD, RT_EVENT_FLAG_AND | RT_EVENT_FLAG_CLEAR, RT_WAITING_FOREVER, &event);
+              if ((result == RT_EOK) && !(gsm_mode_get() & EVENT_GSM_MODE_CMD))
               {
                 rt_kprintf("\ngsm mode switch to cmd is error, and try resend|\n");
               }
@@ -371,8 +371,8 @@ void sms_mail_process_thread_entry(void *parameter)
               {
                 rt_event_recv(event_gsm_mode_response, EVENT_GSM_MODE_CMD, RT_EVENT_FLAG_AND | RT_EVENT_FLAG_CLEAR, RT_WAITING_NO, &event);
                 rt_event_send(event_gsm_mode_request, EVENT_GSM_MODE_CMD);
-                result = rt_event_recv(event_gsm_mode_response, EVENT_GSM_MODE_CMD, RT_EVENT_FLAG_AND | RT_EVENT_FLAG_CLEAR, 800 , &event);
-                if (result != RT_EOK)
+                result = rt_event_recv(event_gsm_mode_response, EVENT_GSM_MODE_CMD, RT_EVENT_FLAG_AND | RT_EVENT_FLAG_CLEAR, RT_WAITING_FOREVER, &event);
+                if ((result == RT_EOK) && !(gsm_mode_get() & EVENT_GSM_MODE_CMD))
                 {
                   rt_kprintf("\ngsm mode switch to cmd is error, and try resend|\n");
                 }
