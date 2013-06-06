@@ -385,7 +385,7 @@ ATCommandStatus gsm_send_plus3(void)
       /* parse at response */
       temp = (char *)rt_malloc(RECV_BUF_SIZE);
       memset(temp, '\0', RECV_BUF_SIZE);
-      match_error = sscanf(recv_buf, "%*[^\r]\r\n%[^\r]\r\n", temp);
+      match_error = sscanf(recv_buf, "\r\n%[^\r]\r\n", temp);
 
       if (match_error != 1)
       {
