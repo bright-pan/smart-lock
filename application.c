@@ -120,6 +120,12 @@ void rt_init_thread_entry(void* parameter)
 #endif /* #ifdef RT_USING_RTGUI */
 }
 
+
+static void logo_led_timeout(void *parameters)
+{
+  gpio_pin_output(DEVICE_NAME_LOGO_LED, 0);
+}      
+
 int rt_application_init()
 {
   rt_thread_t init_thread;
@@ -129,6 +135,7 @@ int rt_application_init()
   rt_thread_t gprs_mail_process_thread;
   rt_thread_t local_mail_process_thread;
   rt_thread_t gsm_process_thread;
+  rt_timer_t logo_led_timer;
 
   /* alarm mail process thread */
   gsm_process_thread = rt_thread_create("gsm",
@@ -199,6 +206,14 @@ int rt_application_init()
   {
     rt_kprintf("rtc_device is not exist!!!");
   }
+
+  // open logo led
+  gpio_pin_output(DEVICE_NAME_LOGO_LED, 1);
+  logo_led_timer = rt_timer_create("tr_led",
+                                   logo_led_timeout,
+                                   RT_NULL,
+                                   6000,
+                                   RT_TIMER_FLAG_ONE_SHOT);
 
   return 0;
 }
