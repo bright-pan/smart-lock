@@ -343,6 +343,39 @@ void rt_hw_test_register(void)
   rt_hw_gpio_register(gpio_device, gpio_user_data->name, (RT_DEVICE_FLAG_RDWR), gpio_user_data);
 }
 
+void gpio_pin_output(char *str, const rt_uint8_t dat)
+{
+  rt_device_t device = RT_NULL;
+  device = rt_device_find(str);
+  if (device != RT_NULL)
+  {
+    rt_device_write(device,0,&dat,0);
+  }
+  else
+  {
+#ifdef RT_USING_FINSH
+    rt_kprintf("the gpio device %s is not found!\n", DEVICE_NAME_GSM_POWER);
+#endif
+  }
+}	
+
+void gpio_pin_input(char *str)
+{
+  rt_device_t device = RT_NULL;
+  rt_uint8_t dat;
+  device = rt_device_find(str);
+  if (device != RT_NULL)
+  {
+    rt_device_read(device,0,&dat,0);
+    rt_kprintf("the gpio pin value is %d\n", dat);
+  }
+  else
+  {
+#ifdef RT_USING_FINSH
+    rt_kprintf("the gpio device %s is not found!\n", DEVICE_NAME_GSM_STATUS);
+#endif
+  }
+}	
 
 #ifdef RT_USING_FINSH
 #include <finsh.h>
@@ -363,38 +396,6 @@ void led(const char *str, const rt_uint8_t dat)
 }
 FINSH_FUNCTION_EXPORT(led, led[device_name 0/1])
 
-void gpio_pin_output(char *str, const rt_uint8_t dat)
-{
-  rt_device_t device = RT_NULL;
-  device = rt_device_find(str);
-  if (device != RT_NULL)
-  {
-    rt_device_write(device,0,&dat,0);
-  }
-  else
-  {
-#ifdef RT_USING_FINSH
-    rt_kprintf("the gpio device %s is not found!\n", DEVICE_NAME_GSM_POWER);
-#endif
-  }
-}	
 FINSH_FUNCTION_EXPORT(gpio_pin_output, [device_name <0 1>])
-void gpio_pin_input(char *str)
-{
-  rt_device_t device = RT_NULL;
-  rt_uint8_t dat;
-  device = rt_device_find(str);
-  if (device != RT_NULL)
-  {
-    rt_device_read(device,0,&dat,0);
-    rt_kprintf("the gpio pin value is %d\n", dat);
-  }
-  else
-  {
-#ifdef RT_USING_FINSH
-    rt_kprintf("the gpio device %s is not found!\n", DEVICE_NAME_GSM_STATUS);
-#endif
-  }
-}	
 FINSH_FUNCTION_EXPORT(gpio_pin_input, [device_name])
 #endif
