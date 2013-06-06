@@ -35,60 +35,6 @@
 #define	TP_DCS_DEFAULT					0X08//UCS2编码方式;
 #define	TP_VP_DEFAULT						0XC2//5分钟有效期限;
 
-
-
-/* 电缆故障类型 */
-#define CABLE_DISCONNECT_FAULT	0x01
-#define CURRENT_ON		0x01
-
-/* 数据帧正确 */
-#define FRAME_CORRECT 		0x00
-
-/* 短信帧功能分隔标记 */
-#define POUND_SIGN 	0x2300//#井号
-#define COMMA_SIGN      0x2c00
-#define COLON_SIGN	0x3a00// :;
-#define LINE_SIGN	0x2D00// :;
-
-/* 汉字UCS2 编码 */
-
-#define UCS2_LIAN	0XDE8F//连
-#define UCS2_TONG	0X1A90//通
-#define UCS2_DUAN	0XAD65//断
-#define UCS2_KAI	0X005F//开
-#define UCS2_YOU	0X0967//有
-#define UCS2_DIAN	0X3575//电
-#define UCS2_WU		0XE065//无
-#define UCS2_DU 	0XA65E//度
-
-#define YEAR		0X745e
-#define MONTH		0X0867
-#define DAY		0Xe565
-#define HOUR		0XF665
-#define MINUTE		0X0652
-#define SECOND		0XD279
-
-#define FAN		0xd153
-#define SHENG	 	0x1f75//发生
-#define SHI			0x8b4e
-#define JIAN		0xf64e//事件
-
-//请尽快处理;
-#define QING		0xf78b
-#define	JIN		0x3d5c
-#define	KUAI		0xeb5f
-#define	CHU		0x0459
-#define	LI		0x0674
-
-#define	YU		0x8e4e//于
-
-#define SMS_ALARM_FRAME_TYPE		1
-#define SMS_QUERY_FRAME_TYPE		2
-
-#define MODBUS_DATA_QUERY 		0x03
-#define MODBUS_TIME_SET			0x10
-
-
 typedef struct {
 
   uint8_t SMSC_Length;//计算方式不同;
