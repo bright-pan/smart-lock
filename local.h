@@ -26,6 +26,7 @@ typedef struct
 }LOCAL_MAIL_TYPEDEF;
 
 extern rt_mq_t local_mq;
+extern rt_timer_t lock_gate_timer;
 
 void local_mail_process_thread_entry(void *parameter);
 
