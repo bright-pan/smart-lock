@@ -100,17 +100,23 @@ void idle_thread_work(void)
 void mms_info(mms_dev_t mms)
 {
 	rt_kprintf("mms->error        %d\n",mms->error);
+	rt_kprintf("error0 %d error1 %d error2 %d error3 %d \n",mms->error_record[0],mms->error_record[1],mms->error_record[2],mms->error_record[3]);
 	rt_kprintf("mms->mobile_no    %s\n",mms->mobile_no[0]);
 	rt_kprintf("mms->number       %d\n",mms->number);
 	rt_kprintf("mms->pic_name[0]  %s\n",mms->pic_name[0]);
 	rt_kprintf("mms->pic_name[1]  %s\n",mms->pic_name[1]);
 	rt_kprintf("mms->pic_size[0]  %d\n",mms->pic_size[0]);
 	rt_kprintf("mms->pic_size[1]  %d\n",mms->pic_size[1]);
-	rt_kprintf("mms->text    %s\n",mms->text);
-	rt_kprintf("mms->title   %s\n",mms->title);
+	rt_kprintf("mms->text  size %3d 		%s\n",mms->text.size,mms->text.string);
+	rt_kprintf("mms->title size %3d   	%s\n",mms->title.size,mms->title.string);
 	rt_kprintf("usart name   %s\n",mms->usart->parent.name);
 }
 
+void printf_dev_data(rt_device_t dev,rt_uint8_t *buffer)
+{
+	rt_device_read(dev,0,buffer,100);
+	rt_kprintf("%s\n",buffer);
+}
 
 void printf_loop_string(rt_uint8_t *buffer,rt_uint32_t size)
 {
@@ -121,6 +127,46 @@ void printf_loop_string(rt_uint8_t *buffer,rt_uint32_t size)
 	}
 }
 
+
+void gsm_hw_reset(void)
+{
+	rt_device_t dev;
+	rt_uint8_t dat = 1;
+
+	dev = rt_device_find("g_power");
+
+	if(RT_NULL != dev)
+	{
+		rt_device_write(dev,0,&dat,1);
+
+		dat = 0;
+		rt_thread_delay(100);
+
+		rt_device_write(dev,0,&dat,1);
+	}
+}
+
+void printf_format_string(rt_uint8_t *addr,rt_uint8_t format,rt_uint8_t len)
+{
+	rt_uint8_t i = 0;
+
+	for(i =0;i<len;i++)
+	{
+		switch(format)
+		{
+			case 'd':
+			{
+				rt_kprintf("%d ",*addr++);
+				break;
+			}
+			case 'x':
+			{
+				rt_kprintf("%x ",*addr++);
+				break;
+			}
+		}
+	}
+}
 
 #ifdef RT_USING_FINSH
 #include <finsh.h>
@@ -208,15 +254,13 @@ void cputest()
 }
 FINSH_FUNCTION_EXPORT(cputest,--cputest);
 
-#define GPRS_READ_USART_LEN		1024
+#define GPRS_READ_USART_LEN		128
 void ch_dev_in(const char *name)
 {
 	rt_device_t device;
-	rt_uint8_t*	data;
+	volatile rt_uint8_t	data[GPRS_READ_USART_LEN]={0,};
 
-	data = (rt_uint8_t *)rt_malloc(sizeof(rt_uint8_t)*GPRS_READ_USART_LEN);
-
-	rt_memset((rt_uint8_t *)data,0,GPRS_READ_USART_LEN);
+//	data = (rt_uint8_t *)rt_malloc(sizeof(rt_uint8_t)*GPRS_READ_USART_LEN);
 	
 	device = rt_device_find(name);
 
@@ -224,9 +268,9 @@ void ch_dev_in(const char *name)
 
 	rt_device_read(device,0,data,GPRS_READ_USART_LEN);
 	
-	rt_kprintf("%s\n",data);
+	rt_kprintf("rcv = %s\n",data);
 
-	free(data);
+//	free(data);
 
 }
 FINSH_FUNCTION_EXPORT(ch_dev_in,ch_dev_in(name)--read char device printf);
@@ -237,9 +281,9 @@ void ch_dev_out(const char *name,rt_int8_t* data)
 	rt_device_t device;
 	rt_uint8_t	size;
 
-	size = strlen((char *)data);
+	size = rt_strlen((char *)data);
 
-	rt_kprintf("size = %d\n",size);
+//	rt_kprintf("size = %d\n",size);
 	
 	device = rt_device_find(name);
 	
@@ -248,14 +292,14 @@ void ch_dev_out(const char *name,rt_int8_t* data)
 }
 FINSH_FUNCTION_EXPORT(ch_dev_out,(name,data)--write to data char device);
 
-void ch_dev_rdwd(const char *name,rt_int8_t* data)
+void ch_dev_rdwd(const char *name,const char* data)
 {
 	rt_device_t device;
 	rt_uint8_t	size;
 
-	size = strlen((char *)data);
+	size = rt_strlen((char *)data);
 
-	rt_kprintf("size = %d\n",size);
+//	rt_kprintf("size = %d\n",size);
 
 	device = rt_device_find(name);
 
@@ -362,7 +406,11 @@ FINSH_FUNCTION_EXPORT(sizeof_test,(void)--test sizeof use);
 
 
 */
-
+void gsm_run()
+{
+	gsm_hw_reset();
+}
+FINSH_FUNCTION_EXPORT(gsm_run,(void)--reset gsm modle);
 
 #endif
 

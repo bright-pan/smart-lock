@@ -15,7 +15,7 @@
 #ifndef _GSM_USART_H_
 #define _GSM_USART_H_
 #include <rtdevice.h>
-//#include serial.h>
+#include <serial.h>
 #include <stm32f10x_dma.h>
 
 struct gsm_usart_user_data_t
