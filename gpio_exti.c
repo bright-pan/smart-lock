@@ -13,6 +13,7 @@
 
 #include "gpio_exti.h"
 #include "gpio_pin.h"
+#include "local.h"
 
 struct gpio_exti_user_data
 {
@@ -404,7 +405,7 @@ rt_err_t gsm_ring_rx_ind(rt_device_t dev, rt_size_t size)
   rt_device_control(rtc_device, RT_DEVICE_CTRL_RTC_GET_TIME, &(buf.time));
 
   buf.alarm_type = ALARM_TYPE_GSM_RING;
-  buf.alarm_process_flag = ALARM_PROCESS_FLAG_SMS | ALARM_PROCESS_FLAG_MMS | ALARM_PROCESS_FLAG_GPRS | ALARM_PROCESS_FLAG_LOCAL;
+  buf.alarm_process_flag = ALARM_PROCESS_FLAG_LOCAL;
   buf.gpio_value = gpio->pin_value;
 
   device = rt_device_find(DEVICE_NAME_GSM_STATUS);
@@ -481,8 +482,12 @@ rt_err_t lock_gate_rx_ind(rt_device_t dev, rt_size_t size)
   rt_device_control(rtc_device, RT_DEVICE_CTRL_RTC_GET_TIME, &(buf.time));
 
   buf.alarm_type = ALARM_TYPE_LOCK_GATE;
-  buf.alarm_process_flag = ALARM_PROCESS_FLAG_SMS | ALARM_PROCESS_FLAG_MMS | ALARM_PROCESS_FLAG_GPRS | ALARM_PROCESS_FLAG_LOCAL;
+  buf.alarm_process_flag = ALARM_PROCESS_FLAG_GPRS | ALARM_PROCESS_FLAG_LOCAL;
   buf.gpio_value = gpio->pin_value;
+  if (lock_gate_timer != RT_NULL)
+  {
+    return RT_EOK;
+  }
   /* send mail */
   if (alarm_mq != NULL)
   {
@@ -543,7 +548,7 @@ rt_err_t lock_shell_rx_ind(rt_device_t dev, rt_size_t size)
   /* produce mail */
   rt_device_control(rtc_device, RT_DEVICE_CTRL_RTC_GET_TIME, &(buf.time));
   buf.alarm_type = ALARM_TYPE_LOCK_SHELL;
-  buf.alarm_process_flag = ALARM_PROCESS_FLAG_SMS | ALARM_PROCESS_FLAG_MMS | ALARM_PROCESS_FLAG_GPRS | ALARM_PROCESS_FLAG_LOCAL;
+  buf.alarm_process_flag = ALARM_PROCESS_FLAG_SMS | ALARM_PROCESS_FLAG_GPRS | ALARM_PROCESS_FLAG_LOCAL;
   buf.gpio_value = gpio->pin_value;
 
   if ((buf.time - time) > ALARM_INTERVAL)
