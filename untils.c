@@ -24,8 +24,6 @@ void delay_us(uint32_t time)
 
 
 DEVICE_PARAMETERS_TYPEDEF device_parameters = {
-  //device id
-  0xAAAA,
   //alarm telephone
   {
     {
@@ -58,5 +56,13 @@ DEVICE_PARAMETERS_TYPEDEF device_parameters = {
   {
     "iyuet.com",
     6800
-  }
+  },
+  //lock gate alarm time
+  30,
+  //device id
+  {0x00,},
+  //key0
+  {0x00,},
+  //key1
+  {0x00,},
 };

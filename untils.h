@@ -47,11 +47,14 @@ typedef struct {
 
 typedef struct {
 
-  uint32_t device_id;
   TELEPHONE_ADDRESS_TYPEDEF alarm_telephone[TELEPHONE_NUMBERS];
   TELEPHONE_ADDRESS_TYPEDEF call_telephone[TELEPHONE_NUMBERS];
   RFID_KEY_TYPEDEF rfid_key[RFID_KEY_NUMBERS];
   TCP_DEMAIN_TYPEDEF tcp_domain;
+  uint8_t lock_gate_alarm_time;
+  uint8_t device_id[6];
+  uint8_t key0[8];
+  uint8_t key1[8];
 
 }DEVICE_PARAMETERS_TYPEDEF;
 
