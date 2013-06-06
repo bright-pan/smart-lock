@@ -65,4 +65,8 @@ void rt_hw_motor_b_pulse_register(void);
 
 void rt_hw_voice_data_register(void);
 
+void voice_output(rt_uint16_t counts);
+
+int8_t motor_output(uint8_t direction);
+
 #endif
