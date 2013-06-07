@@ -107,8 +107,8 @@ void mms_info(mms_dev_t mms)
 	rt_kprintf("mms->pic_name[1]  %s\n",mms->pic_name[1]);
 	rt_kprintf("mms->pic_size[0]  %d\n",mms->pic_size[0]);
 	rt_kprintf("mms->pic_size[1]  %d\n",mms->pic_size[1]);
-	rt_kprintf("mms->text  size %3d 		%s\n",mms->text.size,mms->text.string);
-	rt_kprintf("mms->title size %3d   	%s\n",mms->title.size,mms->title.string);
+	rt_kprintf("mms->text  size %03d %s\n",mms->text.size,mms->text.string);
+	rt_kprintf("mms->title size %03d %s\n",mms->title.size,mms->title.string);
 	rt_kprintf("usart name   %s\n",mms->usart->parent.name);
 }
 
@@ -406,11 +406,25 @@ FINSH_FUNCTION_EXPORT(sizeof_test,(void)--test sizeof use);
 
 
 */
-void gsm_run()
+	void gsm_run()
+	{
+		gsm_hw_reset();
+	}
+	FINSH_FUNCTION_EXPORT(gsm_run,(void)--reset gsm modle);
+
+#ifdef __GNUC__
+void time_test()
 {
-	gsm_hw_reset();
+	time_t t_v;
+	struct tm t;
+
+	time(&t_v);
+	gmtime_r(&t_v,&t);
+
+	rt_kprintf("%d, %d %d",t.tm_year,t.tm_mon,t.tm_mday);
 }
-FINSH_FUNCTION_EXPORT(gsm_run,(void)--reset gsm modle);
+FINSH_FUNCTION_EXPORT(time_test,time test);
+#endif
 
 #endif
 

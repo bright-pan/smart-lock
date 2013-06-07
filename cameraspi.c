@@ -410,8 +410,22 @@ void picture_create_file_one(camera_t camera,const char *pathname )
 void picture_struct_init(camera_t camera)
 {	
 	camera->device = rt_device_find(DEVICE_NAME_CAMERA_UART);
+	if(RT_NULL == camera->device)
+	{
+		rt_kprintf("camera usart device error\n");
+
+		
+	}
 	camera->glint_led = rt_device_find(DEVICE_NAME_CAMERA_LED);
+	if(RT_NULL == camera->glint_led)
+	{
+
+	}
 	camera->power = rt_device_find(DEVICE_NAME_CAMERA_POWER);
+	if(RT_NULL == camera->power)
+	{
+
+	}
 	camera->addr = 0;
 	camera->page = 0;
 	camera->size = 0;

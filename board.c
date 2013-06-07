@@ -180,13 +180,13 @@ void rt_hw_board_init()
   EXT_SRAM_Configuration();
 #endif
 	rt_hw_usart_init();
+	
 	rt_console_set_device(CONSOLE_DEVICE);
 	
 //	rt_hw_camera_init();
 
-	rt_kprintf("spi1 config ok\n");
 	
-	rt_spi_flash_init();
+	rt_hw_spi_flash_init();
 	
 
 //	rt_hw_camera_uart_register();
@@ -225,7 +225,7 @@ void rt_hw_board_init()
   //rt_hw_adc11_register();
   /* logo device register */
 //  rt_hw_logo_led_register();
-//  rt_hw_chip_register();
+ rt_hw_chip_register();
   
 }
 

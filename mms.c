@@ -20,10 +20,12 @@ rt_sem_t 										mms_test_sem = RT_NULL;
 rt_timer_t 									mms_recv_cmd_t = RT_NULL;
 volatile rt_uint32_t				mms_timer_value = 0;
 
+#define MMS_ERROR_DEAL_FLAG							5
 #define MMS_ERROR_FLAG(arg)							(0X01 << arg)
 #define MMS_ERROR_OK										0X00
 #define MMS_ERROR_0_CMD									0				
-#define MMS_ERROR_1											1
+#define MMS_ERROR_1_FATAL								1
+
 
 
 
@@ -111,7 +113,7 @@ void mms_recv_cmd_result(mms_dev_t mms,rt_int32_t wait_time,const char cmd[],...
 
 	rt_kprintf("%s\n",buffer_head);
 	
-	rt_kprintf("%d",cnt);
+	rt_kprintf("%d error %d",cnt,mms->error_record[MMS_ERROR_0_CMD]);
 
 	rt_free(buffer_head);
 }
@@ -141,7 +143,7 @@ void mms_send_pic_fun(mms_dev_t mms, rt_uint8_t pic_pos)
 		}
 		do
 		{
-			size = read(file_id,&buffer,1);
+			size = read(file_id,(rt_uint8_t *)&buffer,1);
 			delay(250);//delay(250);delay(250);delay(250);delay(250);delay(250);
 			if(size > 0)
 			{
@@ -287,17 +289,24 @@ rt_uint8_t mms_send_error_deal(mms_dev_t mms,rt_uint8_t deal_type)
 		{
 			for(i = 0; i < MMS_ERROR_TYPE_NUM; i++)
 			{
-				if(mms->error_record[i] != 0)
+				if((mms->error_record[i] != 0)||(mms->error != 0))
 				{
 					return 1;
 				}
 			}
+			break;
 		}
 		case 1:
 		{
-
+			rt_kprintf("enter into");
+			if(mms->error_record[MMS_ERROR_0_CMD] > MMS_ERROR_DEAL_FLAG)
+			{
+				return 1;
+			}
+			break;
 		}
 	}
+	return 0;
 }
 void mms_send_at_cmd(mms_dev_t mms)
 {
@@ -310,7 +319,7 @@ void mms_send_at_cmd(mms_dev_t mms)
 	mms_recv_cmd_result(mms,10,"OK");			//release gsm usart data make one cmd error 
 	mms->error &= ~(MMS_ERROR_FLAG(MMS_ERROR_0_CMD));	//clear this make of error
 
-	mms_send_exit_cmd(mms,-40);
+	mms_send_exit_cmd(mms,-20);
 
 	rt_device_write(mms->usart,0,"AT+CMMSINIT\r",rt_strlen("AT+CMMSINIT\r"));	//初始化
 	
@@ -323,6 +332,14 @@ void mms_send_at_cmd(mms_dev_t mms)
 	rt_device_write(mms->usart,0,"at+cmmscid=1\r",rt_strlen("at+cmmscid=1\r"));	//设置URL
 	
 	mms_recv_cmd_result(mms,10,"OK");
+
+	if(mms_send_error_deal(mms,1))						//eeror  check up
+	{
+		mms->error |= MMS_ERROR_FLAG(MMS_ERROR_1_FATAL);
+		mms->error_record[MMS_ERROR_1_FATAL]++;
+		
+		return ;
+	}
 		
 	rt_device_write(mms->usart,0,"at+cmmsproto=\"10.0.0.172\",80\r",rt_strlen("at+cmmsproto=\"10.0.0.172\",80\r"));//设置mms协议属性			
 	
@@ -411,7 +428,7 @@ void rt_mms_data_init(mms_dev_t mms)
 	rt_device_t dev = RT_NULL;
 	
 
-	dev = rt_device_find("g_usart");
+	dev = rt_device_find(MMS_USART_DEVICE_NAME);
 	
 	if(RT_NULL != dev)
 	{
@@ -460,7 +477,7 @@ void rt_mms_thread_entry(void *arg)
 
 		rt_thread_delay(100);
 
-	//	rt_sem_release(mms_test_sem);
+//		rt_sem_release(mms_test_sem);
 		
 		mms_info(&mms);
 	}
@@ -517,48 +534,6 @@ void statu()
 	rt_kprintf("1.jpg size %d \n",status.st_size);
 }
 FINSH_FUNCTION_EXPORT(statu, statu());
-
-
-void df_test()
-{
-	int file_id;
-	rt_uint8_t run = 3;
-	rt_uint32_t size = 0;
-	volatile rt_uint8_t buffer;
-	rt_uint32_t fzise = 0;
-	rt_device_t dev;
-
-	dev = rt_device_find("g_usart");
-
-	while(1)
-	{
-			
-		file_id = open("/2.jpg",O_RDONLY,0);
-		if(file_id < 0)
-		{
-			rt_kprintf("open file fial\n");
-			return ;
-		}
-		do
-		{
-			size = read(file_id,&buffer,1);
-			if(size > 0)
-			{
-				rt_device_write(dev,0,(const char *)&buffer,size);
-			}
-			fzise++;
-			
-		}
-		while(size>0);
-		
-		if(close(file_id) == 0)
-		{
-			rt_kprintf("close file ok\n");
-		}
-	}
-	rt_kprintf("\n%d\n",fzise);
-}
-FINSH_FUNCTION_EXPORT(df_test, df_test());
 
 #endif
 

@@ -67,7 +67,14 @@
 #define RT_USING_SERIAL
 #define RT_USING_SPI
 
-#define RT_USING_NEWLIBC
+#ifdef __GNUC__
+#define RT_USING_MINILIBC
+//#define RT_USING_NEWLIB
+//#define RT_USING_PTHREADS
+#else
+
+#endif /* __GNUC__ */
+
 
 /* SECTION: Console options */
 #define RT_USING_CONSOLE
@@ -183,5 +190,11 @@
 #define RT_USING_RTT_CMSIS
 // <bool name="RT_USING_BSP_CMSIS" description="Using CMSIS in BSP" default="true" />
 // #define RT_USING_BSP_CMSIS
+
+
+
+/*  hardware platform -------------------------*/
+#define USE_WILDFIRE_TEST								//use wild fire hardware platform
+
 
 #endif

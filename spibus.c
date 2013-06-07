@@ -155,7 +155,6 @@ static rt_err_t configure(struct rt_spi_device* device, struct rt_spi_configurat
     if(configuration->data_width <= 8)
     {
         SPI_InitStructure.SPI_DataSize = SPI_DataSize_8b;
-        rt_kprintf("SPI_DataSize_8b \n");
     }
     else if(configuration->data_width <= 16)
     {

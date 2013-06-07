@@ -108,7 +108,7 @@ struct serial_configure serial_device_1_config =
 };
 struct serial_configure serial_device_2_config = 
 {
-  BAUD_RATE_9600, /* 115200 bits/s */
+  BAUD_RATE_115200, /* 115200 bits/s */
   DATA_BITS_8,      /* 8 databits */
   STOP_BITS_1,      /* 1 stopbit */
   PARITY_NONE,      /* No parity  */

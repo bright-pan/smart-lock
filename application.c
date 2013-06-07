@@ -150,6 +150,9 @@ void rt_init_thread_entry(void* parameter)
 //		filesystem_test();
 		rt_mms_thread_init();
 	}
+#ifdef	USE_WILDFIRE_TEST
+	rt_kprintf("°ÓUser Wild Fire Hardware Piatform TESE\n");
+#endif
 }
 
 int rt_application_init()

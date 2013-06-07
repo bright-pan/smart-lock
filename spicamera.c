@@ -84,7 +84,7 @@ static u8 camera_read_write_byte(struct rt_spi_device* device,const u8 data)
 	struct rt_spi_message message;
 
 	message.length = 1;
-	message.recv_buf = &value;
+	message.recv_buf = (u8 *)&value;
 	message.send_buf = &data;
 	message.cs_release = 0;
 	message.cs_take = 0;

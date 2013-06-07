@@ -207,13 +207,13 @@
             <hadIRAM2>0</hadIRAM2>
             <hadIROM2>0</hadIROM2>
             <StupSel>8</StupSel>
-            <useUlib>1</useUlib>
+            <useUlib>0</useUlib>
             <EndSel>0</EndSel>
             <uLtcg>0</uLtcg>
             <RoSelD>3</RoSelD>
             <RwSelD>3</RwSelD>
             <CodeSel>0</CodeSel>
-            <OptFeed>1</OptFeed>
+            <OptFeed>0</OptFeed>
             <NoZi1>0</NoZi1>
             <NoZi2>0</NoZi2>
             <NoZi3>0</NoZi3>
@@ -345,7 +345,7 @@
               <MiscControls></MiscControls>
               <Define>STM32F10X_HD, USE_STDPERIPH_DRIVER</Define>
               <Undefine></Undefine>
-              <IncludePath>.;Libraries/CMSIS/CM3/DeviceSupport/ST/STM32F10x;Libraries/STM32F10x_StdPeriph_Driver/inc;RT-Thread/components/CMSIS/Include;RT-Thread/components/finsh;.\RT-Thread\libcpu;RT-Thread/libcpu/arm/common;RT-Thread/libcpu/arm/cortex-m3;.\RT-Thread\components\drivers\include;.\RT-Thread\components\dfs\include;.\RT-Thread\components\dfs\filesystems\elmfat;.\RT-Thread\components\drivers\include\drivers;.\RT-Thread\include;.\RT-Thread\components\libc\newlib;.\RT-Thread\components\libc\minilibc;.\RT-Thread\components\dfs\filesystems\devfs</IncludePath>
+              <IncludePath>.;Libraries/CMSIS/CM3/DeviceSupport/ST/STM32F10x;Libraries/STM32F10x_StdPeriph_Driver/inc;RT-Thread/components/CMSIS/Include;RT-Thread/components/finsh;.\RT-Thread\libcpu;RT-Thread/libcpu/arm/common;RT-Thread/libcpu/arm/cortex-m3;.\RT-Thread\components\drivers\include;.\RT-Thread\components\dfs\include;.\RT-Thread\components\dfs\filesystems\elmfat;.\RT-Thread\components\drivers\include\drivers;.\RT-Thread\include;.\RT-Thread\components\libc\newlib;.\RT-Thread\components\libc\minilibc;.\RT-Thread\components\dfs\filesystems\devfs;.\RT-Thread\components\libc\minilibc</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -372,7 +372,7 @@
             <useFile>0</useFile>
             <TextAddressRange>0x08000000</TextAddressRange>
             <DataAddressRange>0x20000000</DataAddressRange>
-            <ScatterFile></ScatterFile>
+            <ScatterFile>.\obj\rtthread-stm32.sct</ScatterFile>
             <IncludeLibs></IncludeLibs>
             <IncludeLibsPath></IncludeLibsPath>
             <Misc>--keep __fsym_* --keep __vsym_*</Misc>

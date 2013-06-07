@@ -70,17 +70,21 @@ void rt_hw_spi_init(void)
 	/*		initialization SPI Bus device		 */
 	{		
 		GPIO_InitTypeDef 							gpio_initstructure;
-
+		
+#ifdef	USE_WILDFIRE_TEST
+	RCC_APB2PeriphClockCmd(GPIO_RCC | SPI2_CLOCK,ENABLE);
+#else
 		RCC_APB1PeriphClockCmd(SPI2_CLOCK ,ENABLE);
 		
 		RCC_APB2PeriphClockCmd(GPIO_RCC ,ENABLE);
 
+#endif
 		gpio_initstructure.GPIO_Mode = GPIO_Mode_AF_PP;
 		gpio_initstructure.GPIO_Speed = GPIO_Speed_50MHz;
 		gpio_initstructure.GPIO_Pin = SPI2_MISO_PIN | SPI2_MOSI_PIN | SPI2_SCK_PIN;
 		GPIO_Init(SPI2_GPIO_PORT,&gpio_initstructure);
 		/*		register spi bus device */
-		stm32_spi_register(SPI2,&stm32_spi_bus_2,SPI2_BUS_NAME);
+		stm32_spi_register(SPI_PORT,&stm32_spi_bus_2,SPI2_BUS_NAME);
 	}
 	/*		initialization SPI CS device 		 */
 	{
@@ -538,7 +542,7 @@ rt_err_t rt_flash_register(const char * flash_device_name, const char * spi_devi
 
 
 
-void rt_spi_flash_init(void)
+void rt_hw_spi_flash_init(void)
 {
 	rt_hw_spi_init();
 	rt_flash_register(FLASH1_DEVICE_NAME,SPI2_CS1_NAME1);
