@@ -2,7 +2,7 @@
 #define		__TESTPRINTF_H__
 #include "rtthread.h"
 #include "photo.h"
-#include "mms.h"
+#include "mms_dev.h"
 
 
 #define USE_DEBUG_PRINTF

@@ -436,14 +436,14 @@
               <FilePath>.\cpuusage.c</FilePath>
             </File>
             <File>
-              <FileName>mms.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\mms.c</FilePath>
-            </File>
-            <File>
               <FileName>photo.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\photo.c</FilePath>
+            </File>
+            <File>
+              <FileName>mms_dev.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\mms_dev.c</FilePath>
             </File>
           </Files>
         </Group>
