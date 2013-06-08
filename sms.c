@@ -611,6 +611,31 @@ send_error:
 
 }
 
+void send_sms_mail(ALARM_TYPEDEF alarm_type, time_t time)
+{
+  SMS_MAIL_TYPEDEF buf;
+  extern rt_device_t rtc_device;
+  rt_err_t result;
+  //send mail
+  buf.alarm_type = alarm_type;
+  if (!time)
+  {
+    rt_device_control(rtc_device, RT_DEVICE_CTRL_RTC_GET_TIME, &(buf.time));
+  }
+  if (sms_mq != NULL)
+  {
+    result = rt_mq_send(sms_mq, &buf, sizeof(SMS_MAIL_TYPEDEF));
+    if (result == -RT_EFULL)
+    {
+      rt_kprintf("sms_mq is full!!!\n");
+    }
+  }
+  else
+  {
+    rt_kprintf("sms_mq is RT_NULL!!!\n");
+  }
+}
+
 #ifdef RT_USING_FINSH
 #include <finsh.h>
 
