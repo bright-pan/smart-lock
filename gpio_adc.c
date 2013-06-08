@@ -272,6 +272,56 @@ void rt_hw_adc11_register(void)
   rt_hw_gpio_register(adc_device,adc_user_data->name, (RT_DEVICE_FLAG_RDONLY | RT_DEVICE_FLAG_DMA_RX), adc_user_data);
 }
 
+struct gpio_adc_user_data battery_adc_user_data = 
+{
+  DEVICE_NAME_BATTERY_ADC,
+  /* gpio */
+  GPIOC,
+  GPIO_Pin_0,
+  GPIO_Mode_AIN,
+  GPIO_Speed_50MHz,
+  RCC_APB2Periph_GPIOC,
+  /* adc */
+  ADC1,
+  RCC_PCLK2_Div8,
+  RCC_APB2Periph_ADC1,
+  ADC_Channel_10,
+  1, //adc_channel_rank
+  ADC_Mode_Independent,
+  DISABLE,
+  ENABLE,
+  ADC_ExternalTrigConv_None,
+  ADC_DataAlign_Right,
+  1, //adc_nbr_of_channel
+  ADC_SampleTime_55Cycles5,
+  0, //adc_converted_value
+  /* dma */
+  DMA1_Channel1,
+  RCC_AHBPeriph_DMA1,
+  (uint32_t)&(ADC1->DR),
+  0,
+  DMA_DIR_PeripheralSRC,
+  1,//dma_buffer_size
+  DMA_PeripheralInc_Disable,
+  DMA_MemoryInc_Disable,
+  DMA_PeripheralDataSize_HalfWord,
+  DMA_MemoryDataSize_HalfWord,
+  DMA_Mode_Circular,//dma_mode
+  DMA_Priority_High,//dma_priority
+  DMA_M2M_Disable,//dma_m2m
+};
+
+gpio_device battery_adc_device;
+
+void rt_hw_battery_adc_register(void)
+{
+  gpio_device *adc_device = &battery_adc_device;
+  struct gpio_adc_user_data *adc_user_data = &battery_adc_user_data;
+  adc_user_data->dma_memory_base_address = (uint32_t)&(adc_user_data->adc_converted_value);
+  adc_device->ops = &gpio_adc_user_ops;
+  rt_hw_gpio_register(adc_device,adc_user_data->name, (RT_DEVICE_FLAG_RDONLY | RT_DEVICE_FLAG_DMA_RX), adc_user_data);
+}
+
 #ifdef RT_USING_FINSH
 #include <finsh.h>
 void adc11_get_value(void)
@@ -335,4 +385,66 @@ void adc11_disable(void)
   }
 }
 FINSH_FUNCTION_EXPORT(adc11_disable, disable adc11 convert)
+
+void bat_get_value(void)
+{
+  rt_uint16_t adc_value;
+  rt_device_t device = RT_NULL;
+  device = rt_device_find(DEVICE_NAME_BATTERY_ADC);
+
+  if (device != RT_NULL)
+  {
+    rt_device_control(device, RT_DEVICE_CTRL_GET_CONVERT_VALUE, (void *)&adc_value);
+#ifdef RT_USING_FINSH
+    rt_kprintf("bat_value = 0x%x\n",adc_value);
+#endif
+  }
+  else
+  {
+#ifdef RT_USING_FINSH
+    rt_kprintf("the device is not found!\n");
+#endif
+  }
+}
+FINSH_FUNCTION_EXPORT(bat_get_value, get bat converted value)
+
+void bat_enable(void)
+{
+  rt_device_t device = RT_NULL;
+  device = rt_device_find(DEVICE_NAME_BATTERY_ADC);
+  if (device != RT_NULL)
+  {
+    rt_device_control(device, RT_DEVICE_CTRL_ENABLE_CONVERT, (void *)0);
+#ifdef RT_USING_FINSH
+    rt_kprintf("bat is starting convert!\n");
+#endif  
+  }
+  else
+  {
+#ifdef RT_USING_FINSH
+    rt_kprintf("the device is not found!\n");
+#endif
+  }
+}
+FINSH_FUNCTION_EXPORT(bat_enable, enable bat convert)
+
+void bat_disable(void)
+{
+  rt_device_t device = RT_NULL;
+  device = rt_device_find(DEVICE_NAME_BATTERY_ADC);
+  if (device != RT_NULL)
+  {
+    rt_device_control(device, RT_DEVICE_CTRL_DISABLE_CONVERT, (void *)0);
+#ifdef RT_USING_FINSH
+    rt_kprintf("bat is stoped convert!\n");
+#endif
+  }
+  else
+  {
+#ifdef RT_USING_FINSH
+    rt_kprintf("the device is not found!\n");
+#endif
+  }
+}
+FINSH_FUNCTION_EXPORT(bat_disable, disable bat convert)
 #endif

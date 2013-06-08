@@ -479,7 +479,6 @@ void EXTI9_5_IRQHandler(void)
   if(EXTI_GetITStatus(EXTI_Line8) == SET)
   {
     extern gpio_device motor_status_device;
-		
     rt_hw_gpio_isr(&motor_status_device);
     EXTI_ClearITPendingBit(EXTI_Line8);
   }
@@ -537,28 +536,36 @@ void EXTI15_10_IRQHandler(void)
   if(EXTI_GetITStatus(EXTI_Line10) == SET)
   {
     extern gpio_device rfid_key_detect_device;
-		
     rt_hw_gpio_isr(&rfid_key_detect_device);
     EXTI_ClearITPendingBit(EXTI_Line10);
+  }
+  if(EXTI_GetITStatus(EXTI_Line11) == SET)
+  {
+    extern gpio_device lock_shell_device;
+    rt_hw_gpio_isr(&lock_shell_device);
+    EXTI_ClearITPendingBit(EXTI_Line11);
   }
   if(EXTI_GetITStatus(EXTI_Line12) == SET)
   {
     extern gpio_device lock_gate_device;
-		
     rt_hw_gpio_isr(&lock_gate_device);
     EXTI_ClearITPendingBit(EXTI_Line12);
+  }
+  if(EXTI_GetITStatus(EXTI_Line13) == SET)
+  {
+    extern gpio_device gsm_ring_device;
+    rt_hw_gpio_isr(&gsm_ring_device);
+    EXTI_ClearITPendingBit(EXTI_Line13);
   }
   if(EXTI_GetITStatus(EXTI_Line14) == SET)
   {
     extern gpio_device lock_temperature_device;
-		
     rt_hw_gpio_isr(&lock_temperature_device);
     EXTI_ClearITPendingBit(EXTI_Line14);
   }
   if(EXTI_GetITStatus(EXTI_Line15) == SET)
   {
     extern gpio_device gate_temperature_device;
-		
     rt_hw_gpio_isr(&gate_temperature_device);
     EXTI_ClearITPendingBit(EXTI_Line15);
   }

@@ -32,15 +32,15 @@
 
 #define GSM_USART_USE_HW_CONTROL
 
-#define GSM_USART_DR_Base              	0x40004404
+#define GSM_USART_DR_Base              0x40004404
 /* USART2_REMAP = 1 */
-#define GSM_USART_GPIO_PIN_CTS					GPIO_Pin_3
-#define GSM_USART_GPIO_PIN_RTS					GPIO_Pin_4
+#define GSM_USART_GPIO_PIN_CTS		GPIO_Pin_3
+#define GSM_USART_GPIO_PIN_RTS		GPIO_Pin_4
 
-#define GSM_USART_GPIO_PIN_TX						GPIO_Pin_5
-#define GSM_USART_GPIO_PIN_RX						GPIO_Pin_6
-#define GSM_USART_GPIO		       				GPIOD
-#define GSM_USART_GPIO_RCC	        		RCC_APB2Periph_GPIOD
+#define GSM_USART_GPIO_PIN_TX		GPIO_Pin_5
+#define GSM_USART_GPIO_PIN_RX		GPIO_Pin_6
+#define GSM_USART_GPIO		        GPIOD
+#define GSM_USART_GPIO_RCC	        RCC_APB2Periph_GPIOD
 
 //#define GSM_USART_GPIO_PIN_TX		GPIO_Pin_2
 //#define GSM_USART_GPIO_PIN_RX		GPIO_Pin_3
@@ -444,7 +444,7 @@ void gsm_usart_device_isr(struct rt_serial_device *serial)
 
 static char temp[100];
 
-void gsm(rt_int8_t cmd, const char *str)
+void gsm_usart(rt_int8_t cmd, const char *str)
 {
   rt_uint8_t i = 0;
   rt_device_t device;
@@ -479,5 +479,5 @@ void gsm(rt_int8_t cmd, const char *str)
     rt_kprintf("device %s is not exist!\n", DEVICE_NAME_GSM_USART);
   }
 }
-FINSH_FUNCTION_EXPORT(gsm, gsm[cmd parameters])
+FINSH_FUNCTION_EXPORT(gsm_usart, gsm_usart[cmd parameters])
 #endif

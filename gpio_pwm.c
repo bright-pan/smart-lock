@@ -12,6 +12,7 @@
  ********************************************************************/
 
 #include "gpio_pwm.h"
+#include "gpio_exti.h"
 
 /*
  *  GPIO ops function interfaces
@@ -383,6 +384,102 @@ void delay(rt_uint32_t counts)
   }
 }
 
+void voice_output(rt_uint16_t counts)
+{
+  rt_device_t device = RT_NULL;
+  rt_device_t data_device = RT_NULL;
+  rt_int8_t dat = 0;
+  data_device = rt_device_find("vo_data");
+  rt_device_control(data_device, RT_DEVICE_CTRL_SET_PULSE_COUNTS, (void *)&counts);
+  device = rt_device_find("vo_sw");
+  dat = 1;
+  rt_device_write(device, 0, &dat, 0);
+  device = rt_device_find("vo_amp");
+  dat = 1;
+  rt_device_write(device, 0, &dat, 0);
+  device = rt_device_find("vo_rst");
+  dat = 1;
+  rt_device_write(device, 0, &dat, 0);
+  delay(1058);
+  dat = 0;
+  rt_device_write(device, 0, &dat, 0);
+  //  delay(26450);
+  delay(1058);
+  rt_device_control(data_device, RT_DEVICE_CTRL_SEND_PULSE, (void *)0);
+}
+
+int8_t motor_output(uint8_t direction)
+{
+  rt_device_t device_motor_a = RT_NULL;
+  rt_device_t device_motor_b = RT_NULL;
+  rt_device_t device_motor_status = RT_NULL;
+  uint16_t counts = 200;
+  uint16_t adjust_period = 20;
+  uint16_t period = 10;
+  uint8_t dat = 0;
+  
+  device_motor_a = rt_device_find(DEVICE_NAME_MOTOR_A_PULSE);
+  device_motor_b = rt_device_find(DEVICE_NAME_MOTOR_B_PULSE);
+  device_motor_status = rt_device_find(DEVICE_NAME_MOTOR_STATUS);
+
+
+  rt_device_read(device_motor_status,0,&dat,0);
+  //
+  if (dat != direction)
+  {
+    if (direction == 0)
+    {
+      while (counts-- > 0)
+      {
+        rt_device_control(device_motor_a, RT_DEVICE_CTRL_SET_PULSE_COUNTS, &period);
+        rt_device_control(device_motor_a, RT_DEVICE_CTRL_SEND_PULSE, (void *)0);
+        rt_device_read(device_motor_status,0,&dat,0);
+        if (dat == 0)
+        {
+          //adjust place
+          rt_device_control(device_motor_a, RT_DEVICE_CTRL_SET_PULSE_COUNTS, &adjust_period);
+          rt_device_control(device_motor_a, RT_DEVICE_CTRL_SEND_PULSE, (void *)0);
+          break;
+        }
+      }
+      rt_device_read(device_motor_status,0,&dat,0);
+      if (dat == 1)
+      {
+        //motor error
+        return -1;
+      }
+    }
+    else
+    {
+      while (counts-- > 0)
+      {
+        rt_device_control(device_motor_b, RT_DEVICE_CTRL_SET_PULSE_COUNTS, &period);
+        rt_device_control(device_motor_b, RT_DEVICE_CTRL_SEND_PULSE, (void *)0);
+        rt_device_read(device_motor_status,0,&dat,0);
+        if (dat == 1)
+        {
+          //adjust place
+          rt_device_control(device_motor_b, RT_DEVICE_CTRL_SET_PULSE_COUNTS, &adjust_period);
+          rt_device_control(device_motor_b, RT_DEVICE_CTRL_SEND_PULSE, (void *)0);
+          break;
+        }
+      }
+      rt_device_read(device_motor_status,0,&dat,0);
+      if (dat == 0)
+      {
+        //motor error
+        return -1;
+      }
+
+    }
+  }
+  else
+  {
+
+  }
+  return 0;
+}
+
 #ifdef RT_USING_FINSH
 #include <finsh.h>
 void pwm_set_counts(char *str, rt_uint16_t counts)
@@ -409,28 +506,5 @@ void pwm_send_pulse(char *str)
 }
 FINSH_FUNCTION_EXPORT(pwm_send_pulse, pwm_send_pulse[device_name])
 
-void voice_output(rt_uint16_t counts)
-{
-  rt_device_t device = RT_NULL;
-  rt_device_t data_device = RT_NULL;  
-  rt_int8_t dat = 0;
-  data_device = rt_device_find("vo_data");
-  rt_device_control(data_device, RT_DEVICE_CTRL_SET_PULSE_COUNTS, (void *)&counts);
-  device = rt_device_find("vo_sw");
-  dat = 1;
-  rt_device_write(device, 0, &dat, 0);
-  device = rt_device_find("vo_amp");
-  dat = 1;
-  rt_device_write(device, 0, &dat, 0);
-  device = rt_device_find("vo_rst");
-  dat = 1;
-  rt_device_write(device, 0, &dat, 0);
-  delay(1058);
-  dat = 0;
-  rt_device_write(device, 0, &dat, 0);
-  //  delay(26450);
-  delay(1058);
-  rt_device_control(data_device, RT_DEVICE_CTRL_SEND_PULSE, (void *)0);
-}
 FINSH_FUNCTION_EXPORT(voice_output, voice_output[counts])
 #endif

@@ -21,6 +21,7 @@
 
 #define ALARM_MAIL_MAX_MSGS 20
 
+#define ALARM_INTERVAL 10
 /*
  * alarm type and items
  *
@@ -31,6 +32,7 @@ typedef enum
   ALARM_TYPE_LOCK_TEMPERATURE,// lock temperatrue
   ALARM_TYPE_GATE_TEMPERATURE,// lock temperatrue
   ALARM_TYPE_LOCK_GATE,// lock gate status
+  ALARM_TYPE_GSM_RING,// lock gate status
   ALARM_TYPE_RFID_KEY_DETECT,// rfid key detect alarm type
   ALARM_TYPE_CAMERA_COVERED,// camera covered alarm type'
   ALARM_TYPE_CAMERA_PHOTOSENSOR,
@@ -58,6 +60,7 @@ typedef enum
   ALARM_PROCESS_FLAG_SMS = 0x01,// sms process
   ALARM_PROCESS_FLAG_GPRS = 0x02,// gprs process
   ALARM_PROCESS_FLAG_LOCAL = 0x04,// local process
+  ALARM_PROCESS_FLAG_MMS = 0x08,// local process
 }ALARM_PROCESS_FLAG_TYPEDEF;
 
 /*

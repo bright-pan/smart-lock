@@ -17,14 +17,10 @@
 #include "testprintf.h"
 
 rt_sem_t 										mms_test_sem = RT_NULL;
-rt_timer_t 									mms_recv_cmd_t = RT_NULL;
 volatile rt_uint32_t				mms_timer_value = 0;
+rt_timer_t 								  mms_recv_cmd_t = RT_NULL;
 
-#define MMS_ERROR_DEAL_FLAG							5
-#define MMS_ERROR_FLAG(arg)							(0X01 << arg)
-#define MMS_ERROR_OK										0X00
-#define MMS_ERROR_0_CMD									0				
-#define MMS_ERROR_1_FATAL								1
+
 
 
 
@@ -87,7 +83,7 @@ void mms_recv_cmd_result(mms_dev_t mms,rt_int32_t wait_time,const char cmd[],...
 		str_result = rt_strstr((const char *)buffer_head,cmd);
 		if(str_result != RT_NULL)
 		{
-			rt_kprintf("cmd ok\n");
+			rt_kprintf(">>>>cmd ok");
 			
 			break;
 		}
@@ -97,7 +93,7 @@ void mms_recv_cmd_result(mms_dev_t mms,rt_int32_t wait_time,const char cmd[],...
 		}
 		if(str_result != RT_NULL)
 		{
-			rt_kprintf("cmd ok\n");
+			rt_kprintf(">>>>cmd ok");
 		
 			mms->error &= ~(MMS_ERROR_FLAG(MMS_ERROR_0_CMD));
 			break;
@@ -107,13 +103,14 @@ void mms_recv_cmd_result(mms_dev_t mms,rt_int32_t wait_time,const char cmd[],...
 	{
 		mms->error |= MMS_ERROR_FLAG(MMS_ERROR_0_CMD);
 		mms->error_record[MMS_ERROR_0_CMD]++;
+		rt_kprintf(">>>>cmd error");
 	}
 	rt_timer_stop(mms_recv_cmd_t);
 	mms_timer_value = 0;
 
-	rt_kprintf("%s\n",buffer_head);
+	rt_kprintf(">>>>    %s",buffer_head);
 	
-	rt_kprintf("%d error %d",cnt,mms->error_record[MMS_ERROR_0_CMD]);
+	rt_kprintf(">>>>    %d error %d\n",cnt,mms->error_record[MMS_ERROR_0_CMD]);
 
 	rt_free(buffer_head);
 }
@@ -138,7 +135,7 @@ void mms_send_pic_fun(mms_dev_t mms, rt_uint8_t pic_pos)
 		file_id = open(mms->pic_name[pic_pos],O_RDONLY,0);
 		if(file_id < 0)
 		{
-			rt_kprintf("open file fial\n");
+			rt_kprintf("★open file fial\n");
 			return ;
 		}
 		do
@@ -160,7 +157,7 @@ void mms_send_pic_fun(mms_dev_t mms, rt_uint8_t pic_pos)
 			rt_kprintf("close file ok\n");
 		}
 	}
-	rt_kprintf("\n%d\n",fzise);
+	rt_kprintf(">>>\n%d\n",fzise);
 }
 
 void mms_send_exit_cmd(mms_dev_t mms,rt_int8_t time)
@@ -289,7 +286,7 @@ rt_uint8_t mms_send_error_deal(mms_dev_t mms,rt_uint8_t deal_type)
 		{
 			for(i = 0; i < MMS_ERROR_TYPE_NUM; i++)
 			{
-				if((mms->error_record[i] != 0)||(mms->error != 0))
+				if((mms->error_record[i] != 0)||(mms->error &= MMS_ERROR_FLAG(MMS_ERROR_0_CMD)))
 				{
 					return 1;
 				}
@@ -308,7 +305,30 @@ rt_uint8_t mms_send_error_deal(mms_dev_t mms,rt_uint8_t deal_type)
 	}
 	return 0;
 }
-void mms_send_at_cmd(mms_dev_t mms)
+/*mms cmd-------------------------------*/
+/*mms_cmd[] = 
+{
+	"AT+CMMSINIT\r",
+	"at+cmmscurl=\"mmsc.monternet.com\"\r",
+	"at+cmmscid=1\r",
+	"at+cmmsproto=\"10.0.0.172\",80\r",
+	"at+cmmssendcfg=6,3,0,0,2,4\r",
+	"AT+SAPBR=3,1,\"Contype\",\"GPRS\"\r",
+	"AT+SAPBR=3,1,\"APN\",\"CMWAP\"\r",
+	"AT+SAPBR=1,1\r",
+	"AT+SAPBR=2,1\r",
+	"AT+CGATT?\r",
+	"AT+CMMSEDIT=0\r",
+	"AT+CMMSEDIT=1\r",
+	.PIC
+	.TITLE
+	.TXET
+	.Mobile phone number
+	"at+cmmsview\r",
+	"at+cmmssend\r",
+}
+________________________________________*/
+void mms_send_fun(mms_dev_t mms)
 {
 	rt_uint8_t *buffer = RT_NULL;
 	
@@ -318,7 +338,8 @@ void mms_send_at_cmd(mms_dev_t mms)
 	
 	mms_recv_cmd_result(mms,10,"OK");			//release gsm usart data make one cmd error 
 	mms->error &= ~(MMS_ERROR_FLAG(MMS_ERROR_0_CMD));	//clear this make of error
-
+	mms->error_record[MMS_ERROR_0_CMD]--;	//	Elimination of the last error logging			
+	
 	mms_send_exit_cmd(mms,-20);
 
 	rt_device_write(mms->usart,0,"AT+CMMSINIT\r",rt_strlen("AT+CMMSINIT\r"));	//初始化
@@ -379,15 +400,24 @@ void mms_send_at_cmd(mms_dev_t mms)
 
 	mms_send_data_struct_deal(mms,buffer);
 
-	rt_device_write(mms->usart,0,"at+cmmsview\r",strlen("at+cmmsview\r"));//查看发送的内容是否已经存入模块
+	rt_device_write(mms->usart,0,"at+cmmsview\r",rt_strlen("at+cmmsview\r"));//查看发送的内容是否已经存入模块
 	
 	mms_recv_cmd_result(mms,50,"OK");
 
-	
-	rt_device_write(mms->usart,0,"at+cmmssend\r",strlen("at+cmmssend\r"));//发送mms		
+//	rt_device_write(mms->usart,0,"at+cmmssend\r",rt_strlen("at+cmmssend\r"));//发送mms		
 
-	mms_recv_cmd_result(mms,900,"OK");		//max wait send ok time 90minute
+	mms->error &= ~(MMS_ERROR_FLAG(MMS_ERROR_1_FATAL)); //Is ready to receive and send the results
 
+//	mms_recv_cmd_result(mms,900,"OK");		//max wait send ok time 90minute
+
+	if(mms_send_error_deal(mms,0))						//eeror  check up
+	{
+		mms->error |= MMS_ERROR_FLAG(MMS_ERROR_1_FATAL);
+		mms->error_record[MMS_ERROR_1_FATAL]++;
+		
+		return ;
+	}
+		
 	mms_send_exit_cmd(mms,40);
 
 	rt_free(buffer);
@@ -421,8 +451,9 @@ void mms_error_record_init(mms_dev_t mms)
 	}
 }
 
-const char  title[] ={0xfe,0xff,0x60,0xA6,0x5F,0xB7,0x66,0x7A,0x80,0xFD};	//智能悦德
-const char  text[] ={0xfe,0xff,0x5F,0x53,0x52,0x4D,0x64,0x44,0x50,0xCF,0x59,0x34,0x60,0xC5,0x51,0xB5};		//"彩信ok
+static const char  title[] ={0xfe,0xff,0x60,0xA6,0x5F,0xB7,0x66,0x7A,0x80,0xFD};	//智能悦德
+static const char  text[] ={0xfe,0xff,0x5F,0x53,0x52,0x4D,0x64,0x44,0x50,0xCF,0x59,0x34,0x60,0xC5,0x51,0xB5};		//"彩信ok
+
 void rt_mms_data_init(mms_dev_t mms)
 {
 	rt_device_t dev = RT_NULL;
@@ -444,8 +475,8 @@ void rt_mms_data_init(mms_dev_t mms)
 
 	
 	mms->mobile_no[0] = "1678764298@qq.com";
-//	mms->mobile_no[1] = "13316975697";
-	mms->mobile_no[1] = RT_NULL;
+	mms->mobile_no[1] = "939463111@qq.com";
+	mms->mobile_no[2] = RT_NULL;
 	
 	mms->number = 1;
 	mms->pic_name[0] = "/2.jpg";	//send picture path
@@ -467,13 +498,20 @@ void rt_mms_thread_entry(void *arg)
 {
 	struct mms_dev mms;
 
+	mms_recv_cmd_t = rt_timer_create("mms_time",mms_timer_fun,RT_NULL,10,RT_TIMER_FLAG_PERIODIC);
+	if(RT_NULL == mms_recv_cmd_t)
+	{
+		rt_kprintf("\"mms_time\" creat fail\n",mms_recv_cmd_t);
+	}
+
 	rt_mms_data_init(&mms);
+	
 	mms_info(&mms);
 	while(1)
 	{	
 		rt_sem_take(mms_test_sem,RT_WAITING_FOREVER);
 
-		mms_send_at_cmd(&mms);
+		mms_send_fun(&mms);
 
 		rt_thread_delay(100);
 
@@ -489,7 +527,7 @@ void rt_mms_thread_init(void)
 {
 	rt_thread_t thread_id = RT_NULL;
 
-	thread_id= rt_thread_create("dealpic",rt_mms_thread_entry,RT_NULL,1024*4,29,10);
+	thread_id= rt_thread_create("dealpic",rt_mms_thread_entry,RT_NULL,1024*4,107,10);
 	if(RT_NULL == thread_id)
 	{
 	rt_kprintf("\"dealpic\" create fial\n");
@@ -497,18 +535,12 @@ void rt_mms_thread_init(void)
 	}
 	rt_thread_startup(thread_id);	
 
-	mms_test_sem = rt_sem_create("mms_sem",0,RT_IPC_FLAG_FIFO);
+	mms_test_sem = rt_sem_create("mms_dev",0,RT_IPC_FLAG_FIFO);
 	if(RT_NULL == mms_test_sem)
 	{
 		rt_kprintf(" \"mms_sem\" sem create fail\n");
 
 		return ;
-	}
-	
-	mms_recv_cmd_t = rt_timer_create("mms_time",mms_timer_fun,RT_NULL,10,RT_TIMER_FLAG_PERIODIC);
-	if(RT_NULL == mms_recv_cmd_t)
-	{
-		rt_kprintf("\"mms_time\" creat fail\n",mms_recv_cmd_t);
 	}
 	
 }

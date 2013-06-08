@@ -130,14 +130,6 @@ void rt_hw_rfid_power_register(void)
   rt_hw_gpio_register(gpio_device, gpio_user_data->name, (RT_DEVICE_FLAG_RDWR), gpio_user_data);
   }
 
-
-
-
-
-
-
-
-
 /* camera led device */
 struct gpio_pin_user_data camera_led_user_data = 
 {
@@ -168,7 +160,7 @@ struct gpio_pin_user_data camera_power_user_data =
   GPIO_Mode_Out_PP,
   GPIO_Speed_50MHz,
   RCC_APB2Periph_GPIOE,
-  1,
+  0,
 };
 gpio_device camera_power_device;
 
@@ -181,16 +173,6 @@ void rt_hw_camera_power_register(void)
   rt_hw_gpio_register(gpio_device, gpio_user_data->name, (RT_DEVICE_FLAG_RDWR), gpio_user_data);
 }
 
-
-
-
-
-
-
-
-
-
-
 /* logo led device */
 struct gpio_pin_user_data logo_led_user_data = 
 {
@@ -200,7 +182,7 @@ struct gpio_pin_user_data logo_led_user_data =
   GPIO_Mode_Out_PP,
   GPIO_Speed_50MHz,
   RCC_APB2Periph_GPIOE,
-  1,
+  0,
 };
 gpio_device logo_led_device;
 
@@ -213,20 +195,6 @@ void rt_hw_logo_led_register(void)
   rt_hw_gpio_register(gpio_device, gpio_user_data->name, (RT_DEVICE_FLAG_RDWR), gpio_user_data);
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 /* gsm led device */
 struct gpio_pin_user_data gsm_led_user_data = 
 {
@@ -236,7 +204,7 @@ struct gpio_pin_user_data gsm_led_user_data =
   GPIO_Mode_Out_PP,
   GPIO_Speed_50MHz,
   RCC_APB2Periph_GPIOE,
-  1,
+  0,
 };
 gpio_device gsm_led_device;
 
@@ -375,67 +343,39 @@ void rt_hw_test_register(void)
   rt_hw_gpio_register(gpio_device, gpio_user_data->name, (RT_DEVICE_FLAG_RDWR), gpio_user_data);
 }
 
+void gpio_pin_output(char *str, const rt_uint8_t dat)
+{
+  rt_device_t device = RT_NULL;
+  device = rt_device_find(str);
+  if (device != RT_NULL)
+  {
+    rt_device_write(device,0,&dat,0);
+  }
+  else
+  {
+#ifdef RT_USING_FINSH
+    rt_kprintf("the gpio device %s is not found!\n", DEVICE_NAME_GSM_POWER);
+#endif
+  }
+}	
 
-///* camera glint light pin*/
-//struct gpio_pin_user_data glint_right_user_data = 
-//{
-//	"glint",
-//	GPIOC,
-//	GPIO_Pin_3,
-//	GPIO_Mode_Out_PP,
-//	GPIO_Speed_50MHz,
-//	RCC_APB2Periph_GPIOC,
-//	1,
-//};
-//gpio_device glint_device;
-//
-//void rt_hw_glint_light_register(void)
-//{
-//	glint_device.ops = &gpio_pin_user_ops;
-//	rt_hw_gpio_register(&glint_device,glint_right_user_data.name,RT_DEVICE_FLAG_RDWR,&glint_right_user_data);
-//}
-//
-///* camera power pin	*/
-//struct gpio_pin_user_data camera_power_user_data = 
-//{
-//	"cpower",
-//	GPIOE,
-//	GPIO_Pin_12,
-//	GPIO_Mode_Out_PP,
-//	GPIO_Speed_50MHz,
-//	RCC_APB2Periph_GPIOE,
-//	0,
-//};
-//gpio_device cpower_device;
-//
-//void rt_hw_camera_power_register(void)
-//{
-//	cpower_device.ops = &gpio_pin_user_ops;
-//	rt_hw_gpio_register(&cpower_device,camera_power_user_data.name,RT_DEVICE_FLAG_RDWR,&camera_power_user_data);
-//}
-//
-///* camera power pin	*/
-//struct gpio_pin_user_data run_led_user_data = 
-//{
-//	"ledf",
-//	GPIOE,
-//	GPIO_Pin_13,
-//	GPIO_Mode_Out_PP,
-//	GPIO_Speed_50MHz,
-//	RCC_APB2Periph_GPIOE,
-//	0,
-//};
-//gpio_device runled_device;
-//
-//void rt_hw_run_led_register(void)
-//{
-//	runled_device.ops = &gpio_pin_user_ops;
-//	rt_hw_gpio_register(&runled_device,run_led_user_data.name,RT_DEVICE_FLAG_RDWR,&run_led_user_data);
-//}
-//
-
-
-
+void gpio_pin_input(char *str)
+{
+  rt_device_t device = RT_NULL;
+  rt_uint8_t dat;
+  device = rt_device_find(str);
+  if (device != RT_NULL)
+  {
+    rt_device_read(device,0,&dat,0);
+    rt_kprintf("the gpio pin value is %d\n", dat);
+  }
+  else
+  {
+#ifdef RT_USING_FINSH
+    rt_kprintf("the gpio device %s is not found!\n", DEVICE_NAME_GSM_STATUS);
+#endif
+  }
+}	
 
 #ifdef RT_USING_FINSH
 #include <finsh.h>
@@ -456,38 +396,6 @@ void led(const char *str, const rt_uint8_t dat)
 }
 FINSH_FUNCTION_EXPORT(led, led[device_name 0/1])
 
-void gpio_pin_output(char *str, const rt_uint8_t dat)
-{
-  rt_device_t device = RT_NULL;
-  device = rt_device_find(str);
-  if (device != RT_NULL)
-  {
-    rt_device_write(device,0,&dat,0);
-  }
-  else
-  {
-#ifdef RT_USING_FINSH
-    rt_kprintf("the gpio device %s is not found!\n", DEVICE_NAME_GSM_POWER);
-#endif
-  }
-}	
 FINSH_FUNCTION_EXPORT(gpio_pin_output, [device_name <0 1>])
-void gpio_pin_input(char *str)
-{
-  rt_device_t device = RT_NULL;
-  rt_uint8_t dat;
-  device = rt_device_find(str);
-  if (device != RT_NULL)
-  {
-    rt_device_read(device,0,&dat,0);
-    rt_kprintf("the gpio pin value is %d\n", dat);
-  }
-  else
-  {
-#ifdef RT_USING_FINSH
-    rt_kprintf("the gpio device %s is not found!\n", DEVICE_NAME_GSM_STATUS);
-#endif
-  }
-}	
 FINSH_FUNCTION_EXPORT(gpio_pin_input, [device_name])
 #endif

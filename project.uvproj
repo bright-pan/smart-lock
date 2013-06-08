@@ -207,13 +207,13 @@
             <hadIRAM2>0</hadIRAM2>
             <hadIROM2>0</hadIROM2>
             <StupSel>8</StupSel>
-            <useUlib>0</useUlib>
+            <useUlib>1</useUlib>
             <EndSel>0</EndSel>
             <uLtcg>0</uLtcg>
             <RoSelD>3</RoSelD>
             <RwSelD>3</RwSelD>
             <CodeSel>0</CodeSel>
-            <OptFeed>0</OptFeed>
+            <OptFeed>1</OptFeed>
             <NoZi1>0</NoZi1>
             <NoZi2>0</NoZi2>
             <NoZi3>0</NoZi3>
@@ -330,10 +330,10 @@
           </ArmAdsMisc>
           <Cads>
             <interw>1</interw>
-            <Optim>0</Optim>
+            <Optim>3</Optim>
             <oTime>0</oTime>
             <SplitLS>0</SplitLS>
-            <OneElfS>0</OneElfS>
+            <OneElfS>1</OneElfS>
             <Strict>0</Strict>
             <EnumInt>0</EnumInt>
             <PlainCh>0</PlainCh>
@@ -444,6 +444,21 @@
               <FileName>mms_dev.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\mms_dev.c</FilePath>
+            </File>
+            <File>
+              <FileName>gsm.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\gsm.c</FilePath>
+            </File>
+            <File>
+              <FileName>untils.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\untils.c</FilePath>
+            </File>
+            <File>
+              <FileName>mms.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\mms.c</FilePath>
             </File>
           </Files>
         </Group>

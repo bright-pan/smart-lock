@@ -148,26 +148,42 @@ void rt_init_thread_entry(void* parameter)
 //		send_photo_thread_init();
 //		photo_thread_init();
 //		filesystem_test();
-		rt_mms_thread_init();
+//		rt_mms_thread_init();
 	}
 #ifdef	USE_WILDFIRE_TEST
 	rt_kprintf("°ÓUser Wild Fire Hardware Piatform TESE\n");
 #endif
 }
 
+
+static void logo_led_timeout(void *parameters)
+{
+  gpio_pin_output(DEVICE_NAME_LOGO_LED, 0);
+}      
+
 int rt_application_init()
 {
   rt_thread_t init_thread;
   rt_thread_t alarm_mail_process_thread;
   rt_thread_t sms_mail_process_thread;
+  rt_thread_t mms_mail_process_thread;
   rt_thread_t gprs_mail_process_thread;
   rt_thread_t local_mail_process_thread;
+  rt_thread_t gsm_process_thread;
+  rt_timer_t logo_led_timer;
 
-
+  /* alarm mail process thread */
+  gsm_process_thread = rt_thread_create("gsm",
+                                  gsm_process_thread_entry, RT_NULL,
+                                  2048, 100, 20);
+  if (gsm_process_thread != RT_NULL)
+  {
+    rt_thread_startup(gsm_process_thread);
+  }
   /* alarm mail process thread */
   alarm_mail_process_thread = rt_thread_create("alarm",
                                   alarm_mail_process_thread_entry, RT_NULL,
-                                  512, 20, 20);
+                                  512, 101, 20);
   if (alarm_mail_process_thread != RT_NULL)
   {
     rt_thread_startup(alarm_mail_process_thread);
@@ -175,15 +191,23 @@ int rt_application_init()
   /* sms mail process thread */
   sms_mail_process_thread = rt_thread_create("sms",
                                   sms_mail_process_thread_entry, RT_NULL,
-                                  1024, 22, 20);
+                                  2048, 105, 20);
   if (sms_mail_process_thread != RT_NULL)
   {
     rt_thread_startup(sms_mail_process_thread);
   }
+  /* mms mail process thread */
+  mms_mail_process_thread = rt_thread_create("mms",
+                                  mms_mail_process_thread_entry, RT_NULL,
+                                  1024, 107, 20);
+  if (mms_mail_process_thread != RT_NULL)
+  {
+    rt_thread_startup(mms_mail_process_thread);
+  }
   /* gprs mail process thread */
-  gprs_mail_process_thread = rt_thread_create("sms",
+  gprs_mail_process_thread = rt_thread_create("gprs",
                                   gprs_mail_process_thread_entry, RT_NULL,
-                                  1024, 23, 20);
+                                  1024, 106, 20);
   if (gprs_mail_process_thread != RT_NULL)
   {
     rt_thread_startup(gprs_mail_process_thread);
@@ -191,10 +215,10 @@ int rt_application_init()
   /* local mail process thread */
   local_mail_process_thread = rt_thread_create("local",
                                   local_mail_process_thread_entry, RT_NULL,
-                                  1024, 21, 20);
+                                  1024, 102, 20);
   if (local_mail_process_thread != RT_NULL)
   {
-    rt_thread_startup(local_mail_process_thread);
+   rt_thread_startup(local_mail_process_thread);
   }
   
   /* init init_thread */
@@ -217,6 +241,14 @@ int rt_application_init()
   {
     rt_kprintf("rtc_device is not exist!!!");
   }
+
+  // open logo led
+  gpio_pin_output(DEVICE_NAME_LOGO_LED, 1);
+  logo_led_timer = rt_timer_create("tr_led",
+                                   logo_led_timeout,
+                                   RT_NULL,
+                                   6000,
+                                   RT_TIMER_FLAG_ONE_SHOT);
 
   return 0;
 }

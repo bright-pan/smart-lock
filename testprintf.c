@@ -15,6 +15,14 @@
 #include "testprintf.h"
 #include "stm32f10x.h"
 //#include "gbcode.h"
+#include <time.h>
+#include "alarm.h"
+#include "sms.h"
+#include "gprs.h"
+#include "mms.h"
+
+
+
 
 
 
@@ -99,17 +107,28 @@ void idle_thread_work(void)
 
 void mms_info(mms_dev_t mms)
 {
+	rt_uint8_t	i = 0;
+
+	rt_kprintf("/*****************MMS DATA*************/");
 	rt_kprintf("mms->error        %d\n",mms->error);
 	rt_kprintf("error0 %d error1 %d error2 %d error3 %d \n",mms->error_record[0],mms->error_record[1],mms->error_record[2],mms->error_record[3]);
-	rt_kprintf("mms->mobile_no    %s\n",mms->mobile_no[0]);
+	for(i = 0 ; mms->mobile_no[i] != RT_NULL;i++)
+	{
+		rt_kprintf("mms->mobile_no[%d]		%s\n",i,mms->mobile_no[i]);
+		if(mms->number >= MOBILE_NO_NUM)
+		{
+			break;
+		}
+	}
 	rt_kprintf("mms->number       %d\n",mms->number);
-	rt_kprintf("mms->pic_name[0]  %s\n",mms->pic_name[0]);
-	rt_kprintf("mms->pic_name[1]  %s\n",mms->pic_name[1]);
-	rt_kprintf("mms->pic_size[0]  %d\n",mms->pic_size[0]);
-	rt_kprintf("mms->pic_size[1]  %d\n",mms->pic_size[1]);
+	for(i =0 ;mms->pic_name[i] != RT_NULL;i++)
+	{
+		rt_kprintf("mms->pic_name[%d]  %s size %d\n",i,mms->pic_name[i],mms->pic_size[i]);
+	}
 	rt_kprintf("mms->text  size %03d %s\n",mms->text.size,mms->text.string);
 	rt_kprintf("mms->title size %03d %s\n",mms->title.size,mms->title.string);
 	rt_kprintf("usart name   %s\n",mms->usart->parent.name);
+	rt_kprintf("/**************************************/");
 }
 
 void printf_dev_data(rt_device_t dev,rt_uint8_t *buffer)
@@ -412,19 +431,37 @@ FINSH_FUNCTION_EXPORT(sizeof_test,(void)--test sizeof use);
 	}
 	FINSH_FUNCTION_EXPORT(gsm_run,(void)--reset gsm modle);
 
-#ifdef __GNUC__
+
 void time_test()
 {
 	time_t t_v;
 	struct tm t;
-
-	time(&t_v);
+	
+	time(&t_v);	
+#ifdef __GNUC__
 	gmtime_r(&t_v,&t);
+#else
+	t = *localtime(&t_v);
+#endif
 
-	rt_kprintf("%d, %d %d",t.tm_year,t.tm_mon,t.tm_mday);
+	rt_kprintf("%d,%d,%d,%d,%d,%d,\n",t.tm_year,t.tm_mon,t.tm_mday,t.tm_hour,t.tm_min,t.tm_sec);
 }
 FINSH_FUNCTION_EXPORT(time_test,time test);
-#endif
+
+void smms(void)
+{
+	time_t now_t;
+	extern rt_mq_t mms_mq;
+	MMS_MAIL_TYPEDEF *mms_mail_buf = (MMS_MAIL_TYPEDEF *)rt_malloc(sizeof(MMS_MAIL_TYPEDEF));
+
+	time(&now_t);
+	mms_mail_buf->time = now_t;
+  mms_mail_buf->alarm_type = ALARM_TYPE_CAMERA_COVERED;
+
+	rt_mq_send(mms_mq,mms_mail_buf,sizeof(MMS_MAIL_TYPEDEF));
+}
+FINSH_FUNCTION_EXPORT(smms,send mq mms_mq);
+
 
 #endif
 
