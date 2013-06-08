@@ -38,7 +38,7 @@
 
 
 rt_device_t rtc_device;
-
+static rt_timer_t logo_led_timer;
 
 void rt_init_thread_entry(void* parameter)
 {
@@ -124,6 +124,8 @@ void rt_init_thread_entry(void* parameter)
 static void logo_led_timeout(void *parameters)
 {
   gpio_pin_output(DEVICE_NAME_LOGO_LED, 0);
+  rt_timer_stop(logo_led_timer);
+  rt_timer_delete(logo_led_timer);
 }      
 
 int rt_application_init()
@@ -135,7 +137,7 @@ int rt_application_init()
   rt_thread_t gprs_mail_process_thread;
   rt_thread_t local_mail_process_thread;
   rt_thread_t gsm_process_thread;
-  rt_timer_t logo_led_timer;
+  rt_thread_t battery_check_process_thread;
 
   /* alarm mail process thread */
   gsm_process_thread = rt_thread_create("gsm",
@@ -185,6 +187,14 @@ int rt_application_init()
   {
     rt_thread_startup(local_mail_process_thread);
   }
+  /* battery check process thread */
+  battery_check_process_thread = rt_thread_create("bt_check",
+                                  battery_check_process_thread_entry, RT_NULL,
+                                  1024, 120, 20);
+  if (battery_check_process_thread != RT_NULL)
+  {
+    rt_thread_startup(battery_check_process_thread);
+  }
   
   /* init init_thread */
 #if (RT_THREAD_PRIORITY_MAX == 32)
@@ -212,7 +222,7 @@ int rt_application_init()
   logo_led_timer = rt_timer_create("tr_led",
                                    logo_led_timeout,
                                    RT_NULL,
-                                   6000,
+                                   1000,
                                    RT_TIMER_FLAG_ONE_SHOT);
 
   return 0;

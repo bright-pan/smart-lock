@@ -14,17 +14,30 @@
 #include "local.h"
 #include "gpio_exti.h"
 #include "sms.h"
+#include "gprs.h"
 #include "gpio_pwm.h"
 #include "gpio_pin.h"
+#include "battery.h"
 #include "untils.h"
+#include "rfid_uart.h"
 
 /* local msg queue for local alarm */
 rt_mq_t local_mq;
 
 rt_timer_t lock_gate_timer;
+rt_timer_t battery_switch_timer;
+rt_timer_t rfid_key_detect_timer;
 
+static void lock_gate_process(void);
 static void lock_gate_timeout(void *parameters);
-static int32_t counts = 0;
+static int32_t lock_gate_timeout_counts = 0;
+
+static void battery_switch_timeout(void *parameters);
+static void battery_switch_process(void);
+static int32_t battery_switch_timeout_counts = 0;
+
+static void rfid_key_detect_process(void);
+static void rfid_key_detect_timeout(void *parameters);
 
 void local_mail_process_thread_entry(void *parameter)
 {
@@ -73,22 +86,17 @@ void local_mail_process_thread_entry(void *parameter)
           // receive sms
           break;
         };
+        case ALARM_TYPE_BATTERY_SWITCH : {
+          battery_switch_process();
+          // receive sms
+          break;
+        };          
         case ALARM_TYPE_LOCK_GATE : {
-
-          gpio_pin_output(DEVICE_NAME_LOGO_LED, 1);
-          lock_gate_timer = rt_timer_create("tr_lg",
-                                            lock_gate_timeout,
-                                            RT_NULL,
-                                            6000,
-                                            RT_TIMER_FLAG_PERIODIC);
-          if (device_parameters.lock_gate_alarm_time < 0 || device_parameters.lock_gate_alarm_time > 99)
-          {
-            counts = 30;
-          }
-          else
-          {
-            counts = device_parameters.lock_gate_alarm_time;
-          }
+          lock_gate_process();
+          break;
+        };
+        case ALARM_TYPE_RFID_KEY_DETECT : {
+          rfid_key_detect_process();
           break;
         };
       }
@@ -102,11 +110,186 @@ void local_mail_process_thread_entry(void *parameter)
   
 }
 
+
+
+
+
+static void rfid_key_detect_process(void)
+{
+  rt_device_t device;
+  uint32_t rfid_key = 0;
+  int8_t counts = 50;
+  int8_t rfid_key_index = 0;
+  int8_t rfid_error = 0;
+  uint8_t dat;
+
+  dat = gpio_pin_input(DEVICE_NAME_RFID_KEY_DETECT);
+  if (dat == 1)
+  {
+    rfid_key_detect_timer = rt_timer_create("tr_rkd",
+                                      rfid_key_detect_timeout,
+                                      RT_NULL,
+                                      6000,
+                                      RT_TIMER_FLAG_PERIODIC);
+  }
+  else
+  {
+
+  }
+
+  device = rt_device_find(DEVICE_NAME_RFID_UART);
+  if (device != RT_NULL)
+  {
+    while (counts > 0)
+    {
+      rt_device_read(device, 0, &rfid_key, 4);// clear rfid uart cache
+      rt_device_read(device, 0, &rfid_key, 4);// clear rfid uart cache
+      rfid_key = 0;
+      rt_device_write(device, 0, "\x50\x00\x06\xD4\x07\x01\x00\x00\x00\x04\x80", 11);
+      delay_us(200000);
+      if (rt_device_read(device, 0, &rfid_key, 4) == 4)
+      {
+        rfid_key_index = RFID_KEY_NUMBERS - 1;
+        while (rfid_key_index >= 0)
+        {
+          if (device_parameters.rfid_key[rfid_key_index].flag && (device_parameters.rfid_key[rfid_key_index].key == rfid_key))
+          {
+            // success read rfid key
+            motor_output(0);//unlock
+            send_gprs_mail(ALARM_TYPE_RFID_KEY_SUCCESS, 0);
+            return;
+          }
+          rfid_key_index--;
+        }
+      }
+      else
+      {
+        rfid_error++;
+      }
+      counts--;
+    }
+    if (!counts)
+    {
+      // error read rfid_key
+      if (rfid_error > 20)
+      {
+        // rfid fault
+        send_sms_mail(ALARM_TYPE_RFID_FAULT, 0);
+        send_gprs_mail(ALARM_TYPE_RFID_FAULT, 0);
+        return;
+      }
+      // send rfid key error mail
+      send_sms_mail(ALARM_TYPE_RFID_KEY_ERROR, 0);
+      send_gprs_mail(ALARM_TYPE_RFID_KEY_ERROR, 0);
+    }
+  }
+  else
+  {
+    rt_kprintf("device %s is not exist!\n", DEVICE_NAME_RFID_UART);
+  }
+
+}
+static void rfid_key_detect_timeout(void *parameters)
+{
+  rt_device_t device = RT_NULL;
+  uint8_t data;
+
+  device = rt_device_find(DEVICE_NAME_RFID_KEY_DETECT);
+  if (device == RT_NULL)
+  {
+    rt_timer_stop(rfid_key_detect_timer);
+    rt_timer_delete(rfid_key_detect_timer);
+  }
+  else
+  {
+    rt_device_read(device,0,&data,0);
+    if (data == 1) // rfid key is plugin
+    {
+      send_sms_mail(ALARM_TYPE_RFID_KEY_PLUGIN, 0);
+      send_gprs_mail(ALARM_TYPE_RFID_KEY_PLUGIN, 0);
+    }
+  }
+  rt_timer_stop(battery_switch_timer);
+  rt_timer_delete(battery_switch_timer);
+}
+
+static void battery_switch_process(void)
+{
+  uint8_t dat;
+  dat = gpio_pin_input(DEVICE_NAME_BATTERY_SWITCH);
+  if (dat == POWER_BATTERY)
+  {
+    battery_switch_timer = rt_timer_create("tr_bs",
+                                      battery_switch_timeout,
+                                      RT_NULL,
+                                      6000,
+                                      RT_TIMER_FLAG_PERIODIC);
+    battery_switch_timeout_counts = 20;
+  }
+  else
+  {
+
+  }
+}
+
+static void battery_switch_timeout(void *parameters)
+{
+  rt_device_t device = RT_NULL;
+  uint8_t data;
+
+  device = rt_device_find(DEVICE_NAME_BATTERY_SWITCH);
+  if (device == RT_NULL)
+  {
+    rt_timer_stop(battery_switch_timer);
+    rt_timer_delete(battery_switch_timer);
+  }
+  else
+  {
+    if (battery_switch_timeout_counts-- > 0)
+    {
+      rt_device_read(device,0,&data,0);
+      if (data != POWER_BATTERY) // power is external
+      {
+        rt_timer_stop(battery_switch_timer);
+        rt_timer_delete(battery_switch_timer);
+        battery_switch_timer = RT_NULL;
+        battery_switch_timeout_counts = 0;
+      }
+    }
+    else
+    {
+      rt_timer_stop(battery_switch_timer);
+      rt_timer_delete(battery_switch_timer);
+      battery_switch_timer = RT_NULL;
+      battery_switch_timeout_counts = 0;
+      //send sms mail
+      send_sms_mail(ALARM_TYPE_BATTERY_WORKING_20M, 0);
+    }
+  }
+}
+
+static void lock_gate_process(void)
+{
+  gpio_pin_output(DEVICE_NAME_LOGO_LED, 1);
+  lock_gate_timer = rt_timer_create("tr_lg",
+                                    lock_gate_timeout,
+                                    RT_NULL,
+                                    6000,
+                                    RT_TIMER_FLAG_PERIODIC);
+  if (device_parameters.lock_gate_alarm_time < 0 || device_parameters.lock_gate_alarm_time > 99)
+  {
+    lock_gate_timeout_counts = 30;
+  }
+  else
+  {
+    lock_gate_timeout_counts = device_parameters.lock_gate_alarm_time;
+  }
+}
+
 static void lock_gate_timeout(void *parameters)
 {
   rt_device_t device = RT_NULL;
   uint8_t data;
-  SMS_MAIL_TYPEDEF sms_mail_buf;
 
   device = rt_device_find(DEVICE_NAME_LOCK_GATE);
   if (device == RT_NULL)
@@ -117,7 +300,7 @@ static void lock_gate_timeout(void *parameters)
   }
   else
   {
-    if (counts-- > 0)
+    if (lock_gate_timeout_counts-- > 0)
     {
       rt_device_read(device,0,&data,0);
       if (!data) // gate is closed
@@ -126,7 +309,7 @@ static void lock_gate_timeout(void *parameters)
         rt_timer_delete(lock_gate_timer);
         gpio_pin_output(DEVICE_NAME_LOGO_LED, 0);// close led
         lock_gate_timer = RT_NULL;
-        counts = 0;
+        lock_gate_timeout_counts = 0;
       }
     }
     else
@@ -135,16 +318,35 @@ static void lock_gate_timeout(void *parameters)
       rt_timer_delete(lock_gate_timer);
       gpio_pin_output(DEVICE_NAME_LOGO_LED, 0);//close logo
       lock_gate_timer = RT_NULL;
-      counts = 0;
+      lock_gate_timeout_counts = 0;
       //send sms mail
-      sms_mail_buf.alarm_type = ALARM_TYPE_LOCK_GATE;
-      rt_device_control(rtc_device, RT_DEVICE_CTRL_RTC_GET_TIME, &(sms_mail_buf.time));
-      if (alarm_mq != NULL)
-      {
-        rt_mq_send(sms_mq, &sms_mail_buf, sizeof(SMS_MAIL_TYPEDEF));
-      }
+      send_sms_mail(ALARM_TYPE_LOCK_GATE, 0);
     }
   }
 }
 
+void send_local_mail(ALARM_TYPEDEF alarm_type, time_t time)
+{
+  LOCAL_MAIL_TYPEDEF buf;
+  extern rt_device_t rtc_device;
+  rt_err_t result;
+  //send mail
+  buf.alarm_type = alarm_type;
+  if (!time)
+  {
+    rt_device_control(rtc_device, RT_DEVICE_CTRL_RTC_GET_TIME, &(buf.time));
+  }
+  if (local_mq != NULL)
+  {
+    result = rt_mq_send(local_mq, &buf, sizeof(LOCAL_MAIL_TYPEDEF));
+    if (result == -RT_EFULL)
+    {
+      rt_kprintf("local_mq is full!!!\n");
+    }
+  }
+  else
+  {
+    rt_kprintf("local_mq is RT_NULL!!!\n");
+  }
+}
 

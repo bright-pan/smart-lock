@@ -30,4 +30,6 @@ extern rt_timer_t lock_gate_timer;
 
 void local_mail_process_thread_entry(void *parameter);
 
+void send_local_mail(ALARM_TYPEDEF alarm_type, time_t time);
+
 #endif

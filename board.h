@@ -31,6 +31,7 @@
 #include "camera_uart.h"
 #include "untils.h"
 #include "gsm.h"
+#include "battery.h"
 
 
 /* board configuration */
