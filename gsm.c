@@ -1142,7 +1142,7 @@ ATCommandStatus gsm_send_at_cipstart(void)
     memset(recv_buf, '\0', RECV_BUF_SIZE);
     memset(at_temp, '\0', 512);
     rt_kprintf("gsm send : ");
-    siprintf(at_temp,"AT+CIPSTART=\"TCP\",\"%s\",%d\r",device_parameters.tcp_domain.domain, device_parameters.tcp_domain.port);
+    rt_sprintf(at_temp,"AT+CIPSTART=\"TCP\",\"%s\",%d\r",device_parameters.tcp_domain.domain, device_parameters.tcp_domain.port);
     gsm_put_char(at_temp, strlen(at_temp));
     rt_device_write(device_gsm_usart, 0, at_temp, strlen(at_temp));
     rt_free(at_temp);
@@ -2114,7 +2114,7 @@ void gsm_ip_start(char *ip, int port)
   {
     at_temp = (char *)rt_malloc(512);
     memset(at_temp, '\0', 512);
-    siprintf(at_temp,"AT+CIPSTART=\"TCP\",\"%s\",%d\r", ip, port);
+    rt_sprintf(at_temp,"AT+CIPSTART=\"TCP\",\"%s\",%d\r", ip, port);
     gsm_put_char(at_temp, strlen(at_temp));
     rt_device_write(device_gsm_usart, 0, at_temp, strlen(at_temp));
     rt_free(at_temp);

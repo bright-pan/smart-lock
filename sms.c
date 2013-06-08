@@ -296,7 +296,7 @@ void sms_mail_process_thread_entry(void *parameter)
       }
 
       // sms time process
-      gmtime_r(&(sms_mail_buf->time), &tm_time);
+      tm_time = *localtime(&(sms_mail_buf->time));
 
       tm_time.tm_year += 1900;
       tm_time.tm_mon += 1;
@@ -556,7 +556,7 @@ int8_t sms_pdu_ucs_send(char *dest_address, char *smsc_address, uint16_t *conten
 
   memset(at_temp, '\0', 512);
   memset(process_buf, '\0', 512);
-  siprintf(at_temp,"AT+CMGS=%d\x0D",
+  rt_sprintf(at_temp,"AT+CMGS=%d\x0D",
            send_pdu_frame->TPDU.TP_UDL + (sizeof(send_pdu_frame->TPDU) - sizeof(send_pdu_frame->TPDU.TP_UD)));
   rt_device_write(device, 0, at_temp, strlen(at_temp));
   rt_thread_delay(50);
