@@ -32,7 +32,7 @@ typedef struct
 extern rt_mq_t gprs_mq;
 
 void gprs_mail_process_thread_entry(void *parameter);
-
+void send_gprs_mail(ALARM_TYPEDEF alarm_type, time_t time);
 
 
 
