@@ -296,12 +296,8 @@ void sms_mail_process_thread_entry(void *parameter)
       }
 
       // sms time process
-#ifdef __GNUC__
+      tm_time = *localtime(&(sms_mail_buf->time));
 
-      gmtime_r(&(sms_mail_buf->time), &tm_time);
-#else
-			tm_time = *localtime(&sms_mail_buf->time);
-#endif
       tm_time.tm_year += 1900;
       tm_time.tm_mon += 1;
       time_ucs_length = 0;
@@ -399,7 +395,6 @@ void sms_mail_process_thread_entry(void *parameter)
     }
     else
     {
-      break;
       /* mail receive error */
     }
     /*
