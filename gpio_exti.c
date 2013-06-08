@@ -15,6 +15,8 @@
 #include "gpio_pin.h"
 #include "local.h"
 
+extern rt_device_t rtc_device;
+
 struct gpio_exti_user_data
 {
   const char name[RT_NAME_MAX];
@@ -151,29 +153,15 @@ struct rt_gpio_ops gpio_exti_user_ops=
 /* rfid_key_detect device pd10 */
 rt_err_t rfid_key_detect_rx_ind(rt_device_t dev, rt_size_t size)
 {
-  ALARM_MAIL_TYPEDEF buf;
-  rt_err_t result;
   gpio_device *gpio = RT_NULL;
+  time_t time;
+
   RT_ASSERT(dev != RT_NULL);
   gpio = (gpio_device *)dev;
   /* produce mail */
-  rt_device_control(rtc_device, RT_DEVICE_CTRL_RTC_GET_TIME, &(buf.time));
-  buf.alarm_type = ALARM_TYPE_RFID_KEY_DETECT;
-  buf.alarm_process_flag = ALARM_PROCESS_FLAG_SMS | ALARM_PROCESS_FLAG_MMS | ALARM_PROCESS_FLAG_GPRS | ALARM_PROCESS_FLAG_LOCAL;
-  buf.gpio_value = gpio->pin_value;
+  rt_device_control(rtc_device, RT_DEVICE_CTRL_RTC_GET_TIME, &time);
   /* send mail */
-  if (alarm_mq != NULL)
-  {
-    result = rt_mq_send(alarm_mq, &buf, sizeof(ALARM_MAIL_TYPEDEF));
-    if (result == -RT_EFULL)
-    {
-      rt_kprintf("alarm_mq is full!!!\n");
-    }
-  }
-  else
-  {
-    rt_kprintf("alarm_mq is RT_NULL!!!\n");
-  }
+  send_alarm_mail(ALARM_TYPE_RFID_KEY_DETECT, ALARM_PROCESS_FLAG_LOCAL, gpio->pin_value, time);
   return RT_EOK;
 }
 
@@ -204,7 +192,7 @@ void rt_hw_rfid_key_detect_register(void)
   struct gpio_exti_user_data *gpio_user_data = &rfid_key_detect_user_data;
 
   gpio_device->ops = &gpio_exti_user_ops;
-  
+
   rt_hw_gpio_register(gpio_device, gpio_user_data->name, (RT_DEVICE_FLAG_RDWR | RT_DEVICE_FLAG_INT_RX), gpio_user_data);
   rt_device_set_rx_indicate((rt_device_t)gpio_device, gpio_user_data->gpio_exti_rx_indicate);
 }
@@ -212,29 +200,16 @@ void rt_hw_rfid_key_detect_register(void)
 /* motor_status device pd8 */
 rt_err_t motor_status_rx_ind(rt_device_t dev, rt_size_t size)
 {
-  ALARM_MAIL_TYPEDEF buf;
-  rt_err_t result;
   gpio_device *gpio = RT_NULL;
+  time_t time;
+
   RT_ASSERT(dev != RT_NULL);
   gpio = (gpio_device *)dev;
   /* produce mail */
-  rt_device_control(rtc_device, RT_DEVICE_CTRL_RTC_GET_TIME, &(buf.time));
-  buf.alarm_type = ALARM_TYPE_MOTOR_STATUS;
-  buf.alarm_process_flag = ALARM_PROCESS_FLAG_SMS | ALARM_PROCESS_FLAG_MMS | ALARM_PROCESS_FLAG_GPRS | ALARM_PROCESS_FLAG_LOCAL;
-  buf.gpio_value = gpio->pin_value;
+  rt_device_control(rtc_device, RT_DEVICE_CTRL_RTC_GET_TIME, &time);
   /* send mail */
-  if (alarm_mq != NULL)
-  {
-    result = rt_mq_send(alarm_mq, &buf, sizeof(ALARM_MAIL_TYPEDEF));
-    if (result == -RT_EFULL)
-    {
-      rt_kprintf("alarm_mq is full!!!\n");
-    }
-  }
-  else
-  {
-    rt_kprintf("alarm_mq is RT_NULL!!!\n");
-  }
+  send_alarm_mail(ALARM_TYPE_MOTOR_STATUS, ALARM_PROCESS_FLAG_LOCAL, gpio->pin_value, time);
+
   return RT_EOK;
 }
 
@@ -272,29 +247,16 @@ void rt_hw_motor_status_register(void)
 /* camera_photosensor device pb0 */
 rt_err_t camera_photosensor_rx_ind(rt_device_t dev, rt_size_t size)
 {
-  ALARM_MAIL_TYPEDEF buf;
-  rt_err_t result;
   gpio_device *gpio = RT_NULL;
+  time_t time;
+
   RT_ASSERT(dev != RT_NULL);
   gpio = (gpio_device *)dev;
   /* produce mail */
-  rt_device_control(rtc_device, RT_DEVICE_CTRL_RTC_GET_TIME, &(buf.time));
-  /* send mail */  
-  buf.alarm_type = ALARM_TYPE_CAMERA_PHOTOSENSOR;
-  buf.alarm_process_flag = ALARM_PROCESS_FLAG_SMS | ALARM_PROCESS_FLAG_MMS | ALARM_PROCESS_FLAG_GPRS | ALARM_PROCESS_FLAG_LOCAL;
-  buf.gpio_value = gpio->pin_value;
-  if (alarm_mq != NULL)
-  {
-    result = rt_mq_send(alarm_mq, &buf, sizeof(ALARM_MAIL_TYPEDEF));
-    if (result == -RT_EFULL)
-    {
-      rt_kprintf("alarm_mq is full!!!\n");
-    }
-  }
-  else
-  {
-    rt_kprintf("alarm_mq is RT_NULL!!!\n");
-  }
+  rt_device_control(rtc_device, RT_DEVICE_CTRL_RTC_GET_TIME, &time);
+  /* send mail */
+  send_alarm_mail(ALARM_TYPE_CAMERA_PHOTOSENSOR, ALARM_PROCESS_FLAG_LOCAL, gpio->pin_value, time);
+
   return RT_EOK;
 }
 
@@ -332,29 +294,16 @@ void rt_hw_camera_photosensor_register(void)
 /* camera_irdasensor device pb0 */
 rt_err_t camera_irdasensor_rx_ind(rt_device_t dev, rt_size_t size)
 {
-  ALARM_MAIL_TYPEDEF buf;
-  rt_err_t result;
   gpio_device *gpio = RT_NULL;
+  time_t time;
+
   RT_ASSERT(dev != RT_NULL);
   gpio = (gpio_device *)dev;
   /* produce mail */
-  rt_device_control(rtc_device, RT_DEVICE_CTRL_RTC_GET_TIME, &(buf.time));
-  /* send mail */  
-  buf.alarm_type = ALARM_TYPE_CAMERA_IRDASENSOR;
-  buf.alarm_process_flag = ALARM_PROCESS_FLAG_SMS | ALARM_PROCESS_FLAG_MMS | ALARM_PROCESS_FLAG_GPRS | ALARM_PROCESS_FLAG_LOCAL;
-  buf.gpio_value = gpio->pin_value;
-  if (alarm_mq != NULL)
-  {
-    result = rt_mq_send(alarm_mq, &buf, sizeof(ALARM_MAIL_TYPEDEF));
-    if (result == -RT_EFULL)
-    {
-      rt_kprintf("alarm_mq is full!!!\n");
-    }
-  }
-  else
-  {
-    rt_kprintf("alarm_mq is RT_NULL!!!\n");
-  }
+  rt_device_control(rtc_device, RT_DEVICE_CTRL_RTC_GET_TIME, &time);
+  /* send mail */
+  send_alarm_mail(ALARM_TYPE_CAMERA_IRDASENSOR, ALARM_PROCESS_FLAG_SMS | ALARM_PROCESS_FLAG_GPRS | ALARM_PROCESS_FLAG_LOCAL, gpio->pin_value, time);
+
   return RT_EOK;
 }
 
@@ -393,21 +342,15 @@ void rt_hw_camera_irdasensor_register(void)
 /* gsm_ring device */
 rt_err_t gsm_ring_rx_ind(rt_device_t dev, rt_size_t size)
 {
-  ALARM_MAIL_TYPEDEF buf;
-  rt_err_t result;
   gpio_device *gpio = RT_NULL;
+  time_t time;
   uint8_t dat;
   rt_device_t device = RT_NULL;
 
   RT_ASSERT(dev != RT_NULL);
   gpio = (gpio_device *)dev;
   /* produce mail */
-  rt_device_control(rtc_device, RT_DEVICE_CTRL_RTC_GET_TIME, &(buf.time));
-
-  buf.alarm_type = ALARM_TYPE_GSM_RING;
-  buf.alarm_process_flag = ALARM_PROCESS_FLAG_LOCAL;
-  buf.gpio_value = gpio->pin_value;
-
+  rt_device_control(rtc_device, RT_DEVICE_CTRL_RTC_GET_TIME, &time);
   device = rt_device_find(DEVICE_NAME_GSM_STATUS);
   if (device != RT_NULL)
   {
@@ -425,18 +368,8 @@ rt_err_t gsm_ring_rx_ind(rt_device_t dev, rt_size_t size)
 #endif
   }
   /* send mail */
-  if (alarm_mq != NULL)
-  {
-    result = rt_mq_send(alarm_mq, &buf, sizeof(ALARM_MAIL_TYPEDEF));
-    if (result == -RT_EFULL)
-    {
-      rt_kprintf("alarm_mq is full!!!\n");
-    }
-  }
-  else
-  {
-    rt_kprintf("alarm_mq is RT_NULL!!!\n");
-  }
+  send_alarm_mail(ALARM_TYPE_GSM_RING, ALARM_PROCESS_FLAG_LOCAL, gpio->pin_value, time);
+
   return RT_EOK;
 }
 
@@ -473,34 +406,20 @@ void rt_hw_gsm_ring_register(void)
 /* lock_gate device */
 rt_err_t lock_gate_rx_ind(rt_device_t dev, rt_size_t size)
 {
-  ALARM_MAIL_TYPEDEF buf;
-  rt_err_t result;
   gpio_device *gpio = RT_NULL;
+  time_t time;
+
   RT_ASSERT(dev != RT_NULL);
   gpio = (gpio_device *)dev;
   /* produce mail */
-  rt_device_control(rtc_device, RT_DEVICE_CTRL_RTC_GET_TIME, &(buf.time));
-
-  buf.alarm_type = ALARM_TYPE_LOCK_GATE;
-  buf.alarm_process_flag = ALARM_PROCESS_FLAG_GPRS | ALARM_PROCESS_FLAG_LOCAL;
-  buf.gpio_value = gpio->pin_value;
+  rt_device_control(rtc_device, RT_DEVICE_CTRL_RTC_GET_TIME, &time);
   if (lock_gate_timer != RT_NULL)
   {
     return RT_EOK;
   }
   /* send mail */
-  if (alarm_mq != NULL)
-  {
-    result = rt_mq_send(alarm_mq, &buf, sizeof(ALARM_MAIL_TYPEDEF));
-    if (result == -RT_EFULL)
-    {
-      rt_kprintf("alarm_mq is full!!!\n");
-    }
-  }
-  else
-  {
-    rt_kprintf("alarm_mq is RT_NULL!!!\n");
-  }
+  send_alarm_mail(ALARM_TYPE_LOCK_GATE, ALARM_PROCESS_FLAG_GPRS | ALARM_PROCESS_FLAG_LOCAL, gpio->pin_value, time);
+
   return RT_EOK;
 }
 
@@ -539,40 +458,26 @@ void rt_hw_lock_gate_register(void)
 /* lock_shell device */
 rt_err_t lock_shell_rx_ind(rt_device_t dev, rt_size_t size)
 {
-  static time_t time = 0;
-  ALARM_MAIL_TYPEDEF buf;
-  rt_err_t result;
+  static time_t time_old = 0;
   gpio_device *gpio = RT_NULL;
+  time_t time;
+
   RT_ASSERT(dev != RT_NULL);
   gpio = (gpio_device *)dev;
   /* produce mail */
-  rt_device_control(rtc_device, RT_DEVICE_CTRL_RTC_GET_TIME, &(buf.time));
-  buf.alarm_type = ALARM_TYPE_LOCK_SHELL;
-  buf.alarm_process_flag = ALARM_PROCESS_FLAG_SMS | ALARM_PROCESS_FLAG_GPRS | ALARM_PROCESS_FLAG_LOCAL;
-  buf.gpio_value = gpio->pin_value;
-
-  if ((buf.time - time) > ALARM_INTERVAL)
+  rt_device_control(rtc_device, RT_DEVICE_CTRL_RTC_GET_TIME, &time);
+  if ((time - time_old) > ALARM_INTERVAL)
   {
-    time = buf.time;
+    time_old = time;
   }
   else
   {
-    time = buf.time;
+    time_old = time;
     return RT_EOK;
   }
   /* send mail */
-  if (alarm_mq != NULL)
-  {
-    result = rt_mq_send(alarm_mq, &buf, sizeof(ALARM_MAIL_TYPEDEF));
-    if (result == -RT_EFULL)
-    {
-      rt_kprintf("alarm_mq is full!!!\n");
-    }
-  }
-  else
-  {
-    rt_kprintf("alarm_mq is RT_NULL!!!\n");
-  }
+  send_alarm_mail(ALARM_TYPE_LOCK_SHELL, ALARM_PROCESS_FLAG_SMS | ALARM_PROCESS_FLAG_GPRS | ALARM_PROCESS_FLAG_LOCAL, gpio->pin_value, time);
+
   return RT_EOK;
 }
 
@@ -611,29 +516,26 @@ void rt_hw_lock_shell_register(void)
 /* gate temperature device register */
 rt_err_t gate_temperature_rx_ind(rt_device_t dev, rt_size_t size)
 {
-  ALARM_MAIL_TYPEDEF buf;
-  rt_err_t result;
+  static time_t time_old = 0;
   gpio_device *gpio = RT_NULL;
+  time_t time;
+
   RT_ASSERT(dev != RT_NULL);
   gpio = (gpio_device *)dev;
   /* produce mail */
-  rt_device_control(rtc_device, RT_DEVICE_CTRL_RTC_GET_TIME, &(buf.time));
-  buf.alarm_type = ALARM_TYPE_GATE_TEMPERATURE;
-  buf.alarm_process_flag = ALARM_PROCESS_FLAG_SMS | ALARM_PROCESS_FLAG_MMS | ALARM_PROCESS_FLAG_GPRS | ALARM_PROCESS_FLAG_LOCAL;
-  buf.gpio_value = gpio->pin_value;
-  /* send mail */
-  if (alarm_mq != NULL)
+  rt_device_control(rtc_device, RT_DEVICE_CTRL_RTC_GET_TIME, &time);
+  if ((time - time_old) > ALARM_INTERVAL)
   {
-    result = rt_mq_send(alarm_mq, &buf, sizeof(ALARM_MAIL_TYPEDEF));
-    if (result == -RT_EFULL)
-    {
-      rt_kprintf("alarm_mq is full!!!\n");
-    }
+    time_old = time;
   }
   else
   {
-    rt_kprintf("alarm_mq is RT_NULL!!!\n");
+    time_old = time;
+    return RT_EOK;
   }
+  /* send mail */
+  send_alarm_mail(ALARM_TYPE_GATE_TEMPERATURE, ALARM_PROCESS_FLAG_SMS | ALARM_PROCESS_FLAG_GPRS | ALARM_PROCESS_FLAG_LOCAL, gpio->pin_value, time);
+
   return RT_EOK;
 }
 
@@ -671,29 +573,26 @@ void rt_hw_gate_temperature_register(void)
 /* lock temperature device register */
 rt_err_t lock_temperature_rx_ind(rt_device_t dev, rt_size_t size)
 {
-  ALARM_MAIL_TYPEDEF buf;
-  rt_err_t result;
+  static time_t time_old = 0;
   gpio_device *gpio = RT_NULL;
+  time_t time;
+
   RT_ASSERT(dev != RT_NULL);
   gpio = (gpio_device *)dev;
   /* produce mail */
-  rt_device_control(rtc_device, RT_DEVICE_CTRL_RTC_GET_TIME, &(buf.time));
-  buf.alarm_type = ALARM_TYPE_LOCK_TEMPERATURE;
-  buf.alarm_process_flag = ALARM_PROCESS_FLAG_SMS | ALARM_PROCESS_FLAG_MMS | ALARM_PROCESS_FLAG_GPRS | ALARM_PROCESS_FLAG_LOCAL;
-  buf.gpio_value = gpio->pin_value;
-  /* send mail */
-  if (alarm_mq != NULL)
+  rt_device_control(rtc_device, RT_DEVICE_CTRL_RTC_GET_TIME, &time);
+  if ((time - time_old) > ALARM_INTERVAL)
   {
-    result = rt_mq_send(alarm_mq, &buf, sizeof(ALARM_MAIL_TYPEDEF));
-    if (result == -RT_EFULL)
-    {
-      rt_kprintf("alarm_mq is full!!!\n");
-    }
+    time_old = time;
   }
   else
   {
-    rt_kprintf("alarm_mq is RT_NULL!!!\n");
+    time_old = time;
+    return RT_EOK;
   }
+  /* send mail */
+  send_alarm_mail(ALARM_TYPE_LOCK_TEMPERATURE, ALARM_PROCESS_FLAG_SMS | ALARM_PROCESS_FLAG_GPRS | ALARM_PROCESS_FLAG_LOCAL, gpio->pin_value, time);
+
   return RT_EOK;
 }
 
@@ -722,6 +621,63 @@ void rt_hw_lock_temperature_register(void)
 {
   gpio_device *gpio_device = &lock_temperature_device;
   struct gpio_exti_user_data *gpio_user_data = &lock_temperature_user_data;
+
+  gpio_device->ops = &gpio_exti_user_ops;
+  
+  rt_hw_gpio_register(gpio_device, gpio_user_data->name, (RT_DEVICE_FLAG_RDWR | RT_DEVICE_FLAG_INT_RX), gpio_user_data);
+  rt_device_set_rx_indicate((rt_device_t)gpio_device, gpio_user_data->gpio_exti_rx_indicate);
+}
+/* battery switch device register */
+rt_err_t battery_switch_rx_ind(rt_device_t dev, rt_size_t size)
+{
+  static time_t time_old = 0;
+  gpio_device *gpio = RT_NULL;
+  time_t time;
+
+  RT_ASSERT(dev != RT_NULL);
+  gpio = (gpio_device *)dev;
+  /* produce mail */
+  rt_device_control(rtc_device, RT_DEVICE_CTRL_RTC_GET_TIME, &time);
+  if ((time - time_old) > ALARM_INTERVAL)
+  {
+    time_old = time;
+  }
+  else
+  {
+    time_old = time;
+    return RT_EOK;
+  }
+  /* send mail */
+  send_alarm_mail(ALARM_TYPE_BATTERY_SWITCH, ALARM_PROCESS_FLAG_LOCAL, gpio->pin_value, time);
+
+  return RT_EOK;
+}
+
+gpio_device battery_switch_device;
+
+struct gpio_exti_user_data battery_switch_user_data = 
+{
+  DEVICE_NAME_BATTERY_SWITCH,
+  GPIOD,
+  GPIO_Pin_9,
+  GPIO_Mode_IPD,
+  GPIO_Speed_50MHz,
+  RCC_APB2Periph_GPIOD | RCC_APB2Periph_AFIO,
+  GPIO_PortSourceGPIOD,
+  GPIO_PinSource9,
+  EXTI_Line9,
+  EXTI_Mode_Interrupt,
+  EXTI_Trigger_Rising_Falling,
+  EXTI9_5_IRQn,
+  1,
+  5,
+  battery_switch_rx_ind,
+};
+
+void rt_hw_battery_switch_register(void)
+{
+  gpio_device *gpio_device = &battery_switch_device;
+  struct gpio_exti_user_data *gpio_user_data = &battery_switch_user_data;
 
   gpio_device->ops = &gpio_exti_user_ops;
   

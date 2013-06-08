@@ -108,3 +108,30 @@ void alarm_mail_process_thread_entry(void *parameter)
   rt_free(local_mail_buf);
   rt_free(mms_mail_buf);
 }
+
+void send_alarm_mail(ALARM_TYPEDEF alarm_type, ALARM_PROCESS_FLAG_TYPEDEF alarm_process_flag, rt_int8_t gpio_value, time_t time)
+{
+  extern rt_device_t rtc_device;
+  ALARM_MAIL_TYPEDEF buf;
+  rt_err_t result;
+  buf.alarm_type = alarm_type;
+  if (!time)
+  {
+    rt_device_control(rtc_device, RT_DEVICE_CTRL_RTC_GET_TIME, &(buf.time));
+  }
+  buf.alarm_process_flag = alarm_process_flag;
+  buf.gpio_value = gpio_value;
+  if (alarm_mq != NULL)
+  {
+    result = rt_mq_send(alarm_mq, &buf, sizeof(ALARM_MAIL_TYPEDEF));
+    if (result == -RT_EFULL)
+    {
+      rt_kprintf("alarm_mq is full!!!\n");
+    }
+  }
+  else
+  {
+    rt_kprintf("alarm_mq is RT_NULL!!!\n");
+  }
+}
+
