@@ -54,7 +54,7 @@ void rt_hw_voice_amp_register(void);
 
 void rt_hw_test_register(void);
 
-void gpio_pin_input(char *str);
+uint8_t gpio_pin_input(char *str);
 void gpio_pin_output(char *str, const rt_uint8_t dat);
 
 #endif
