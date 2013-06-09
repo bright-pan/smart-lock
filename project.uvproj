@@ -46,8 +46,8 @@
           <OutputName>rtthread-stm32</OutputName>
           <CreateExecutable>1</CreateExecutable>
           <CreateLib>0</CreateLib>
-          <CreateHexFile>0</CreateHexFile>
-          <DebugInformation>0</DebugInformation>
+          <CreateHexFile>1</CreateHexFile>
+          <DebugInformation>1</DebugInformation>
           <BrowseInformation>0</BrowseInformation>
           <ListingPath>.\obj\</ListingPath>
           <HexFormatSelection>1</HexFormatSelection>
@@ -72,7 +72,7 @@
           <AfterMake>
             <RunUserProg1>0</RunUserProg1>
             <RunUserProg2>0</RunUserProg2>
-            <UserProg1Name></UserProg1Name>
+            <UserProg1Name>C:\Keil\ARM\BIN40\fromelf.exe  --bin -o D:\wzw.bin  E:\code\smartlock\obj\rtthread-stm32.axf</UserProg1Name>
             <UserProg2Name></UserProg2Name>
             <UserProg1Dos16Mode>0</UserProg1Dos16Mode>
             <UserProg2Dos16Mode>0</UserProg2Dos16Mode>
@@ -114,7 +114,7 @@
             <Oh166RecLen>16</Oh166RecLen>
           </OPTHX>
           <Simulator>
-            <UseSimulator>1</UseSimulator>
+            <UseSimulator>0</UseSimulator>
             <LoadApplicationAtStartup>1</LoadApplicationAtStartup>
             <RunToMain>1</RunToMain>
             <RestoreBreakpoints>1</RestoreBreakpoints>
@@ -125,7 +125,7 @@
             <LimitSpeedToRealTime>0</LimitSpeedToRealTime>
           </Simulator>
           <Target>
-            <UseTarget>0</UseTarget>
+            <UseTarget>1</UseTarget>
             <LoadApplicationAtStartup>1</LoadApplicationAtStartup>
             <RunToMain>1</RunToMain>
             <RestoreBreakpoints>1</RestoreBreakpoints>
@@ -135,7 +135,7 @@
             <RestoreToolbox>1</RestoreToolbox>
           </Target>
           <RunDebugAfterBuild>0</RunDebugAfterBuild>
-          <TargetSelection>5</TargetSelection>
+          <TargetSelection>7</TargetSelection>
           <SimDlls>
             <CpuDll></CpuDll>
             <CpuDllArguments></CpuDllArguments>
@@ -207,13 +207,13 @@
             <hadIRAM2>0</hadIRAM2>
             <hadIROM2>0</hadIROM2>
             <StupSel>8</StupSel>
-            <useUlib>0</useUlib>
+            <useUlib>1</useUlib>
             <EndSel>0</EndSel>
             <uLtcg>0</uLtcg>
             <RoSelD>3</RoSelD>
             <RwSelD>3</RwSelD>
             <CodeSel>0</CodeSel>
-            <OptFeed>0</OptFeed>
+            <OptFeed>1</OptFeed>
             <NoZi1>0</NoZi1>
             <NoZi2>0</NoZi2>
             <NoZi3>0</NoZi3>
@@ -330,22 +330,22 @@
           </ArmAdsMisc>
           <Cads>
             <interw>1</interw>
-            <Optim>1</Optim>
+            <Optim>3</Optim>
             <oTime>0</oTime>
             <SplitLS>0</SplitLS>
-            <OneElfS>0</OneElfS>
+            <OneElfS>1</OneElfS>
             <Strict>0</Strict>
             <EnumInt>0</EnumInt>
             <PlainCh>0</PlainCh>
             <Ropi>0</Ropi>
             <Rwpi>0</Rwpi>
-            <wLevel>0</wLevel>
+            <wLevel>2</wLevel>
             <uThumb>0</uThumb>
             <VariousControls>
               <MiscControls></MiscControls>
               <Define>STM32F10X_HD, USE_STDPERIPH_DRIVER</Define>
               <Undefine></Undefine>
-              <IncludePath>.;Libraries/CMSIS/CM3/DeviceSupport/ST/STM32F10x;Libraries/STM32F10x_StdPeriph_Driver/inc;RT-Thread/components/CMSIS/Include;RT-Thread/components/finsh;RT-Thread/include;RT-Thread/libcpu/arm/common;RT-Thread/libcpu/arm/cortex-m3;.\RT-Thread\components\drivers\include;.\RT-Thread\components\drivers\include\drivers</IncludePath>
+              <IncludePath>.;Libraries/CMSIS/CM3/DeviceSupport/ST/STM32F10x;Libraries/STM32F10x_StdPeriph_Driver/inc;RT-Thread/components/CMSIS/Include;RT-Thread/components/finsh;.\RT-Thread\libcpu;RT-Thread/libcpu/arm/common;RT-Thread/libcpu/arm/cortex-m3;.\RT-Thread\components\drivers\include;.\RT-Thread\components\dfs\include;.\RT-Thread\components\dfs\filesystems\elmfat;.\RT-Thread\components\drivers\include\drivers;.\RT-Thread\include;.\RT-Thread\components\libc\newlib;.\RT-Thread\components\libc\minilibc;.\RT-Thread\components\dfs\filesystems\devfs;.\RT-Thread\components\libc\minilibc</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -372,10 +372,10 @@
             <useFile>0</useFile>
             <TextAddressRange>0x08000000</TextAddressRange>
             <DataAddressRange>0x20000000</DataAddressRange>
-            <ScatterFile></ScatterFile>
+            <ScatterFile>.\obj\rtthread-stm32.sct</ScatterFile>
             <IncludeLibs></IncludeLibs>
             <IncludeLibsPath></IncludeLibsPath>
-            <Misc> --keep __fsym_* --keep __vsym_* </Misc>
+            <Misc>--keep __fsym_* --keep __vsym_*</Misc>
             <LinkerInputFile></LinkerInputFile>
             <DisabledWarnings></DisabledWarnings>
           </LDads>
@@ -383,8 +383,23 @@
       </TargetOption>
       <Groups>
         <Group>
-          <GroupName>Startup</GroupName>
+          <GroupName>Application</GroupName>
           <Files>
+            <File>
+              <FileName>local.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\local.c</FilePath>
+            </File>
+            <File>
+              <FileName>alarm.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\alarm.c</FilePath>
+            </File>
+            <File>
+              <FileName>gprs.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\gprs.c</FilePath>
+            </File>
             <File>
               <FileName>application.c</FileName>
               <FileType>1</FileType>
@@ -401,59 +416,49 @@
               <FilePath>./board.c</FilePath>
             </File>
             <File>
-              <FileName>stm32f10x_it.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>./stm32f10x_it.c</FilePath>
-            </File>
-            <File>
-              <FileName>rtc.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>./rtc.c</FilePath>
-            </File>
-            <File>
-              <FileName>usart.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>./usart.c</FilePath>
-            </File>
-            <File>
-              <FileName>led.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>./led.c</FilePath>
-            </File>
-            <File>
-              <FileName>serial.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\RT-Thread\components\drivers\serial\serial.c</FilePath>
-            </File>
-            <File>
-              <FileName>completion.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\RT-Thread\components\drivers\src\completion.c</FilePath>
-            </File>
-            <File>
               <FileName>dataqueue.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\RT-Thread\components\drivers\src\dataqueue.c</FilePath>
             </File>
             <File>
-              <FileName>pipe.c</FileName>
+              <FileName>gsm_usart.c</FileName>
               <FileType>1</FileType>
-              <FilePath>.\RT-Thread\components\drivers\src\pipe.c</FilePath>
+              <FilePath>.\gsm_usart.c</FilePath>
             </File>
             <File>
-              <FileName>ringbuffer.c</FileName>
+              <FileName>sdcard.c</FileName>
               <FileType>1</FileType>
-              <FilePath>.\RT-Thread\components\drivers\src\ringbuffer.c</FilePath>
+              <FilePath>.\sdcard.c</FilePath>
             </File>
             <File>
-              <FileName>gpio.c</FileName>
+              <FileName>cpuusage.c</FileName>
               <FileType>1</FileType>
-              <FilePath>.\gpio.c</FilePath>
+              <FilePath>.\cpuusage.c</FilePath>
             </File>
             <File>
-              <FileName>gpio_pin.c</FileName>
+              <FileName>photo.c</FileName>
               <FileType>1</FileType>
-              <FilePath>.\gpio_pin.c</FilePath>
+              <FilePath>.\photo.c</FilePath>
+            </File>
+            <File>
+              <FileName>mms_dev.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\mms_dev.c</FilePath>
+            </File>
+            <File>
+              <FileName>gsm.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\gsm.c</FilePath>
+            </File>
+            <File>
+              <FileName>untils.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\untils.c</FilePath>
+            </File>
+            <File>
+              <FileName>mms.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\mms.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -749,6 +754,196 @@
               <FileName>startup_stm32f10x_hd.s</FileName>
               <FileType>2</FileType>
               <FilePath>Libraries/CMSIS/CM3/DeviceSupport/ST/STM32F10x/startup/arm/startup_stm32f10x_hd.s</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>FileSystem</GroupName>
+          <Files>
+            <File>
+              <FileName>dfs.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\RT-Thread\components\dfs\src\dfs.c</FilePath>
+            </File>
+            <File>
+              <FileName>dfs_file.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\RT-Thread\components\dfs\src\dfs_file.c</FilePath>
+            </File>
+            <File>
+              <FileName>dfs_fs.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\RT-Thread\components\dfs\src\dfs_fs.c</FilePath>
+            </File>
+            <File>
+              <FileName>dfs_posix.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\RT-Thread\components\dfs\src\dfs_posix.c</FilePath>
+            </File>
+            <File>
+              <FileName>dfs_elm.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\RT-Thread\components\dfs\filesystems\elmfat\dfs_elm.c</FilePath>
+            </File>
+            <File>
+              <FileName>ff.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\RT-Thread\components\dfs\filesystems\elmfat\ff.c</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>Zmodem</GroupName>
+          <Files>
+            <File>
+              <FileName>rz.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\RT-Thread\components\utilities\zmodem\rz.c</FilePath>
+            </File>
+            <File>
+              <FileName>sz.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\RT-Thread\components\utilities\zmodem\sz.c</FilePath>
+            </File>
+            <File>
+              <FileName>zcore.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\RT-Thread\components\utilities\zmodem\zcore.c</FilePath>
+            </File>
+            <File>
+              <FileName>zdevice.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\RT-Thread\components\utilities\zmodem\zdevice.c</FilePath>
+            </File>
+            <File>
+              <FileName>zstart.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\RT-Thread\components\utilities\zmodem\zstart.c</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>Device_drive</GroupName>
+          <Files>
+            <File>
+              <FileName>spicamera.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\spicamera.c</FilePath>
+            </File>
+            <File>
+              <FileName>sms.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\sms.c</FilePath>
+            </File>
+            <File>
+              <FileName>sst25v16.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\sst25v16.c</FilePath>
+            </File>
+            <File>
+              <FileName>stm32f10x_it.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>./stm32f10x_it.c</FilePath>
+            </File>
+            <File>
+              <FileName>gpio_pin.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\gpio_pin.c</FilePath>
+            </File>
+            <File>
+              <FileName>rfid_uart.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\rfid_uart.c</FilePath>
+            </File>
+            <File>
+              <FileName>gpio_adc.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\gpio_adc.c</FilePath>
+            </File>
+            <File>
+              <FileName>spi_core.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\RT-Thread\components\drivers\spi\spi_core.c</FilePath>
+            </File>
+            <File>
+              <FileName>spi_dev.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\RT-Thread\components\drivers\spi\spi_dev.c</FilePath>
+            </File>
+            <File>
+              <FileName>spibus.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\spibus.c</FilePath>
+            </File>
+            <File>
+              <FileName>pipe.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\RT-Thread\components\drivers\src\pipe.c</FilePath>
+            </File>
+            <File>
+              <FileName>ringbuffer.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\RT-Thread\components\drivers\src\ringbuffer.c</FilePath>
+            </File>
+            <File>
+              <FileName>usart.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>./usart.c</FilePath>
+            </File>
+            <File>
+              <FileName>completion.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\RT-Thread\components\drivers\src\completion.c</FilePath>
+            </File>
+            <File>
+              <FileName>rtc.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>./rtc.c</FilePath>
+            </File>
+            <File>
+              <FileName>serial.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\RT-Thread\components\drivers\serial\serial.c</FilePath>
+            </File>
+            <File>
+              <FileName>gpio.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\gpio.c</FilePath>
+            </File>
+            <File>
+              <FileName>gpio_pwm.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\gpio_pwm.c</FilePath>
+            </File>
+            <File>
+              <FileName>gpio_exti.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\gpio_exti.c</FilePath>
+            </File>
+            <File>
+              <FileName>boardinfo.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\boardinfo.c</FilePath>
+            </File>
+            <File>
+              <FileName>camera_uart.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\camera_uart.c</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>Test</GroupName>
+          <Files>
+            <File>
+              <FileName>filetest.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\filetest.c</FilePath>
+            </File>
+            <File>
+              <FileName>testprintf.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\testprintf.c</FilePath>
             </File>
           </Files>
         </Group>

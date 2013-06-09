@@ -333,7 +333,6 @@ void sms_mail_process_thread_entry(void *parameter)
 
       // sms time process
       tm_time = *localtime(&(sms_mail_buf->time));
-
       tm_time.tm_year += 1900;
       tm_time.tm_mon += 1;
       time_ucs_length = 0;
@@ -431,6 +430,7 @@ void sms_mail_process_thread_entry(void *parameter)
     }
     else
     {
+      break;
       /* mail receive error */
     }
     /*

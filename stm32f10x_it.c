@@ -737,4 +737,3 @@ void TIM8_CC_IRQHandler(void)
   rt_interrupt_leave();
 }
 
-/******************* (C) COPYRIGHT 2009 STMicroelectronics *****END OF FILE****/

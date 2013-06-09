@@ -98,9 +98,9 @@ void rtthread_startup(void)
 #ifdef RT_USING_DFS
 	/* init sdcard driver */
 #if STM32_USE_SDIO
-	rt_hw_sdcard_init();
+//	rt_hw_sdcard_init();
 #else
-	rt_hw_msd_init();
+//	rt_hw_msd_init();
 #endif
 #endif
 

@@ -96,9 +96,9 @@ struct rt_uart_ops usart_ops =
   
 };
 struct serial_configure serial_device_default_config = RT_SERIAL_CONFIG_DEFAULT;
-struct serial_configure serial_device_2_config = 
+struct serial_configure serial_device_1_config = 
 {
-  BAUD_RATE_9600, /* 115200 bits/s */
+  115200, /* 115200 bits/s */
   DATA_BITS_8,      /* 8 databits */
   STOP_BITS_1,      /* 1 stopbit */
   PARITY_NONE,      /* No parity  */
@@ -106,6 +106,18 @@ struct serial_configure serial_device_2_config =
   NRZ_NORMAL,       /* Normal mode */
   0,                                  
 };
+struct serial_configure serial_device_2_config = 
+{
+  BAUD_RATE_115200, /* 115200 bits/s */
+  DATA_BITS_8,      /* 8 databits */
+  STOP_BITS_1,      /* 1 stopbit */
+  PARITY_NONE,      /* No parity  */
+  BIT_ORDER_LSB,    /* LSB first sent */
+  NRZ_NORMAL,       /* Normal mode */
+  0,                                  
+};
+
+
 
 #ifdef RT_USING_USART1
 struct serial_user_data usart1_user_data = 
@@ -628,7 +640,7 @@ void rt_hw_usart_init()
   serial_device_usart1.ops = &usart_ops;
   serial_device_usart1.int_rx = &usart1_int_rx;
   serial_device_usart1.int_tx = &usart1_int_tx;
-  serial_device_usart1.config = serial_device_default_config;
+  serial_device_usart1.config = serial_device_1_config;
 
   rt_hw_serial_register(&serial_device_usart1, "usart1",
                         RT_DEVICE_FLAG_RDWR | RT_DEVICE_FLAG_INT_RX | RT_DEVICE_FLAG_STREAM,

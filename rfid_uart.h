@@ -15,7 +15,7 @@
 #ifndef _RFID_UART_H_
 #define _RFID_UART_H_
 #include <rtdevice.h>
-#include <serial.h>
+//#include <serial.h>
 #include <stm32f10x_dma.h>
 
 struct rfid_uart_user_data_t

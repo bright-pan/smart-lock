@@ -182,7 +182,8 @@ void rt_hw_board_init()
   rt_hw_usart_init();
   rt_console_set_device(CONSOLE_DEVICE);
 
-
+  /* file system */
+  rt_hw_spi_flash_init();
   /* gsm device register */
   rt_hw_gsm_usart_register();
   rt_hw_gsm_led_register();
@@ -194,11 +195,12 @@ void rt_hw_board_init()
   //rt_hw_rfid_power_register();
   //rt_hw_rfid_key_detect_register();
   /* lock device register */
-  rt_hw_lock_shell_register();
+  //rt_hw_lock_shell_register();
   //rt_hw_lock_gate_register();
   //rt_hw_lock_temperature_register();
   //rt_hw_key2_register();
   /* camera device register */
+  //rt_hw_camera_init();// test spi interface
   //rt_hw_camera_uart_register();
   //rt_hw_camera_photosensor_register();
   //rt_hw_camera_irdasensor_register();
@@ -221,6 +223,8 @@ void rt_hw_board_init()
   //rt_hw_logo_led_register();
 
   //rt_hw_test_register();
+  //  rt_hw_logo_led_register();
+  //rt_hw_chip_register();// test chip temperature
   
 }
 
