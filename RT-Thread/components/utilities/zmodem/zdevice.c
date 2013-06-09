@@ -51,7 +51,7 @@ void zsend_line(rt_uint16_t c)
 
 rt_int16_t zread_line(rt_uint16_t timeout)
 {
-	char *str = RT_NULL;	 
+	char *str;	 
 	static char buf[10];
 
 	if (Line_left > 0)

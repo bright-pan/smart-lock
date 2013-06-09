@@ -359,7 +359,7 @@ void gpio_pin_output(char *str, const rt_uint8_t dat)
   }
 }	
 
-void gpio_pin_input(char *str)
+uint8_t gpio_pin_input(char *str)
 {
   rt_device_t device = RT_NULL;
   rt_uint8_t dat;
@@ -375,6 +375,7 @@ void gpio_pin_input(char *str)
     rt_kprintf("the gpio device %s is not found!\n", DEVICE_NAME_GSM_STATUS);
 #endif
   }
+  return dat;
 }	
 
 #ifdef RT_USING_FINSH
@@ -397,5 +398,5 @@ void led(const char *str, const rt_uint8_t dat)
 FINSH_FUNCTION_EXPORT(led, led[device_name 0/1])
 
 FINSH_FUNCTION_EXPORT(gpio_pin_output, [device_name <0 1>])
-FINSH_FUNCTION_EXPORT(gpio_pin_input, [device_name])
+FINSH_FUNCTION_EXPORT(gpio_pin_input, [device_name result])
 #endif

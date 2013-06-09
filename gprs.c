@@ -120,3 +120,29 @@ void gprs_mail_process_thread_entry(void *parameter)
   }
   rt_free(gprs_mail_buf);
 }
+
+void send_gprs_mail(ALARM_TYPEDEF alarm_type, time_t time)
+{
+  GPRS_MAIL_TYPEDEF buf;
+  extern rt_device_t rtc_device;
+  rt_err_t result;
+  //send mail
+  buf.alarm_type = alarm_type;
+  if (!time)
+  {
+    rt_device_control(rtc_device, RT_DEVICE_CTRL_RTC_GET_TIME, &(buf.time));
+  }
+  if (gprs_mq != NULL)
+  {
+    result = rt_mq_send(gprs_mq, &buf, sizeof(GPRS_MAIL_TYPEDEF));
+    if (result == -RT_EFULL)
+    {
+      rt_kprintf("gprs_mq is full!!!\n");
+    }
+  }
+  else
+  {
+    rt_kprintf("gprs_mq is RT_NULL!!!\n");
+  }
+}
+

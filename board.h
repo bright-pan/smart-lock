@@ -33,6 +33,7 @@
 #include "spicamera.h"
 #include "boardinfo.h"
 #include "gsm.h"
+#include "battery.h"
 #include "mms.h"
 /* board configuration */
 // <o> SDCard Driver <1=>SDIO sdcard <0=>SPI MMC card

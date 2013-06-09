@@ -273,7 +273,7 @@ void zsend_bin_data(rt_uint8_t *buf, rt_int16_t len, rt_uint8_t frameend)
 /* receive data,with 16bits CRC check */
 static rt_int16_t zrec_data16(rt_uint8_t *buf, rt_uint16_t len)
 {
-	rt_int16_t c = 0,crc_cnt = 0;
+	rt_int16_t c,crc_cnt;
 	rt_uint16_t crc;
 	rt_err_t res = -RT_ERROR;
  	rt_uint8_t *p,flag = 0;
@@ -330,10 +330,10 @@ static rt_int16_t zrec_data16(rt_uint8_t *buf, rt_uint16_t len)
 /* receive data,with 32bits CRC check */
 static rt_int16_t zrec_data32(rt_uint8_t *buf, rt_int16_t len)
 {
-	rt_int16_t c = 0,crc_cnt = 0;
+	rt_int16_t c,crc_cnt;
 	rt_uint32_t crc;
 	rt_err_t res = -RT_ERROR;
-	rt_uint8_t *p = RT_NULL,flag = 0;
+	rt_uint8_t *p,flag = 0;
 
 	crc_cnt = 0;   crc = 0xffffffffL;  
 	Rxcount = 0;  
@@ -384,7 +384,7 @@ static rt_int16_t zrec_data32(rt_uint8_t *buf, rt_int16_t len)
 /* receive data,with RLE encoded,32bits CRC check */
 static rt_int16_t zrec_data32r(rt_uint8_t *buf, rt_int16_t len)
 {
-	rt_int16_t c = 0,crc_cnt = 0;
+	rt_int16_t c,crc_cnt;
 	rt_uint32_t crc;
 	rt_err_t res = -RT_ERROR;
 	rt_uint8_t *p,flag = 0;
@@ -496,8 +496,8 @@ rt_int16_t zget_data(rt_uint8_t *buf, rt_uint16_t len)
 rt_int16_t zget_header(rt_uint8_t *hdr)
 {
 	rt_int16_t c,prev_char;
-	rt_uint32_t bit = 0;
-	rt_uint16_t get_can = 0,step_out = 0;
+	rt_uint32_t bit;
+	rt_uint16_t get_can,step_out;
 
 	bit = get_device_baud();	             /* get console baud rate */
 	Rxframeind = header_type = 0;

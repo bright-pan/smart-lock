@@ -482,6 +482,14 @@ void EXTI9_5_IRQHandler(void)
     rt_hw_gpio_isr(&motor_status_device);
     EXTI_ClearITPendingBit(EXTI_Line8);
   }
+  /* battery switch exti isr */
+  if(EXTI_GetITStatus(EXTI_Line9) == SET)
+  {
+    extern gpio_device battery_switch_device;
+    rt_hw_gpio_isr(&battery_switch_device);
+    EXTI_ClearITPendingBit(EXTI_Line9);
+  }
+
   if(EXTI_GetITStatus(EXTI_Line6) == SET)
   {
     extern gpio_device key2_device;
@@ -729,4 +737,3 @@ void TIM8_CC_IRQHandler(void)
   rt_interrupt_leave();
 }
 
-/******************* (C) COPYRIGHT 2009 STMicroelectronics *****END OF FILE****/

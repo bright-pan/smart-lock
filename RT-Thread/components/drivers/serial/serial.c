@@ -14,6 +14,7 @@
  * 2012-05-28     bernard      code cleanup
  * 2012-11-23     bernard      fix compiler warning.
  */
+#include "serial.h"
 #include <rthw.h>
 #include <rtthread.h>
 #include <rtdevice.h>
@@ -319,6 +320,7 @@ static rt_size_t rt_serial_write(struct rt_device *dev,
             {
                 serial->ops->putc(serial, '\r');
             }
+
             serial->ops->putc(serial, *ptr);
 
             ++ ptr;

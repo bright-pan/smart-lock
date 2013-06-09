@@ -34,22 +34,21 @@ typedef enum
   ALARM_TYPE_LOCK_GATE,// lock gate status
   ALARM_TYPE_GSM_RING,// lock gate status
   ALARM_TYPE_RFID_KEY_DETECT,// rfid key detect alarm type
-  ALARM_TYPE_CAMERA_COVERED,// camera covered alarm type'
-  ALARM_TYPE_CAMERA_PHOTOSENSOR,
-  ALARM_TYPE_CAMERA_IRDASENSOR,
-  ALARM_TYPE_MOTOR_STATUS,  
+  ALARM_TYPE_CAMERA_PHOTOSENSOR, // camera photo sensor
+  ALARM_TYPE_CAMERA_IRDASENSOR, // camera irda sensor
+  ALARM_TYPE_MOTOR_STATUS, // motor status sensor
   ALARM_TYPE_BATTERY_WORKING_20M,
   ALARM_TYPE_BATTERY_REMAIN_50P,
   ALARM_TYPE_BATTERY_REMAIN_20P,
-  ALARM_TYPE_BATTERY_REMAIN_5P,  
-}ALARM_TYPEDEF;
-
-typedef enum
-{
+  ALARM_TYPE_BATTERY_REMAIN_5P,
+  ALARM_TYPE_BATTERY_SWITCH,
+  ALARM_TYPE_RFID_KEY_ERROR,// rfid key detect error alarm type
+  ALARM_TYPE_RFID_KEY_SUCCESS,// rfid key detect success alarm type
+  ALARM_TYPE_RFID_KEY_PLUGIN,// rfid key detect plugin alarm type
   ALARM_TYPE_RFID_FAULT,
   ALARM_TYPE_CAMERA_FAULT,
   ALARM_TYPE_MOTOR_FAULT,
-}FAULT_TYPEDEF;
+}ALARM_TYPEDEF;
 
 /*
  *
@@ -87,5 +86,5 @@ extern rt_mq_t alarm_mq;
  *
  */
 void alarm_mail_process_thread_entry(void *parameter);
-
+void send_alarm_mail(ALARM_TYPEDEF alarm_type, ALARM_PROCESS_FLAG_TYPEDEF alarm_process_flag, rt_int8_t gpio_value, time_t time);
 #endif

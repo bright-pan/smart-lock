@@ -95,7 +95,7 @@ void idle_thread_work(void)
 	if(device != RT_NULL)
 	{
 		len = rt_device_read(device,0,&temp,1);
-		temp = (0x6EE-temp)/0x05+25;
+		temp = (0x6EE - temp)/0x05+25;
 		if((old_temp != temp) && len)
 		{
 			
@@ -248,7 +248,7 @@ void ICT()
 	{
 		rt_device_read(device,0,&temp,1);
 
-		rt_kprintf("stm32f103ze temperature = %d ¡æ",(0x6EE-temp)/0x05+25);
+		rt_kprintf("stm32f103ze temperature = %d ¡æ",(0x6EE - temp)/0x05+25);
 	}
 }
 FINSH_FUNCTION_EXPORT(ICT,ICT() -- stm32f103ve chip internal temperature);
@@ -258,7 +258,7 @@ void setT_dis(void)
 	rt_thread_idle_sethook(idle_thread_work);
 }
 FINSH_FUNCTION_EXPORT(setT_dis,set ilde display temperature);
-
+/*
 void cputest()
 {
 	extern void cpu_usage_init();
@@ -272,7 +272,7 @@ void cputest()
 	rt_kprintf("CPU Usage :%d.%d %\r\n",major,minor);
 }
 FINSH_FUNCTION_EXPORT(cputest,--cputest);
-
+*/
 #define GPRS_READ_USART_LEN		128
 void ch_dev_in(const char *name)
 {
@@ -438,11 +438,7 @@ void time_test()
 	struct tm t;
 	
 	time(&t_v);	
-#ifdef __GNUC__
-	gmtime_r(&t_v,&t);
-#else
 	t = *localtime(&t_v);
-#endif
 
 	rt_kprintf("%d,%d,%d,%d,%d,%d,\n",t.tm_year,t.tm_mon,t.tm_mday,t.tm_hour,t.tm_min,t.tm_sec);
 }
@@ -456,7 +452,7 @@ void smms(void)
 
 	time(&now_t);
 	mms_mail_buf->time = now_t;
-  mms_mail_buf->alarm_type = ALARM_TYPE_CAMERA_COVERED;
+        mms_mail_buf->alarm_type = ALARM_TYPE_CAMERA_IRDASENSOR;
 
 	rt_mq_send(mms_mq,mms_mail_buf,sizeof(MMS_MAIL_TYPEDEF));
 }
