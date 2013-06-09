@@ -462,6 +462,27 @@ void smms(void)
 }
 FINSH_FUNCTION_EXPORT(smms,send mq mms_mq);
 
+void f_n_l(const char *name)
+{
+	int file_id;
+
+	if(RT_NULL!= name)
+	{
+		file_id = open(name,O_CREAT | O_RDWR,0);
+
+		write(file_id,"13544033975",sizeof("13544033975"));
+
+		close(file_id);	
+	}
+}
+FINSH_FUNCTION_EXPORT(f_n_l,send mq mms_mq);
+
+void rname(const char *l_name,const char *n_name)
+{
+	rename(l_name,n_name);
+}
+
+FINSH_FUNCTION_EXPORT(rname,file rename);
 
 #endif
 
