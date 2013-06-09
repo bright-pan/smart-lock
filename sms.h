@@ -136,8 +136,8 @@ typedef struct
 
 extern rt_mq_t sms_mq;
 
+void send_sms_mail(ALARM_TYPEDEF alarm_type, time_t time);
 void sms_mail_process_thread_entry(void *parameter);
-
 int8_t sms_pdu_ucs_send(char *dest_address, char *smsc_address, uint16_t *content, uint8_t length);
 
 #endif

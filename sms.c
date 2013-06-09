@@ -96,10 +96,17 @@ const uint16_t sms_content_lock_gate[] = {
   0x6709,0x9501,0x597D,0xFF0C,0x8BF7,
   0x6CE8,0x610F,0x5B89,0x5168
 };
-const uint16_t sms_content_rfid_key_detect[] = {
+const uint16_t sms_content_rfid_key_error[] = {
 
   0x667A,0x80FD,0x9501,0x6B63,0x88AB,
   0x975E,0x6CD5,0x5F00,0x542F,0xFF0C,
+  0x8BF7,0x6CE8,0x610F,0x5B89,0x5168
+};
+const uint16_t sms_content_rfid_key_detect[] = {
+
+  0x5C0A,0x656C,0x7684,0x7528,0x6237,
+  0xFF0C,0x4F60,0x7684,0x95E8,0x94A5,
+  0x6CA1,0x6709,0x62D4,0x53D6,0xFF0C,
   0x8BF7,0x6CE8,0x610F,0x5B89,0x5168
 };
 const uint16_t sms_content_camera_idrasensor[] = {
@@ -132,7 +139,24 @@ const uint16_t sms_content_battery_remain_20p[] = {
   0x5FEB,0x5145,0x7535
 };
 const uint16_t sms_content_battery_remain_5p[] = {0,0};
-
+const uint16_t sms_content_camera_fault[] = {
+  0x6444,0x50CF,0x5934,0x6A21,0x5757,
+  0x6545,0x969C,0xFF0C,0x8BF7,0x8054,
+  0x7CFB,0x7ECF,0x9500,0x5546,0x6216,
+  0x5382,0x5BB6
+};
+const uint16_t sms_content_rfid_fault[] = {
+  0x0052,0x0046,0x0049,0x0044,0x6A21,
+  0x5757,0x6545,0x969C,0xFF0C,0x8BF7,
+  0x8054,0x7CFB,0x7ECF,0x9500,0x5546,
+  0x6216,0x5382,0x5BB6
+};
+const uint16_t sms_content_motor_fault[] = {
+  0x9501,0x820C,0x7535,0x673A,0x6545,
+  0x969C,0xFF0C,0x8BF7,0x8054,0x7CFB,
+  0x7ECF,0x9500,0x5546,0x6216,0x5382,
+  0x5BB6
+};
 
 const uint16_t sms_content_time_prefix[] = {
 
@@ -169,6 +193,9 @@ static void sms_data_init(SMS_DATA_TYPEDEF sms_data[])
   // lock gate status
   sms_data[ALARM_TYPE_LOCK_GATE].data = sms_content_lock_gate;
   sms_data[ALARM_TYPE_LOCK_GATE].length = sizeof(sms_content_lock_gate) / sizeof(uint16_t);
+  // rfid key error t alarm type
+  sms_data[ALARM_TYPE_RFID_KEY_ERROR].data = sms_content_rfid_key_error;
+  sms_data[ALARM_TYPE_RFID_KEY_ERROR].length = sizeof(sms_content_rfid_key_error) / sizeof(uint16_t);
   // rfid key detect alarm type
   sms_data[ALARM_TYPE_RFID_KEY_DETECT].data = sms_content_rfid_key_detect;
   sms_data[ALARM_TYPE_RFID_KEY_DETECT].length = sizeof(sms_content_rfid_key_detect) / sizeof(uint16_t);
@@ -188,6 +215,15 @@ static void sms_data_init(SMS_DATA_TYPEDEF sms_data[])
   // battry working 5%
   sms_data[ALARM_TYPE_BATTERY_REMAIN_5P].data = sms_content_battery_remain_5p;
   sms_data[ALARM_TYPE_BATTERY_REMAIN_5P].length = sizeof(sms_content_battery_remain_5p) / sizeof(uint16_t);
+  // camera fault
+  sms_data[ALARM_TYPE_CAMERA_FAULT].data = sms_content_camera_fault;
+  sms_data[ALARM_TYPE_CAMERA_FAULT].length = sizeof(sms_content_camera_fault) / sizeof(uint16_t);
+  // rfid fault
+  sms_data[ALARM_TYPE_RFID_FAULT].data = sms_content_rfid_fault;
+  sms_data[ALARM_TYPE_RFID_FAULT].length = sizeof(sms_content_rfid_fault) / sizeof(uint16_t);
+  // motor fault
+  sms_data[ALARM_TYPE_MOTOR_FAULT].data = sms_content_motor_fault;
+  sms_data[ALARM_TYPE_MOTOR_FAULT].length = sizeof(sms_content_motor_fault) / sizeof(uint16_t);
 }
 
 
@@ -609,6 +645,31 @@ send_error:
   rt_free(process_buf);
   return -1;
 
+}
+
+void send_sms_mail(ALARM_TYPEDEF alarm_type, time_t time)
+{
+  SMS_MAIL_TYPEDEF buf;
+  extern rt_device_t rtc_device;
+  rt_err_t result;
+  //send mail
+  buf.alarm_type = alarm_type;
+  if (!time)
+  {
+    rt_device_control(rtc_device, RT_DEVICE_CTRL_RTC_GET_TIME, &(buf.time));
+  }
+  if (sms_mq != NULL)
+  {
+    result = rt_mq_send(sms_mq, &buf, sizeof(SMS_MAIL_TYPEDEF));
+    if (result == -RT_EFULL)
+    {
+      rt_kprintf("sms_mq is full!!!\n");
+    }
+  }
+  else
+  {
+    rt_kprintf("sms_mq is RT_NULL!!!\n");
+  }
 }
 
 #ifdef RT_USING_FINSH

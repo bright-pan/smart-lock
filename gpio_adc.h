@@ -26,8 +26,11 @@
 
 #define DEVICE_NAME_BATTERY_ADC "bat_adc" /* BATTERY DEVICE NAME */
 
-
 void rt_hw_adc11_register(void);
 void rt_hw_battery_adc_register(void);
+
+void bat_enable(void);
+void bat_disable(void);
+uint16_t bat_get_value(void);
 
 #endif
