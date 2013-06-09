@@ -14,6 +14,7 @@
 #include <board.h>
 #include <rtthread.h>
 
+
 #ifdef RT_USING_DFS
 /* dfs init */
 #include <dfs_init.h>
@@ -44,6 +45,8 @@ void rt_init_thread_entry(void* parameter)
 {
   /* Filesystem Initialization */
 #ifdef RT_USING_DFS
+#define FILE_SYSTEM_DEVICE_NAME	"flash1"
+#define FILE_SYSTEM_TYPE_NAME		"elm"
   {
     /* init the device filesystem */
     dfs_init();
@@ -53,12 +56,27 @@ void rt_init_thread_entry(void* parameter)
     elm_init();
 
     /* mount sd card fat partition 1 as root directory */
-    if (dfs_mount("sd0", "/", "elm", 0, 0) == 0)
+    if (dfs_mount(FILE_SYSTEM_DEVICE_NAME, "/", FILE_SYSTEM_TYPE_NAME, 0, 0) == 0)
     {
-      rt_kprintf("File System initialized!\n");
+      rt_kprintf("File System initialized ok!\n");
     }
     else
-      rt_kprintf("File System initialzation failed!\n");
+    {
+      extern int dfs_mkfs(const char *fs_name, const char *device_name);
+    	
+      if(dfs_mkfs(FILE_SYSTEM_TYPE_NAME,FILE_SYSTEM_DEVICE_NAME) == 0)
+      {
+        if (dfs_mount("flash1", "/", "elm", 0, 0) == 0)
+        {
+          rt_kprintf("File System initialized ok!\n");
+        }
+      }
+      else
+      {
+        rt_kprintf("File System initialzation failed!\n");
+      }	
+    }
+     
 #endif
   }
 #endif
@@ -118,6 +136,23 @@ void rt_init_thread_entry(void* parameter)
     rtgui_system_server_init();
   }
 #endif /* #ifdef RT_USING_RTGUI */
+  {
+    extern void photo_thread_init(void);
+    extern void filesystem_test(void);
+    extern void send_photo_thread_init(void);
+    extern void rt_mms_thread_init(void);
+		
+    //		extern void picture_thread_init(void);
+
+    //		picture_thread_init();
+    //		send_photo_thread_init();
+    //		photo_thread_init();
+    //		filesystem_test();
+    //		rt_mms_thread_init();
+  }
+#ifdef	USE_WILDFIRE_TEST
+  rt_kprintf("°ÓUser Wild Fire Hardware Piatform TESE\n");
+#endif
 }
 
 
@@ -141,56 +176,56 @@ int rt_application_init()
 
   /* alarm mail process thread */
   gsm_process_thread = rt_thread_create("gsm",
-                                  gsm_process_thread_entry, RT_NULL,
-                                  2048, 100, 20);
+                                        gsm_process_thread_entry, RT_NULL,
+                                        2048, 100, 20);
   if (gsm_process_thread != RT_NULL)
   {
     rt_thread_startup(gsm_process_thread);
   }
   /* alarm mail process thread */
   alarm_mail_process_thread = rt_thread_create("alarm",
-                                  alarm_mail_process_thread_entry, RT_NULL,
-                                  512, 101, 20);
+                                               alarm_mail_process_thread_entry, RT_NULL,
+                                               512, 101, 20);
   if (alarm_mail_process_thread != RT_NULL)
   {
     rt_thread_startup(alarm_mail_process_thread);
   }
   /* sms mail process thread */
   sms_mail_process_thread = rt_thread_create("sms",
-                                  sms_mail_process_thread_entry, RT_NULL,
-                                  2048, 105, 20);
+                                             sms_mail_process_thread_entry, RT_NULL,
+                                             2048, 105, 20);
   if (sms_mail_process_thread != RT_NULL)
   {
     rt_thread_startup(sms_mail_process_thread);
   }
   /* mms mail process thread */
   mms_mail_process_thread = rt_thread_create("mms",
-                                  mms_mail_process_thread_entry, RT_NULL,
-                                  1024, 107, 20);
+                                             mms_mail_process_thread_entry, RT_NULL,
+                                             1024, 107, 20);
   if (mms_mail_process_thread != RT_NULL)
   {
     rt_thread_startup(mms_mail_process_thread);
   }
   /* gprs mail process thread */
   gprs_mail_process_thread = rt_thread_create("gprs",
-                                  gprs_mail_process_thread_entry, RT_NULL,
-                                  1024, 106, 20);
+                                              gprs_mail_process_thread_entry, RT_NULL,
+                                              1024, 106, 20);
   if (gprs_mail_process_thread != RT_NULL)
   {
     rt_thread_startup(gprs_mail_process_thread);
   }
   /* local mail process thread */
   local_mail_process_thread = rt_thread_create("local",
-                                  local_mail_process_thread_entry, RT_NULL,
-                                  1024, 102, 20);
+                                               local_mail_process_thread_entry, RT_NULL,
+                                               1024, 102, 20);
   if (local_mail_process_thread != RT_NULL)
   {
     rt_thread_startup(local_mail_process_thread);
   }
   /* battery check process thread */
   battery_check_process_thread = rt_thread_create("bt_check",
-                                  battery_check_process_thread_entry, RT_NULL,
-                                  1024, 120, 20);
+                                                  battery_check_process_thread_entry, RT_NULL,
+                                                  1024, 120, 20);
   if (battery_check_process_thread != RT_NULL)
   {
     rt_thread_startup(battery_check_process_thread);

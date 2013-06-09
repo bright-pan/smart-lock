@@ -15,7 +15,6 @@
 #ifndef _CAMERA_UART_H_
 #define _CAMERA_UART_H_
 #include <rtdevice.h>
-#include <serial.h>
 #include <stm32f10x_dma.h>
 
 struct camera_uart_user_data_t

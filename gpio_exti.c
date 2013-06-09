@@ -727,7 +727,6 @@ void rt_hw_key2_register(void)
   rt_device_set_rx_indicate((rt_device_t)key_device,key_user_data->gpio_exti_rx_indicate);
 }
 
-
 #ifdef RT_USING_FINSH
 #include <finsh.h>
 void key(rt_int8_t num)

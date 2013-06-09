@@ -3,7 +3,7 @@
 #define __RTTHREAD_CFG_H__
 
 
-#define RT_USING_NEWLIB
+//#define RT_USING_NEWLIB
 /* RT_NAME_MAX*/
 #define RT_NAME_MAX	8
 
@@ -65,8 +65,16 @@
 #define RT_USING_USART1
 //#define RT_USING_USART2
 #define RT_USING_SERIAL
+#define RT_USING_SPI
 
-//#define RT_USING_NEWLIBC
+#ifdef __GNUC__
+//#define RT_USING_MINILIBC
+#define RT_USING_NEWLIB
+//#define RT_USING_PTHREADS
+#else
+
+#endif /* __GNUC__ */
+
 
 /* SECTION: Console options */
 #define RT_USING_CONSOLE
@@ -80,7 +88,7 @@
 #define FINSH_USING_DESCRIPTION
 
 /* SECTION: device filesystem */
-/* #define RT_USING_DFS */
+#define RT_USING_DFS 
 
 #define RT_USING_DFS_ELMFAT
 #define RT_DFS_ELM_WORD_ACCESS
@@ -91,12 +99,12 @@
 /* #define RT_DFS_ELM_USE_LFN			1 */
 #define RT_DFS_ELM_MAX_LFN			255
 /* Maximum sector size to be handled. */
-#define RT_DFS_ELM_MAX_SECTOR_SIZE  512
+#define RT_DFS_ELM_MAX_SECTOR_SIZE  4096
 
 /* the max number of mounted filesystem */
 #define DFS_FILESYSTEMS_MAX			2
 /* the max number of opened files 		*/
-#define DFS_FD_MAX					4
+#define DFS_FD_MAX					8
 
 /* SECTION: lwip, a lighwight TCP/IP protocol stack */
 /* #define RT_USING_LWIP */
@@ -182,5 +190,11 @@
 #define RT_USING_RTT_CMSIS
 // <bool name="RT_USING_BSP_CMSIS" description="Using CMSIS in BSP" default="true" />
 // #define RT_USING_BSP_CMSIS
+
+
+
+/*  hardware platform -------------------------*/
+//#define USE_WILDFIRE_TEST								//use wild fire hardware platform
+
 
 #endif

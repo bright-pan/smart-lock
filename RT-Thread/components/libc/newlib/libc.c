@@ -11,9 +11,9 @@ void libc_system_init(const char* tty_name)
 	extern int pthread_system_init(void);
 
 #ifdef RT_USING_DFS
-#ifndef RT_USING_DFS_DEVFS
-#error Please enable devfs by defining RT_USING_DFS_DEVFS in rtconfig.h
-#endif
+        //#ifndef RT_USING_DFS_DEVFS
+        //#error Please enable devfs by defining RT_USING_DFS_DEVFS in rtconfig.h
+        //#endif
 
 	/* init console device */
 	rt_console_init(tty_name);
