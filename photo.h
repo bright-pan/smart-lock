@@ -20,6 +20,7 @@
 #define CM_GET_LEN_ERROR							0X01
 #define CM_DEAL_DATA_ERROR						0X02
 #define CM_RECV_OUT_TIME							0X04
+#define CM_DEV_INIT_ERROR							0X08
 
 
 

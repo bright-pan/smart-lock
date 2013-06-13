@@ -438,8 +438,26 @@ void photo_create_file_one(camera_dev_t camera,const char *pathname )
 void photo_struct_init(camera_dev_t camera)
 {	
 	camera->device = rt_device_find(DEVICE_NAME_CAMERA_UART);
+	if(RT_NULL == camera->device)
+	{
+		rt_kprintf("camera->device is RT_NULL");
+		camera->error = CM_DEV_INIT_ERROR;
+		return ;
+	}
 	camera->glint_led = rt_device_find(DEVICE_NAME_CAMERA_LED);
+	if(RT_NULL == camera->glint_led)
+	{
+		rt_kprintf("camera->glint_led is RT_NULL");
+		camera->error = CM_DEV_INIT_ERROR;
+		return ;
+	}
 	camera->power = rt_device_find(DEVICE_NAME_CAMERA_POWER);
+	if(RT_NULL == camera->power)
+	{
+		rt_kprintf("camera->power is RT_NULL");
+		camera->error = CM_DEV_INIT_ERROR;
+		return ;
+	}
 	camera->addr = 0;
 	camera->page = 0;
 	camera->size = 0;
