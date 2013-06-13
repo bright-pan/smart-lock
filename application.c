@@ -153,6 +153,9 @@ void rt_init_thread_entry(void* parameter)
 #ifdef	USE_WILDFIRE_TEST
   rt_kprintf("°ÓUser Wild Fire Hardware Piatform TESE\n");
 #endif
+	/* re-init device driver */
+	rt_device_init_all();
+
 }
 
 

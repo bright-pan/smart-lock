@@ -2,10 +2,10 @@
  * Filename:      photo.c
  *
  * Description:  Camera code photo file 			
- *		Hardware resources : 	USART5 			
- 											Baud:	115200 
- 											Stop: 	1
- 											DataBit:8
+ *Hardware resources : 	USART5 			
+ *Baud:	115200 
+ *Stop: 	1
+ *DataBit:8
  *
  * Author:        wangzw <wangzw@yuettak.com>
  * Created at:    2013-05-17 14:22:03
@@ -472,7 +472,7 @@ void photo_deal(camera_dev_t camera,cm_recv_mq_t recv_mq)
 	send_mq.error = camera->error;
 	send_mq.name1 = recv_mq->name1;
 	send_mq.name2 = recv_mq->name2;
-	rt_mq_send(photo_ok_mq,&send_mq,sizeof(send_mq));
+	rt_mq_send(photo_ok_mq,&send_mq,sizeof(send_mq));//∑¢ÀÕ” œ‰
 }
 void photo_thread_entry(void *arg)
 {
@@ -531,7 +531,7 @@ void photo_thread_init(void)
 {
 	rt_thread_t	id;//threasd id
 
-	id = rt_thread_create("cm_task",photo_thread_entry,RT_NULL,1024*5,20,30);
+	id = rt_thread_create("cm_task",photo_thread_entry,RT_NULL,1024*5,100,30);
 	if(RT_NULL == id )
 	{
 		rt_kprintf("graph thread create fail\n");

@@ -354,7 +354,7 @@ void gpio_pin_output(char *str, const rt_uint8_t dat)
   else
   {
 #ifdef RT_USING_FINSH
-    rt_kprintf("the gpio device %s is not found!\n", DEVICE_NAME_GSM_POWER);
+    rt_kprintf("the gpio device %s is not found!\n", str);
 #endif
   }
 }	
@@ -372,7 +372,7 @@ uint8_t gpio_pin_input(char *str)
   else
   {
 #ifdef RT_USING_FINSH
-    rt_kprintf("the gpio device %s is not found!\n", DEVICE_NAME_GSM_STATUS);
+    rt_kprintf("the gpio device %s is not found!\n", str);
 #endif
   }
   return dat;
