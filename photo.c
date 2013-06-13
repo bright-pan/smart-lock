@@ -20,6 +20,7 @@
 #include "gpio_pin.h"
 #include "camera_uart.h"
 #include "testprintf.h"
+#include "mms.h"
 
 
 
@@ -39,7 +40,7 @@ rt_uint8_t get_photo_fbuf_cmd[16] = {0x56,0x00,0x32,0x0C,0x00,0x0a,0x00,0x00,0x0
 rt_sem_t		usart_data_sem = RT_NULL;		//photograph sem
 rt_sem_t		photo_sem = RT_NULL;				//test use
 rt_mq_t			photo_start_mq = RT_NULL;		//start work mq
-rt_mq_t			photo_ok_mq = RT_NULL;			//photo finish
+//rt_mq_t			photo_ok_mq = RT_NULL;			//photo finish
 
 
 
@@ -471,7 +472,8 @@ void photo_struct_init(camera_dev_t camera)
 void photo_deal(camera_dev_t camera,cm_recv_mq_t recv_mq)
 {
 	struct cm_send_mq send_mq;
-	
+	MMS_MAIL_TYPEDEF mms_mail_buf;
+
 	if('\0' == *(recv_mq->name2))
 	{
 		photo_create_file_one(camera,recv_mq->name1);	
@@ -487,11 +489,15 @@ void photo_deal(camera_dev_t camera,cm_recv_mq_t recv_mq)
 		photo_create_file_one(camera,recv_mq->name2);	
 	}
 	/* camera woker finish send Message Queuing */
-	send_mq.error = camera->error;
+/*	send_mq.error = camera->error;
 	send_mq.name1 = recv_mq->name1;
 	send_mq.name2 = recv_mq->name2;
-	rt_mq_send(photo_ok_mq,&send_mq,sizeof(send_mq));//·¢ËÍÓÊÏä
-	
+*/
+//	rt_mq_send(photo_ok_mq,&send_mq,sizeof(send_mq));//·¢ËÍÓÊÏä
+	mms_mail_buf.alarm_type = recv_mq->alarm_type;
+	mms_mail_buf.time = recv_mq->date;
+	if(CM_RUN_DEAL_OK == camera->error)
+	rt_mq_send(mms_mq, &mms_mail_buf, sizeof(MMS_MAIL_TYPEDEF));
 }
 void photo_thread_entry(void *arg)
 {
@@ -574,7 +580,7 @@ void photo_thread_init(void)
 
 		return ;
 	}
-
+/*
 	photo_ok_mq = rt_mq_create("cmok",64,8,RT_IPC_FLAG_FIFO);
 	if(RT_NULL == photo_ok_mq)
 	{
@@ -582,17 +588,18 @@ void photo_thread_init(void)
 
 		return ;
 	}
+*/
 }
 
 
-void camera_send_mail(LOCAL_MAIL_TYPEDEF *mail_buffer)
+void camera_send_mail(ALARM_TYPEDEF alarm_type, time_t time)
 {
 	struct cm_recv_mq send_mq;
 	
 	send_mq.name1 = "/1.jpg";
 	send_mq.name1 = "/2.jpg";
-	send_mq.date = mail_buffer->time;
-	send_mq.alarm_type = mail_buffer->alarm_type;
+	send_mq.date = time;
+	send_mq.alarm_type = alarm_type;
 
 	rt_mq_send(photo_start_mq,&send_mq,sizeof(send_mq));
 }
@@ -636,11 +643,7 @@ void mq(rt_uint32_t time)//(rt_uint8_t time,rt_uint8_t *file_name)
 FINSH_FUNCTION_EXPORT(mq, mq(time,name));
 void s_cm_mq()
 {
-	LOCAL_MAIL_TYPEDEF mail;
-
-	mail.alarm_type = ALARM_TYPE_CAMERA_IRDASENSOR;
-	mail.time= 0;
-	camera_send_mail(&mail);
+	camera_send_mail(ALARM_TYPE_CAMERA_IRDASENSOR,0);
 }
 FINSH_FUNCTION_EXPORT(s_cm_mq,);
 

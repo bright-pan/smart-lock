@@ -51,7 +51,7 @@ typedef struct camera_dev*	camera_dev_t;
 struct cm_recv_mq
 {
 	rt_uint32_t	time;
-	rt_uint32_t date;
+	time_t date;
 	ALARM_TYPEDEF alarm_type;
 	const char*	name1;
 	const char* name2;
@@ -70,11 +70,11 @@ typedef struct cm_send_mq cm_send_mq_t;
 
 
 
-extern rt_mq_t			photo_ok_mq;			//photo finish
+//extern rt_mq_t			photo_ok_mq;			//photo finish
 
 void photo_thread_init(void);
 void mq(rt_uint32_t time);//(rt_uint8_t time,rt_uint8_t *file_name);
-void camera_send_mail(LOCAL_MAIL_TYPEDEF *mail_buffer);
+void camera_send_mail(ALARM_TYPEDEF alarm_type, time_t time);
 
 
 

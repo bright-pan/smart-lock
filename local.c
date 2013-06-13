@@ -64,21 +64,21 @@ void local_mail_process_thread_entry(void *parameter)
           motor_output(1);//lock
           voice_output(2);//send voice alarm
           //send mail to camera module
-          camera_send_mail(local_mail_buf);
+          camera_send_mail(local_mail_buf->alarm_type,local_mail_buf->time);
           break;
         };
         case ALARM_TYPE_LOCK_TEMPERATURE : {
           motor_output(1);//lock
           voice_output(2);//send voice alarm
           //send mail to camera module
-          camera_send_mail(local_mail_buf);
+          camera_send_mail(local_mail_buf->alarm_type,local_mail_buf->time);
           break;
         };
         case ALARM_TYPE_CAMERA_IRDASENSOR : {
           motor_output(1);//lock
           voice_output(2);//send voice alarm
           //send mail to camera module
-          camera_send_mail(local_mail_buf);
+          camera_send_mail(local_mail_buf->alarm_type,local_mail_buf->time);
           break;
         };
         case ALARM_TYPE_BATTERY_REMAIN_5P : {
