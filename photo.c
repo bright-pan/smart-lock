@@ -491,6 +491,7 @@ void photo_deal(camera_dev_t camera,cm_recv_mq_t recv_mq)
 	send_mq.name1 = recv_mq->name1;
 	send_mq.name2 = recv_mq->name2;
 	rt_mq_send(photo_ok_mq,&send_mq,sizeof(send_mq));//·¢ËÍÓÊÏä
+	
 }
 void photo_thread_entry(void *arg)
 {
@@ -584,7 +585,17 @@ void photo_thread_init(void)
 }
 
 
+void camera_send_mail(LOCAL_MAIL_TYPEDEF *mail_buffer)
+{
+	struct cm_recv_mq send_mq;
+	
+	send_mq.name1 = "/1.jpg";
+	send_mq.name1 = "/2.jpg";
+	send_mq.date = mail_buffer->time;
+	send_mq.alarm_type = mail_buffer->alarm_type;
 
+	rt_mq_send(photo_start_mq,&send_mq,sizeof(send_mq));
+}
 
 
 
@@ -617,13 +628,21 @@ FINSH_FUNCTION_EXPORT(reset, reset());
 
 void mq(rt_uint32_t time)//(rt_uint8_t time,rt_uint8_t *file_name)
 {
-	struct cm_recv_mq send_mq = {0,"/1.jpg","/2.jpg"};
+	struct cm_recv_mq send_mq = {0,0,0,"/1.jpg","/2.jpg"};
 
 	send_mq.time = time;
 	rt_mq_send(photo_start_mq,&send_mq,sizeof(send_mq));
 }
 FINSH_FUNCTION_EXPORT(mq, mq(time,name));
+void s_cm_mq()
+{
+	LOCAL_MAIL_TYPEDEF mail;
 
+	mail.alarm_type = ALARM_TYPE_CAMERA_IRDASENSOR;
+	mail.time= 0;
+	camera_send_mail(&mail);
+}
+FINSH_FUNCTION_EXPORT(s_cm_mq,);
 
 #endif
 

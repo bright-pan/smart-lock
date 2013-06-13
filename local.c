@@ -20,6 +20,7 @@
 #include "battery.h"
 #include "untils.h"
 #include "rfid_uart.h"
+#include "photo.h"
 
 /* local msg queue for local alarm */
 rt_mq_t local_mq;
@@ -63,18 +64,21 @@ void local_mail_process_thread_entry(void *parameter)
           motor_output(1);//lock
           voice_output(2);//send voice alarm
           //send mail to camera module
+          camera_send_mail(local_mail_buf);
           break;
         };
         case ALARM_TYPE_LOCK_TEMPERATURE : {
           motor_output(1);//lock
           voice_output(2);//send voice alarm
           //send mail to camera module
+          camera_send_mail(local_mail_buf);
           break;
         };
         case ALARM_TYPE_CAMERA_IRDASENSOR : {
           motor_output(1);//lock
           voice_output(2);//send voice alarm
           //send mail to camera module
+          camera_send_mail(local_mail_buf);
           break;
         };
         case ALARM_TYPE_BATTERY_REMAIN_5P : {

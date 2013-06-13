@@ -6,6 +6,9 @@
 #include <dfs_elm.h>
 #include <dfs_fs.h>
 #include "dfs_posix.h"
+#include "alarm.h"
+#include "local.h"
+
 
 
 
@@ -48,6 +51,8 @@ typedef struct camera_dev*	camera_dev_t;
 struct cm_recv_mq
 {
 	rt_uint32_t	time;
+	rt_uint32_t date;
+	ALARM_TYPEDEF alarm_type;
 	const char*	name1;
 	const char* name2;
 };
@@ -58,6 +63,7 @@ struct cm_send_mq
 {
 	const char *name1;
 	const char *name2;
+	ALARM_TYPEDEF alarm_type;
 	rt_uint8_t	error;		
 };	
 typedef struct cm_send_mq cm_send_mq_t;
@@ -68,6 +74,9 @@ extern rt_mq_t			photo_ok_mq;			//photo finish
 
 void photo_thread_init(void);
 void mq(rt_uint32_t time);//(rt_uint8_t time,rt_uint8_t *file_name);
+void camera_send_mail(LOCAL_MAIL_TYPEDEF *mail_buffer);
+
+
 
 
 #endif
