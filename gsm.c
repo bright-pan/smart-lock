@@ -1016,7 +1016,7 @@ ATCommandStatus gsm_send_at_ciicr(void)
     rt_device_write(device_gsm_usart, 0, \
                     at_command[at_command_index], \
                     strlen(at_command[at_command_index]));
-    rt_thread_delay(200);
+    rt_thread_delay(400);
     recv_size = rt_device_read(device_gsm_usart, 0, recv_buf, RECV_BUF_SIZE);
     if (recv_size <= 0)
     {

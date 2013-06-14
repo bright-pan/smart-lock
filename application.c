@@ -146,7 +146,7 @@ void rt_init_thread_entry(void* parameter)
 
     //		picture_thread_init();
     //		send_photo_thread_init();
-    //		photo_thread_init();
+    		photo_thread_init();
     //		filesystem_test();
     //		rt_mms_thread_init();
   }
