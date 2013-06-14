@@ -257,7 +257,7 @@ void rt_hw_gsm_status_register(void)
   rt_hw_gpio_register(gpio_device, gpio_user_data->name, (RT_DEVICE_FLAG_RDWR), gpio_user_data);
 }
 
-/* voice reset device */
+/* voice reset device 
 struct gpio_pin_user_data voice_reset_user_data = 
 {
   DEVICE_NAME_VOICE_RESET,
@@ -278,6 +278,7 @@ void rt_hw_voice_reset_register(void)
   gpio_device->ops = &gpio_pin_user_ops;  
   rt_hw_gpio_register(gpio_device, gpio_user_data->name, (RT_DEVICE_FLAG_RDWR), gpio_user_data);
 }
+*/
 /* voice switch device */
 struct gpio_pin_user_data voice_switch_user_data = 
 {

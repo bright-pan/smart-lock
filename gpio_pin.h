@@ -48,7 +48,6 @@ void rt_hw_camera_led_register(void);
 
 void rt_hw_logo_led_register(void);
 
-void rt_hw_voice_reset_register(void);
 void rt_hw_voice_switch_register(void);
 void rt_hw_voice_amp_register(void);
 
