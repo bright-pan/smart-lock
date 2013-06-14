@@ -366,10 +366,11 @@ ATCommandStatus gsm_send_plus3(void)
     memset(recv_buf, '\0', RECV_BUF_SIZE);
     rt_kprintf("gsm send : ");
     gsm_put_char(at_command[at_command_index], strlen(at_command[at_command_index]));
+    rt_thread_delay(100);
     rt_device_write(device_gsm_usart, 0, \
                     at_command[at_command_index], \
                     strlen(at_command[at_command_index]));
-    rt_thread_delay(50);
+    rt_thread_delay(100);
     recv_size = rt_device_read(device_gsm_usart, 0, recv_buf, RECV_BUF_SIZE);
     if (recv_size <= 0)
     {
@@ -1146,7 +1147,7 @@ ATCommandStatus gsm_send_at_cipstart(void)
     gsm_put_char(at_temp, strlen(at_temp));
     rt_device_write(device_gsm_usart, 0, at_temp, strlen(at_temp));
     rt_free(at_temp);
-    rt_thread_delay(100);
+    rt_thread_delay(300);
     recv_size = rt_device_read(device_gsm_usart, 0, recv_buf, RECV_BUF_SIZE);
     if (recv_size <= 0)
     {
@@ -1996,7 +1997,7 @@ void gsm_process_thread_entry(void *parameters)
             rt_kprintf("\ngsm mode switch cmd -> cmd\n");
             rt_event_recv(event_gsm_mode_response, EVENT_GSM_MODE_SETUP, RT_EVENT_FLAG_AND | RT_EVENT_FLAG_CLEAR, RT_WAITING_NO, &response_event);
             rt_event_send(event_gsm_mode_response, EVENT_GSM_MODE_SETUP);
-            rt_event_send(event_gsm_mode_request, EVENT_GSM_MODE_GPRS);
+            //rt_event_send(event_gsm_mode_request, EVENT_GSM_MODE_GPRS);
           }
           else
           {

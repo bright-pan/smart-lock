@@ -497,7 +497,11 @@ void photo_deal(camera_dev_t camera,cm_recv_mq_t recv_mq)
 	mms_mail_buf.alarm_type = recv_mq->alarm_type;
 	mms_mail_buf.time = recv_mq->date;
 	if(CM_RUN_DEAL_OK == camera->error)
-	rt_mq_send(mms_mq, &mms_mail_buf, sizeof(MMS_MAIL_TYPEDEF));
+	{
+	//	rt_thread_delay(1000);
+		rt_mq_send(mms_mq, &mms_mail_buf, sizeof(MMS_MAIL_TYPEDEF));
+	}
+		
 }
 void photo_thread_entry(void *arg)
 {
@@ -518,7 +522,7 @@ void photo_thread_entry(void *arg)
 			/*first open power  need 10ms after  */
 			if(result == -RT_ETIMEOUT)
 			{
-				camera_power_control(&photo,0);	
+		//		camera_power_control(&photo,0);	
 				timeout = RT_WAITING_FOREVER;
 				rt_kprintf("close power\n");
 				continue;
@@ -547,7 +551,7 @@ void photo_thread_entry(void *arg)
 			
 			photo_deal(&photo,&recv_mq);	
 
-			camera_power_control(&photo,0);		//close camera power
+	//		camera_power_control(&photo,0);		//close camera power
 	}
 }
 

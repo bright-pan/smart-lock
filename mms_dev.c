@@ -410,11 +410,11 @@ void mms_send_fun(mms_dev_t mms)
 	
   mms_recv_cmd_result(mms,50,"OK");
 
- 	rt_device_write(mms->usart,0,"at+cmmssend\r",rt_strlen("at+cmmssend\r"));//·¢ËÍmms		
+rt_device_write(mms->usart,0,"at+cmmssend\r",rt_strlen("at+cmmssend\r"));//·¢ËÍmms		
 
   mms->error &= ~(MMS_ERROR_FLAG(MMS_ERROR_1_FATAL)); //Is ready to receive and send the results
 
- 	mms_recv_cmd_result(mms,900,"OK");		//max wait send ok time 90minute
+mms_recv_cmd_result(mms,900,"OK");		//max wait send ok time 90minute
 
   if(mms_send_error_deal(mms,0))						//eeror  check up
   {
@@ -486,11 +486,11 @@ void rt_mms_data_init(mms_dev_t mms)
 	
   mms->number = 1;
   mms->pic_name[0] = "/2.jpg";	//send picture path
-  //	mms->pic_name[1] = "/1.jpg";
+	mms->pic_name[1] = "/1.jpg";
   mms->pic_name[1] = RT_NULL;
 
   mms_get_send_file_size(mms,0);//get picture size
-  //	mms_get_send_file_size(mms,1);
+	mms_get_send_file_size(mms,1);
 	
   mms->number = 2;
 
