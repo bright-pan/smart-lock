@@ -43,6 +43,7 @@ void gprs_mail_process_thread_entry(void *parameter)
       {
         if (!(gsm_mode_get() & EVENT_GSM_MODE_GPRS))
         {
+          rt_kprintf("\ngsm mode requset for gprs mode\n");
           rt_event_recv(event_gsm_mode_response, EVENT_GSM_MODE_GPRS, RT_EVENT_FLAG_AND | RT_EVENT_FLAG_CLEAR, RT_WAITING_NO, &event);
           rt_event_send(event_gsm_mode_request, EVENT_GSM_MODE_GPRS);
           rt_event_recv(event_gsm_mode_response, EVENT_GSM_MODE_GPRS, RT_EVENT_FLAG_AND | RT_EVENT_FLAG_CLEAR, RT_WAITING_FOREVER, &event);
@@ -53,6 +54,7 @@ void gprs_mail_process_thread_entry(void *parameter)
             rt_event_recv(event_gsm_mode_response, EVENT_GSM_MODE_SETUP, RT_EVENT_FLAG_AND|RT_EVENT_FLAG_CLEAR, RT_WAITING_NO, &event);
             if (!(gsm_mode_get() & EVENT_GSM_MODE_CMD))
             {
+              rt_kprintf("\ngsm mode requset for cmd mode\n");
               rt_event_recv(event_gsm_mode_response, EVENT_GSM_MODE_CMD, RT_EVENT_FLAG_AND | RT_EVENT_FLAG_CLEAR, RT_WAITING_NO, &event);
               rt_event_send(event_gsm_mode_request, EVENT_GSM_MODE_CMD);
               result = rt_event_recv(event_gsm_mode_response, EVENT_GSM_MODE_CMD, RT_EVENT_FLAG_AND | RT_EVENT_FLAG_CLEAR, RT_WAITING_FOREVER, &event);
@@ -87,6 +89,7 @@ void gprs_mail_process_thread_entry(void *parameter)
       {
         if (!(gsm_mode_get() & EVENT_GSM_MODE_GPRS))
         {
+          rt_kprintf("\ngsm mode requset for gprs mode\n");
           rt_event_recv(event_gsm_mode_response, EVENT_GSM_MODE_GPRS, RT_EVENT_FLAG_AND | RT_EVENT_FLAG_CLEAR, RT_WAITING_NO, &event);
           rt_event_send(event_gsm_mode_request, EVENT_GSM_MODE_GPRS);
           result = rt_event_recv(event_gsm_mode_response, EVENT_GSM_MODE_GPRS, RT_EVENT_FLAG_AND | RT_EVENT_FLAG_CLEAR, RT_WAITING_FOREVER, &event);
@@ -97,6 +100,7 @@ void gprs_mail_process_thread_entry(void *parameter)
             rt_event_recv(event_gsm_mode_response, EVENT_GSM_MODE_SETUP, RT_EVENT_FLAG_AND|RT_EVENT_FLAG_CLEAR, RT_WAITING_NO, &event);
             if (!(gsm_mode_get() & EVENT_GSM_MODE_CMD))
             {
+            	rt_kprintf("\ngsm mode requset for cmd mode\n");
               rt_event_recv(event_gsm_mode_response, EVENT_GSM_MODE_CMD, RT_EVENT_FLAG_AND | RT_EVENT_FLAG_CLEAR, RT_WAITING_NO, &event);
               rt_event_send(event_gsm_mode_request, EVENT_GSM_MODE_CMD);
               result = rt_event_recv(event_gsm_mode_response, EVENT_GSM_MODE_CMD, RT_EVENT_FLAG_AND | RT_EVENT_FLAG_CLEAR, RT_WAITING_FOREVER, &event);

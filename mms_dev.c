@@ -100,6 +100,7 @@ void mms_recv_cmd_result(mms_dev_t mms,rt_int32_t wait_time,const char cmd[],...
     rt_kprintf(">>>>cmd error");
   }
   rt_timer_stop(mms_recv_cmd_t);
+  rt_kprintf("mms_timer_value = %d",mms_timer_value);
   mms_timer_value = 0;
 
   rt_kprintf(">>>>    %s",buffer_head);
@@ -410,11 +411,11 @@ void mms_send_fun(mms_dev_t mms)
 	
   mms_recv_cmd_result(mms,50,"OK");
 
- 	rt_device_write(mms->usart,0,"at+cmmssend\r",rt_strlen("at+cmmssend\r"));//·¢ËÍmms		
+//	rt_device_write(mms->usart,0,"at+cmmssend\r",rt_strlen("at+cmmssend\r"));//·¢ËÍmms		
 
   mms->error &= ~(MMS_ERROR_FLAG(MMS_ERROR_1_FATAL)); //Is ready to receive and send the results
 
- 	mms_recv_cmd_result(mms,900,"OK");		//max wait send ok time 90minute
+//	mms_recv_cmd_result(mms,1800,"OK");		//max wait send ok time 3minute
 
   if(mms_send_error_deal(mms,0))						//eeror  check up
   {
@@ -486,11 +487,11 @@ void rt_mms_data_init(mms_dev_t mms)
 	
   mms->number = 1;
   mms->pic_name[0] = "/2.jpg";	//send picture path
-  //	mms->pic_name[1] = "/1.jpg";
+	mms->pic_name[1] = "/1.jpg";
   mms->pic_name[1] = RT_NULL;
 
   mms_get_send_file_size(mms,0);//get picture size
-  //	mms_get_send_file_size(mms,1);
+	mms_get_send_file_size(mms,1);
 	
   mms->number = 2;
 
@@ -519,9 +520,9 @@ void rt_mms_thread_entry(void *arg)
 
     mms_send_fun(&mms);
 
-    rt_thread_delay(100);
+	//rt_thread_delay(100);
 
-    //		rt_sem_release(mms_test_sem);
+	//rt_sem_release(mms_test_sem);
 		
     mms_info(&mms);
   }
