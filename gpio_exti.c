@@ -291,16 +291,30 @@ void rt_hw_camera_photosensor_register(void)
   rt_hw_gpio_register(gpio_device, gpio_user_data->name, (RT_DEVICE_FLAG_RDWR | RT_DEVICE_FLAG_INT_RX), gpio_user_data);
   rt_device_set_rx_indicate((rt_device_t)gpio_device, gpio_user_data->gpio_exti_rx_indicate);
 }
+#define CM_IR_SAMPLE_TIME               2
 /* camera_irdasensor device pb0 */
 rt_err_t camera_irdasensor_rx_ind(rt_device_t dev, rt_size_t size)
 {
   gpio_device *gpio = RT_NULL;
   time_t time;
+  static time_t time_old = 0;
 
   RT_ASSERT(dev != RT_NULL);
   gpio = (gpio_device *)dev;
   /* produce mail */
   rt_device_control(rtc_device, RT_DEVICE_CTRL_RTC_GET_TIME, &time);
+  
+  if ((time - time_old) > CM_IR_SAMPLE_TIME)
+  {
+     rt_kprintf("&&time_old = %d time = %d\n",time_old,time);
+     time_old = time;
+  }
+  else
+  {
+    rt_kprintf("time_old = %d time = %d\n",time_old,time);
+    time_old = time;
+    return RT_EOK;
+  }
   /* send mail */
   send_alarm_mail(ALARM_TYPE_CAMERA_IRDASENSOR, ALARM_PROCESS_FLAG_SMS | ALARM_PROCESS_FLAG_GPRS | ALARM_PROCESS_FLAG_LOCAL, gpio->pin_value, time);
 

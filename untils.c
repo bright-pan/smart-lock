@@ -27,7 +27,7 @@ DEVICE_PARAMETERS_TYPEDEF device_parameters = {
   //alarm telephone
   {
     {
-      1,
+      0,
       "8613316975697"
     },
     {

@@ -13,6 +13,7 @@
 
 #include "gpio_pwm.h"
 #include "gpio_exti.h"
+#include "gpio_pin.h"
 
 /*
  *  GPIO ops function interfaces
@@ -194,13 +195,13 @@ struct gpio_pwm_user_data voice_data_user_data =
 {
   DEVICE_NAME_VOICE_DATA,
   GPIOA,
-  GPIO_Pin_11,
+  GPIO_Pin_2,
   GPIO_Mode_AF_PP,
   GPIO_Speed_50MHz,
   RCC_APB2Periph_GPIOA,
   /* timer base */
-  TIM1,
-  RCC_APB2Periph_TIM1,
+  TIM5,
+  RCC_APB1Periph_TIM5,
   24000000,
   4800,//period=200us
   0,
@@ -210,11 +211,11 @@ struct gpio_pwm_user_data voice_data_user_data =
   TIM_OutputState_Enable,
   2400,// pulse value 100us
   TIM_OCPolarity_High,
-  TIM_Channel_4,
-  TIM_IT_CC4 | TIM_IT_Update,
+  TIM_Channel_3,
+  TIM_IT_CC3 | TIM_IT_Update,
   0,// pulse counts
-  TIM1_UP_IRQn,
-  TIM1_CC_IRQn,
+  TIM5_IRQn,
+  RT_NULL,
   1,
   0,
   RT_NULL,
@@ -230,9 +231,56 @@ void rt_hw_voice_data_register(void)
   struct gpio_pwm_user_data *pwm_user_data = &voice_data_user_data;
 
   pwm_device->ops = &gpio_pwm_user_ops;
+  pwm_user_data->tim_oc_init = TIM_OC3Init;
+  pwm_user_data->tim_oc_set_compare = TIM_SetCompare3;
+  pwm_user_data->tim_rcc_cmd = RCC_APB1PeriphClockCmd;
+  rt_hw_gpio_register(pwm_device,pwm_user_data->name, (RT_DEVICE_FLAG_RDWR | RT_DEVICE_FLAG_PWM_TX | RT_DEVICE_FLAG_INT_TX), pwm_user_data);
+}
+
+/* voice reset device register */
+struct gpio_pwm_user_data voice_reset_user_data = 
+{
+  DEVICE_NAME_VOICE_RESET,
+  GPIOA,
+  GPIO_Pin_3,
+  GPIO_Mode_AF_PP,
+  GPIO_Speed_50MHz,
+  RCC_APB2Periph_GPIOA,
+  /* timer base */
+  TIM5,
+  RCC_APB1Periph_TIM5,
+  24000000,
+  4800,//period=200us
+  0,
+  TIM_CounterMode_Up,
+  /* timer oc */
+  TIM_OCMode_PWM2,
+  TIM_OutputState_Enable,
+  2400,// pulse value 100us
+  TIM_OCPolarity_High,
+  TIM_Channel_4,
+  TIM_IT_CC4 | TIM_IT_Update,
+  0,// pulse counts
+  TIM5_IRQn,
+  RT_NULL,
+  1,
+  0,
+  RT_NULL,
+  RT_NULL,
+  RT_NULL,
+};
+
+gpio_device voice_reset_device;
+
+void rt_hw_voice_reset_register(void)
+{
+  gpio_device *pwm_device = &voice_reset_device;
+  struct gpio_pwm_user_data *pwm_user_data = &voice_reset_user_data;
+
+  pwm_device->ops = &gpio_pwm_user_ops;
   pwm_user_data->tim_oc_init = TIM_OC4Init;
   pwm_user_data->tim_oc_set_compare = TIM_SetCompare4;
-  pwm_user_data->tim_rcc_cmd = RCC_APB2PeriphClockCmd;
+  pwm_user_data->tim_rcc_cmd = RCC_APB1PeriphClockCmd;
   rt_hw_gpio_register(pwm_device,pwm_user_data->name, (RT_DEVICE_FLAG_RDWR | RT_DEVICE_FLAG_PWM_TX | RT_DEVICE_FLAG_INT_TX), pwm_user_data);
 }
 
@@ -387,25 +435,20 @@ void delay(rt_uint32_t counts)
 void voice_output(rt_uint16_t counts)
 {
   rt_device_t device = RT_NULL;
-  rt_device_t data_device = RT_NULL;
-  rt_int8_t dat = 0;
-  data_device = rt_device_find("vo_data");
-  rt_device_control(data_device, RT_DEVICE_CTRL_SET_PULSE_COUNTS, (void *)&counts);
-  device = rt_device_find("vo_sw");
+  rt_device_t reset_device = RT_NULL;
+  rt_int16_t dat = 0;
+  reset_device = rt_device_find(DEVICE_NAME_VOICE_RESET);
+  dat = 1;
+  rt_device_control(reset_device, RT_DEVICE_CTRL_SET_PULSE_COUNTS, &dat);
+  device = rt_device_find(DEVICE_NAME_VOICE_DATA);
+  rt_device_control(device, RT_DEVICE_CTRL_SET_PULSE_COUNTS, (void *)&counts);
+  device = rt_device_find(DEVICE_NAME_VOICE_SWITCH);
   dat = 1;
   rt_device_write(device, 0, &dat, 0);
-  device = rt_device_find("vo_amp");
+  device = rt_device_find(DEVICE_NAME_VOICE_AMP);
   dat = 1;
   rt_device_write(device, 0, &dat, 0);
-  device = rt_device_find("vo_rst");
-  dat = 1;
-  rt_device_write(device, 0, &dat, 0);
-  delay(1058);
-  dat = 0;
-  rt_device_write(device, 0, &dat, 0);
-  //  delay(26450);
-  delay(1058);
-  rt_device_control(data_device, RT_DEVICE_CTRL_SEND_PULSE, (void *)0);
+  rt_device_control(reset_device, RT_DEVICE_CTRL_SEND_PULSE, (void *)0);
 }
 
 int8_t motor_output(uint8_t direction)

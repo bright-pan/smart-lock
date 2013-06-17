@@ -667,6 +667,60 @@ void TIM3_IRQHandler(void)
   rt_interrupt_leave();
 }
 
+void TIM5_IRQHandler(void)
+{
+  extern struct gpio_pwm_user_data voice_data_user_data;
+  extern struct gpio_pwm_user_data voice_reset_user_data;
+  rt_device_t data_device = RT_NULL;
+  /* enter interrupt */
+  rt_interrupt_enter();
+  /* tim5 cc3 isr */
+  if(TIM_GetITStatus(voice_data_user_data.timx, TIM_IT_CC3) == SET)
+  {
+    TIM_ClearITPendingBit(voice_data_user_data.timx, TIM_IT_CC3);
+    if (voice_data_user_data.tim_pulse_counts > 0)
+    {
+      voice_data_user_data.tim_pulse_counts--;
+    }
+  }
+  /* tim5 cc4 isr */
+  if(TIM_GetITStatus(voice_reset_user_data.timx, TIM_IT_CC4) == SET)
+  {
+    TIM_ClearITPendingBit(voice_reset_user_data.timx, TIM_IT_CC4);
+    if (voice_reset_user_data.tim_pulse_counts > 0)
+    {
+      voice_reset_user_data.tim_pulse_counts--;
+    }
+  }
+  /* tim5 update isr */
+  if(TIM_GetITStatus(voice_data_user_data.timx, TIM_IT_Update) == SET)
+  {
+    TIM_ClearITPendingBit(voice_data_user_data.timx, TIM_IT_Update);
+    if (voice_data_user_data.tim_pulse_counts == 0)
+    {
+      TIM_CCxCmd(voice_data_user_data.timx, voice_data_user_data.tim_oc_channel, TIM_CCx_Disable);
+      if (voice_reset_user_data.tim_pulse_counts == 0)
+      {
+        TIM_Cmd(voice_data_user_data.timx, DISABLE);
+      }
+    }
+    if (voice_reset_user_data.tim_pulse_counts == 0)
+    {
+      TIM_CCxCmd(voice_reset_user_data.timx, voice_reset_user_data.tim_oc_channel, TIM_CCx_Disable);
+      // send voice data
+      data_device = rt_device_find(DEVICE_NAME_VOICE_DATA);
+      rt_device_control(data_device, RT_DEVICE_CTRL_SEND_PULSE, (void *)0);
+      if (voice_data_user_data.tim_pulse_counts == 0)
+      {
+        TIM_Cmd(voice_reset_user_data.timx, DISABLE);
+      }
+    }
+  }
+  /* leave interrupt */
+  rt_interrupt_leave();
+
+}
+
 /* motor pwm device irq */
 void TIM8_UP_IRQHandler(void)
 {

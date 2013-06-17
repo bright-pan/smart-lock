@@ -229,7 +229,19 @@ void mms_set_phone_no_fun(mms_dev_t mms,rt_uint8_t* buffer,rt_uint8_t pos)
 {
   rt_memset(buffer,0,MMS_BUFFER_SIZE);
 
-  rt_sprintf((char *)buffer,"at+cmmsrecp=\"%s\"\r",mms->mobile_no[pos]);	//mms picture of size 
+	if(*mms->mobile_no[pos] == '+')
+	{
+		mms->mobile_no[pos]++;
+	}
+	if(*mms->mobile_no[pos] == '8')
+	{
+		mms->mobile_no[pos]++;
+	}
+	if(*mms->mobile_no[pos] == '6')
+	{
+		mms->mobile_no[pos]++;
+	}
+	rt_sprintf((char *)buffer,"at+cmmsrecp=\"%s\"\r",mms->mobile_no[pos]);	//mms picture of size 
 
   //	rt_device_write(mms->usart,0,"at+cmmsrecp=\"13544033975\"\r",rt_strlen("at+cmmsrecp=\"13544033975\"\r"));//发送的号码，自己修改		
 
@@ -398,11 +410,11 @@ void mms_send_fun(mms_dev_t mms)
 	
   mms_recv_cmd_result(mms,50,"OK");
 
-  //	rt_device_write(mms->usart,0,"at+cmmssend\r",rt_strlen("at+cmmssend\r"));//发送mms		
+ 	rt_device_write(mms->usart,0,"at+cmmssend\r",rt_strlen("at+cmmssend\r"));//发送mms		
 
   mms->error &= ~(MMS_ERROR_FLAG(MMS_ERROR_1_FATAL)); //Is ready to receive and send the results
 
-  //	mms_recv_cmd_result(mms,900,"OK");		//max wait send ok time 90minute
+ 	mms_recv_cmd_result(mms,900,"OK");		//max wait send ok time 90minute
 
   if(mms_send_error_deal(mms,0))						//eeror  check up
   {
