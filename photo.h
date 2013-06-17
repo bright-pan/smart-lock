@@ -1,3 +1,18 @@
+/*********************************************************************
+ * Filename:      photo.h
+ *
+ * Description: camera photo macro definition and 
+ *data struct declare
+ *
+ * Author:        wangzw <wangzw@yuettak.com>
+ * Created at:    2013-05-17 14:22:03
+ *                
+ * Modify:
+ *
+ * 
+ *
+ * Copyright (C) 2013 Yuettak Co.,Ltd
+ ********************************************************************/
 #ifndef __PHOTO_H__
 #define	 __PHOTO_H__
 #include "rtthread.h"
@@ -9,7 +24,7 @@
 #include "alarm.h"
 #include "local.h"
 
-
+#define CMAERA_DEBUG_INFO_PRINTF				//printf debug information
 
 
 
@@ -24,6 +39,8 @@
 #define CM_DEAL_DATA_ERROR						0X02
 #define CM_RECV_OUT_TIME							0X04
 #define CM_DEV_INIT_ERROR							0X08
+
+
 
 
 
@@ -75,7 +92,6 @@ typedef struct cm_send_mq cm_send_mq_t;
 void photo_thread_init(void);
 void mq(rt_uint32_t time);//(rt_uint8_t time,rt_uint8_t *file_name);
 void camera_send_mail(ALARM_TYPEDEF alarm_type, time_t time);
-
 
 
 

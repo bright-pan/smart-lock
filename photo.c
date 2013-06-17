@@ -69,7 +69,7 @@ void test_run(void)
 	while(run);run = 1;
 }
 
-
+void com_
 
 static rt_err_t com2_photo_data_rx_indicate(rt_device_t device,rt_size_t len)
 {
@@ -99,9 +99,6 @@ void com2_release_buffer(camera_dev_t camera)
 			length = rt_device_read(camera->device,0,camera->data,CM_BUFFER_LEN);
 				
 			test_recv_data(camera->data,length);
-			
-			rt_kprintf("length = %d\n",length);
-
 			release_com2_data = CM_BUFFER_LEN;
 			break;
 		}
@@ -110,10 +107,12 @@ void com2_release_buffer(camera_dev_t camera)
 			length = rt_device_read(camera->device,0,camera->data,CM_BUFFER_LEN);
 			release_com2_data = CM_BUFFER_LEN;
 			test_recv_data(camera->data,length);
-			
-			rt_kprintf("length = .%d\n",length);
 		}
 	}
+#ifdef	CMAERA_DEBUG_INFO_PRINTF
+	rt_kprintf("length = %d\n",length);
+#endif
+
 }
 
 
@@ -234,7 +233,9 @@ void photo_get_size(camera_dev_t camera,rt_uint8_t frame_flag)
 			camera->error |= CM_GET_LEN_ERROR;
 			break;
 		}
+#ifdef	CMAERA_DEBUG_INFO_PRINTF
 		rt_kprintf("max_cnt = %d\n",max_cnt);
+#endif
 	}
 	while((camera->size >60000) ||(camera->size < 0));
 	/*   calculate receive size		*/
@@ -243,6 +244,7 @@ void photo_get_size(camera_dev_t camera,rt_uint8_t frame_flag)
 	camera->page = camera->size / CM_BUFFER_LEN;
 	camera->surplus = camera->size % CM_BUFFER_LEN;
 	length = rt_device_read(camera->device,0,camera->data,CM_BUFFER_LEN);
+	
 	printf_camera(camera);
 }
 
@@ -261,8 +263,9 @@ void photo_data_deal(camera_dev_t camera,int file_id)
 		sem_result = rt_sem_take(usart_data_sem,CM_SEM_BUF_WAIT_TIME);//500ms no recevie data Data sent failure		
 		if((-RT_ETIMEOUT) == sem_result)
 		{
-#ifdef	USE_DEBUG_PRINTF
+#ifdef	CMAERA_DEBUG_INFO_PRINTF
 			rt_kprintf("\nsem result timer out: \n\n");
+			
 			printf_camera(camera);
 #endif			
 			outtime_nun++;//
@@ -300,15 +303,14 @@ void photo_data_deal(camera_dev_t camera,int file_id)
 			camera->addr += camera->surplus;
 		}
 		write(file_id,camera->data,length);
-#ifdef	USE_DEBUG_PRINTF
+#ifdef	CMAERA_DEBUG_INFO_PRINTF
 		printf_write_to_file();
 #endif
-
 		camera->page--;
 		if(camera->addr >= camera->size)
 		{
 			close(file_id);
-#ifdef	USE_DEBUG_PRINTF
+#ifdef	CMAERA_DEBUG_INFO_PRINTF
 			printf_camera(camera);
 			rt_kprintf("\npic_timer_value = %d",pic_timer_value);
 #endif
@@ -471,7 +473,7 @@ void photo_struct_init(camera_dev_t camera)
 
 void photo_deal(camera_dev_t camera,cm_recv_mq_t recv_mq)
 {
-	struct cm_send_mq send_mq;
+	//struct cm_send_mq send_mq;
 	MMS_MAIL_TYPEDEF mms_mail_buf;
 
 	if('\0' == *(recv_mq->name2))
@@ -489,14 +491,16 @@ void photo_deal(camera_dev_t camera,cm_recv_mq_t recv_mq)
 		photo_create_file_one(camera,recv_mq->name2);	
 	}
 	/* camera woker finish send Message Queuing */
-/*	send_mq.error = camera->error;
+/*	
+	send_mq.error = camera->error;
 	send_mq.name1 = recv_mq->name1;
 	send_mq.name2 = recv_mq->name2;
+	rt_mq_send(photo_ok_mq,&send_mq,sizeof(send_mq));//·¢ËÍÓÊÏä
 */
-//	rt_mq_send(photo_ok_mq,&send_mq,sizeof(send_mq));//·¢ËÍÓÊÏä
 	mms_mail_buf.alarm_type = recv_mq->alarm_type;
 	mms_mail_buf.time = recv_mq->date;
-	if((CM_RUN_DEAL_OK == camera->error)||(CM_RECV_OUT_TIME | camera->error))//Receive timeout make no difference
+	/*  Receive timeout make no difference */
+	if((CM_RUN_DEAL_OK == camera->error)||(CM_RECV_OUT_TIME | camera->error))
 	{
 		rt_mq_send(mms_mq, &mms_mail_buf, sizeof(MMS_MAIL_TYPEDEF));
 	}
@@ -506,7 +510,6 @@ void photo_thread_entry(void *arg)
 {
 	struct camera_dev photo;
 	struct cm_recv_mq recv_mq;
-//	rt_int32_t timeout = 1000;
 	rt_err_t	result;
 	
 	pic_timer = rt_timer_create("cm_time",pic_timer_test,RT_NULL,10,RT_TIMER_FLAG_PERIODIC);
@@ -549,7 +552,6 @@ void photo_thread_entry(void *arg)
 		else if(-RT_ETIMEOUT == result)			//timeout checout module
 		{
 			//camera_power_control(&photo,0); 
-//			timeout = RT_WAITING_FOREVER;
 			rt_kprintf("close power\n");
 			continue;
 		}
