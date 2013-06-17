@@ -100,6 +100,7 @@ void mms_recv_cmd_result(mms_dev_t mms,rt_int32_t wait_time,const char cmd[],...
     rt_kprintf(">>>>cmd error");
   }
   rt_timer_stop(mms_recv_cmd_t);
+  rt_kprintf("mms_timer_value = %d",mms_timer_value);
   mms_timer_value = 0;
 
   rt_kprintf(">>>>    %s",buffer_head);
@@ -414,7 +415,7 @@ void mms_send_fun(mms_dev_t mms)
 
   mms->error &= ~(MMS_ERROR_FLAG(MMS_ERROR_1_FATAL)); //Is ready to receive and send the results
 
-//	mms_recv_cmd_result(mms,900,"OK");		//max wait send ok time 90minute
+//	mms_recv_cmd_result(mms,1800,"OK");		//max wait send ok time 3minute
 
   if(mms_send_error_deal(mms,0))						//eeror  check up
   {

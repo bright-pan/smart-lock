@@ -496,9 +496,8 @@ void photo_deal(camera_dev_t camera,cm_recv_mq_t recv_mq)
 //	rt_mq_send(photo_ok_mq,&send_mq,sizeof(send_mq));//·¢ËÍÓÊÏä
 	mms_mail_buf.alarm_type = recv_mq->alarm_type;
 	mms_mail_buf.time = recv_mq->date;
-	if(CM_RUN_DEAL_OK == camera->error)
+	if((CM_RUN_DEAL_OK == camera->error)||(CM_RECV_OUT_TIME | camera->error))//Receive timeout make no difference
 	{
-	//	rt_thread_delay(1000);
 		rt_mq_send(mms_mq, &mms_mail_buf, sizeof(MMS_MAIL_TYPEDEF));
 	}
 		
@@ -507,7 +506,7 @@ void photo_thread_entry(void *arg)
 {
 	struct camera_dev photo;
 	struct cm_recv_mq recv_mq;
-	rt_int32_t timeout = 1000;
+//	rt_int32_t timeout = 1000;
 	rt_err_t	result;
 	
 	pic_timer = rt_timer_create("cm_time",pic_timer_test,RT_NULL,10,RT_TIMER_FLAG_PERIODIC);
@@ -517,18 +516,11 @@ void photo_thread_entry(void *arg)
 	camera_power_control(&photo,1);	
 	while(1)
 	{
-			result =  rt_mq_recv(photo_start_mq,&recv_mq,sizeof(recv_mq),timeout);
+		result =  rt_mq_recv(photo_start_mq,&recv_mq,sizeof(recv_mq),1000);
 
-			/*first open power  need 10ms after  */
-			if(result == -RT_ETIMEOUT)
-			{
-		//		camera_power_control(&photo,0);	
-				timeout = RT_WAITING_FOREVER;
-				rt_kprintf("close power\n");
-				continue;
-			}
-
-			camera_power_control(&photo,1);	
+		if(RT_EOK == result)								//in working order
+		{
+			camera_power_control(&photo,1); 	//open camera power
 			
 			rt_thread_delay(1);
 
@@ -551,7 +543,16 @@ void photo_thread_entry(void *arg)
 			
 			photo_deal(&photo,&recv_mq);	
 
-	//		camera_power_control(&photo,0);		//close camera power
+			//camera_power_control(&photo,0); 	//close camera power
+
+		}
+		else if(-RT_ETIMEOUT == result)			//timeout checout module
+		{
+			//camera_power_control(&photo,0); 
+//			timeout = RT_WAITING_FOREVER;
+			rt_kprintf("close power\n");
+			continue;
+		}
 	}
 }
 
@@ -599,9 +600,10 @@ void photo_thread_init(void)
 void camera_send_mail(ALARM_TYPEDEF alarm_type, time_t time)
 {
 	struct cm_recv_mq send_mq;
-	
+
+	send_mq.time = 0;
 	send_mq.name1 = "/1.jpg";
-	send_mq.name1 = "/2.jpg";
+	send_mq.name2 = "/2.jpg";
 	send_mq.date = time;
 	send_mq.alarm_type = alarm_type;
 

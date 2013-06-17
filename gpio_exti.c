@@ -291,7 +291,7 @@ void rt_hw_camera_photosensor_register(void)
   rt_hw_gpio_register(gpio_device, gpio_user_data->name, (RT_DEVICE_FLAG_RDWR | RT_DEVICE_FLAG_INT_RX), gpio_user_data);
   rt_device_set_rx_indicate((rt_device_t)gpio_device, gpio_user_data->gpio_exti_rx_indicate);
 }
-#define CM_IR_SAMPLE_TIME               2
+#define CM_IR_SAMPLE_TIME               20
 /* camera_irdasensor device pb0 */
 rt_err_t camera_irdasensor_rx_ind(rt_device_t dev, rt_size_t size)
 {
@@ -304,7 +304,7 @@ rt_err_t camera_irdasensor_rx_ind(rt_device_t dev, rt_size_t size)
   /* produce mail */
   rt_device_control(rtc_device, RT_DEVICE_CTRL_RTC_GET_TIME, &time);
   
-  if ((time - time_old) > CM_IR_SAMPLE_TIME)
+  if ((time - time_old) > CM_IR_SAMPLE_TIME || (0 == time_old))//0 == time_old open electrify power
   {
      rt_kprintf("&&time_old = %d time = %d\n",time_old,time);
      time_old = time;
@@ -312,7 +312,7 @@ rt_err_t camera_irdasensor_rx_ind(rt_device_t dev, rt_size_t size)
   else
   {
     rt_kprintf("time_old = %d time = %d\n",time_old,time);
-    time_old = time;
+  //  time_old = time;
     return RT_EOK;
   }
   /* send mail */
