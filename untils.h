@@ -37,7 +37,7 @@ typedef struct {
 typedef struct {
 
   uint8_t flag;
-  uint32_t key;
+  uint8_t key[4];
 }RFID_KEY_TYPEDEF;
 
 typedef struct {

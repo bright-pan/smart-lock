@@ -114,14 +114,11 @@ void local_mail_process_thread_entry(void *parameter)
   
 }
 
-
-
-
-
 static void rfid_key_detect_process(void)
 {
   rt_device_t device;
-  uint32_t rfid_key = 0;
+  uint8_t rfid_key[4] = {0,};
+  uint8_t rfid_buf[8] = {0,};
   int8_t counts = 50;
   int8_t rfid_key_index = 0;
   int8_t rfid_error = 0;
@@ -140,25 +137,30 @@ static void rfid_key_detect_process(void)
   {
 
   }
-
+  gpio_pin_output(DEVICE_NAME_RFID_POWER, 1);
   device = rt_device_find(DEVICE_NAME_RFID_UART);
   if (device != RT_NULL)
   {
     while (counts > 0)
     {
-      rt_device_read(device, 0, &rfid_key, 4);// clear rfid uart cache
-      rt_device_read(device, 0, &rfid_key, 4);// clear rfid uart cache
-      rfid_key = 0;
+      rt_device_read(device, 0, &rfid_key, 8);// clear rfid uart cache
+      rt_device_read(device, 0, &rfid_key, 8);// clear rfid uart cache
       rt_device_write(device, 0, "\x50\x00\x06\xD4\x07\x01\x00\x00\x00\x04\x80", 11);
       delay_us(200000);
-      if (rt_device_read(device, 0, &rfid_key, 4) == 4)
+      if (rt_device_read(device, 0, &rfid_buf, 8) == 8)
       {
+        rfid_key[0] = rfid_buf[5]^rfid_buf[8];
+        rfid_key[1] = rfid_buf[6]^rfid_buf[8];
+        rfid_key[2] = rfid_buf[7]^rfid_buf[8];
+        rfid_key[3] = rfid_buf[8]^rfid_buf[8];
+
         rfid_key_index = RFID_KEY_NUMBERS - 1;
         while (rfid_key_index >= 0)
         {
-          if (device_parameters.rfid_key[rfid_key_index].flag && (device_parameters.rfid_key[rfid_key_index].key == rfid_key))
+          if (device_parameters.rfid_key[rfid_key_index].flag && (*((uint32_t *)device_parameters.rfid_key[rfid_key_index].key) == *((uint32_t *)rfid_key)))
           {
             // success read rfid key
+            gpio_pin_output(DEVICE_NAME_RFID_POWER, 0);
             motor_output(0);//unlock
             send_gprs_mail(ALARM_TYPE_RFID_KEY_SUCCESS, 0);
             return;
@@ -172,6 +174,7 @@ static void rfid_key_detect_process(void)
       }
       counts--;
     }
+    gpio_pin_output(DEVICE_NAME_RFID_POWER, 0);
     if (!counts)
     {
       // error read rfid_key
@@ -191,6 +194,7 @@ static void rfid_key_detect_process(void)
   {
     rt_kprintf("device %s is not exist!\n", DEVICE_NAME_RFID_UART);
   }
+  gpio_pin_output(DEVICE_NAME_RFID_POWER, 0);
 
 }
 static void rfid_key_detect_timeout(void *parameters)
