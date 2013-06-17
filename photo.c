@@ -69,7 +69,7 @@ void test_run(void)
 	while(run);run = 1;
 }
 
-void com_
+
 
 static rt_err_t com2_photo_data_rx_indicate(rt_device_t device,rt_size_t len)
 {
