@@ -27,6 +27,7 @@
 #define DEVICE_NAME_MOTOR_A_PULSE "mt_a"
 #define DEVICE_NAME_MOTOR_B_PULSE "mt_b"
 #define DEVICE_NAME_VOICE_DATA "vo_data"
+#define DEVICE_NAME_VOICE_RESET "vo_rst"
 
 struct gpio_pwm_user_data
 {
@@ -64,6 +65,7 @@ void rt_hw_motor_a_pulse_register(void);
 void rt_hw_motor_b_pulse_register(void);
 
 void rt_hw_voice_data_register(void);
+void rt_hw_voice_reset_register(void);
 
 void voice_output(rt_uint16_t counts);
 
