@@ -49,12 +49,13 @@ void mms_telephone_init(mms_dev_t mms)
 }
 void mms_picture_file_init(mms_dev_t mms)
 {
-  mms->pic_name[0] = "/2.jpg";	//send picture path
-  //	mms->pic_name[1] = "/1.jpg";
-  mms->pic_name[1] = RT_NULL;
+  mms->pic_name[0] = "/1.jpg";	//send picture path
+ 	mms->pic_name[1] = "/2.jpg";
+  mms->pic_name[2] = RT_NULL;
 
   mms_get_send_file_size(mms,0);//get picture size
-  //	mms_get_send_file_size(mms,1);
+	mms_get_send_file_size(mms,1);
+	
 }
 void mms_data_init(mms_dev_t mms)
 {

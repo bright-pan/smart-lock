@@ -410,11 +410,11 @@ void mms_send_fun(mms_dev_t mms)
 	
   mms_recv_cmd_result(mms,50,"OK");
 
-rt_device_write(mms->usart,0,"at+cmmssend\r",rt_strlen("at+cmmssend\r"));//·¢ËÍmms		
+//	rt_device_write(mms->usart,0,"at+cmmssend\r",rt_strlen("at+cmmssend\r"));//·¢ËÍmms		
 
   mms->error &= ~(MMS_ERROR_FLAG(MMS_ERROR_1_FATAL)); //Is ready to receive and send the results
 
-mms_recv_cmd_result(mms,900,"OK");		//max wait send ok time 90minute
+//	mms_recv_cmd_result(mms,900,"OK");		//max wait send ok time 90minute
 
   if(mms_send_error_deal(mms,0))						//eeror  check up
   {
@@ -519,9 +519,9 @@ void rt_mms_thread_entry(void *arg)
 
     mms_send_fun(&mms);
 
-    rt_thread_delay(100);
+	//rt_thread_delay(100);
 
-    //		rt_sem_release(mms_test_sem);
+	//rt_sem_release(mms_test_sem);
 		
     mms_info(&mms);
   }
