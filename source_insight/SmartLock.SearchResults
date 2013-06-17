@@ -1,0 +1,11 @@
+---- sms_mq Æ¥Åä (10 in 4 ÎÄ¼þ) ----
+Alarm.c (e:\code\smartlock):        /* send to sms_mq */
+Alarm.c (e:\code\smartlock):        rt_mq_send(sms_mq, sms_mail_buf, sizeof(SMS_MAIL_TYPEDEF));
+Local.c (e:\code\smartlock):        rt_mq_send(sms_mq, &sms_mail_buf, sizeof(SMS_MAIL_TYPEDEF));
+Sms.c (e:\code\smartlock):rt_mq_t sms_mq;
+Sms.c (e:\code\smartlock):  sms_mq = rt_mq_create("sms", sizeof(SMS_MAIL_TYPEDEF), \
+Sms.c (e:\code\smartlock):    result = rt_mq_recv(sms_mq, sms_mail_buf, \
+Sms.c (e:\code\smartlock):            rt_mq_urgent(sms_mq, sms_mail_buf, sizeof(SMS_MAIL_TYPEDEF));
+Sms.c (e:\code\smartlock):              rt_mq_urgent(sms_mq, sms_mail_buf, sizeof(SMS_MAIL_TYPEDEF));
+Sms.c (e:\code\smartlock):        rt_mq_urgent(sms_mq, sms_mail_buf, sizeof(SMS_MAIL_TYPEDEF));
+Sms.h (e:\code\smartlock):extern rt_mq_t sms_mq;
