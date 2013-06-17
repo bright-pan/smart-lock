@@ -213,7 +213,7 @@ void rt_hw_board_init()
   rt_hw_voice_reset_register();
   rt_hw_voice_switch_register();
   rt_hw_voice_amp_register();
-  rt_hw_pwm1_register();
+  //rt_hw_pwm1_register();
   /* adc device register */
   rt_hw_battery_adc_register();
   rt_hw_battery_switch_register();
