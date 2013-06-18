@@ -270,6 +270,8 @@ int rt_application_init()
                                    1000,
                                    RT_TIMER_FLAG_ONE_SHOT);
   rt_timer_start(logo_led_timer);
+  // initialing status
+  lock_output(GATE_UNLOCK);//unlock
   return 0;
 }
 

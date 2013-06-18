@@ -48,7 +48,7 @@ void local_mail_process_thread_entry(void *parameter)
   LOCAL_MAIL_TYPEDEF *local_mail_buf = (LOCAL_MAIL_TYPEDEF *)rt_malloc(sizeof(LOCAL_MAIL_TYPEDEF));
   /* initial msg queue for local alarm */
   local_mq = rt_mq_create("local", sizeof(LOCAL_MAIL_TYPEDEF), LOCAL_MAIL_MAX_MSGS, RT_IPC_FLAG_FIFO);
-  
+
   while (1)
   {
     /* receive mail */
@@ -61,28 +61,28 @@ void local_mail_process_thread_entry(void *parameter)
       switch (local_mail_buf->alarm_type)
       {
         case ALARM_TYPE_LOCK_SHELL : {
-          motor_output(1);//lock
-          voice_output(2);//send voice alarm
+          lock_output(GATE_LOCK);//lock
+          voice_output(3);//send voice alarm
           //send mail to camera module
           camera_send_mail(local_mail_buf->alarm_type,local_mail_buf->time);
           break;
         };
         case ALARM_TYPE_LOCK_TEMPERATURE : {
-          motor_output(1);//lock
-          voice_output(2);//send voice alarm
+          lock_output(GATE_LOCK);//lock
+          voice_output(3);//send voice alarm
           //send mail to camera module
           camera_send_mail(local_mail_buf->alarm_type,local_mail_buf->time);
           break;
         };
         case ALARM_TYPE_CAMERA_IRDASENSOR : {
-          motor_output(1);//lock
-          voice_output(2);//send voice alarm
+          lock_output(GATE_LOCK);//lock
+          voice_output(3);//send voice alarm
           //send mail to camera module
           camera_send_mail(local_mail_buf->alarm_type,local_mail_buf->time);
           break;
         };
         case ALARM_TYPE_BATTERY_REMAIN_5P : {
-          motor_output(0);//unlock
+          lock_output(GATE_UNLOCK);//unlock
           break;
         };
         case ALARM_TYPE_GSM_RING : {
@@ -170,7 +170,7 @@ static void rfid_key_detect_process(void)
           {
             // success read rfid key
             gpio_pin_output(DEVICE_NAME_RFID_POWER, 0);
-            motor_output(0);//unlock
+            lock_output(GATE_UNLOCK);//unlock
             send_gprs_mail(ALARM_TYPE_RFID_KEY_SUCCESS, 0);
             return;
           }
