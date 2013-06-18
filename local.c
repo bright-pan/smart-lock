@@ -356,6 +356,10 @@ void send_local_mail(ALARM_TYPEDEF alarm_type, time_t time)
   {
     rt_device_control(rtc_device, RT_DEVICE_CTRL_RTC_GET_TIME, &(buf.time));
   }
+  else
+  {
+    buf.time = time;
+  }
   if (local_mq != NULL)
   {
     result = rt_mq_send(local_mq, &buf, sizeof(LOCAL_MAIL_TYPEDEF));
