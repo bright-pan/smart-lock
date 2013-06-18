@@ -23,6 +23,9 @@
 #include "dfs_posix.h"
 #include "alarm.h"
 #include "local.h"
+#include "gpio_exti.h"
+
+
 
 #define CMAERA_DEBUG_INFO_PRINTF				//printf debug information
 
@@ -52,6 +55,7 @@ struct camera_dev
 {
 	rt_device_t device;
 	rt_device_t glint_led;
+	rt_device_t infrared;
 	rt_device_t power;
 	rt_uint32_t	surplus;
 	rt_uint32_t	addr;

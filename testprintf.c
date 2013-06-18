@@ -285,7 +285,7 @@ void ch_dev_in(const char *name)
 
 //	rt_kprintf("%d",);
 
-	rt_device_read(device,0,data,GPRS_READ_USART_LEN);
+	rt_device_read(device,0,(void*)data,GPRS_READ_USART_LEN);
 	
 	rt_kprintf("rcv = %s\n",data);
 

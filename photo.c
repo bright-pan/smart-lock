@@ -21,6 +21,8 @@
 #include "camera_uart.h"
 #include "testprintf.h"
 #include "mms.h"
+#include "stdarg.h"
+#include "sms.h"
 
 
 
@@ -69,7 +71,80 @@ void test_run(void)
 	while(run);run = 1;
 }
 
+/*******************************************************************************
+* Function Name  : com_recv_data_analyze
+* Description    : usart port recv data proceed analyze
+*                  
+* Input				: usart,	wait time,use  RAM size , arg num ,
+*						  analyze arg
+* Output			: -1pointer error 0 time, return >1of data is arg pos
+*******************************************************************************/
+rt_int8_t com_recv_data_analyze(rt_device_t usart,rt_uint32_t wait_t,rt_uint32_t mem_size,rt_uint32_t arg_num,...)
+{	
+	rt_uint8_t*      buffer = RT_NULL;
+	rt_uint8_t*      tmp_buffer = RT_NULL;
+	char*            analyze_result = RT_NULL;
+	rt_size_t        size = 0;
+	va_list          ap;
+	const char*      ap_str = RT_NULL;
+	rt_uint8_t       i = 0;
+	rt_bool_t        jmp_flag = 0;
+	
+	va_start(ap,mem_size);
+	buffer = rt_malloc(sizeof(rt_uint8_t)*mem_size);
+	
+	rt_memset(buffer,0,sizeof(rt_uint8_t)*mem_size);
+	tmp_buffer = buffer;
+	if(RT_NULL == usart)
+	{
+#ifdef CMAERA_DEBUG_INFO_PRINTF
+		rt_kprintf("photo.c \"com_recv_data_analyze\" fun usart device is RT_NULL\n ");
+#endif
+		return -1;
+	}
+	while(time>0)
+	{
+		rt_thread_delay(1);
 
+		size = rt_device_read(usart,0,tmp_buffer,1);
+		if(1 == size)
+		{
+			if((tmp_buffer - buffer) < mem_size)
+			{
+				tmp_buffer++;
+				for(i = 0; i < arg_num;i++)
+				{
+					ap_str = va_arg(ap,const char*);
+					
+					analyze_result = rt_strstr((const char*)buffer,(const char*)ap_str);
+					if(analyze_result != RT_NULL)
+					{
+						jmp_flag = i;
+						break;
+					}
+				}	
+				if(jmp_flag)
+				{
+					rt_free(buffer);
+					va_end(ap);
+					return jmp_flag;
+				}
+			}
+			else
+			{
+				tmp_buffer = buffer;
+			}
+		}
+	}
+	if(0 == time)
+	{
+		rt_kprintf("wait time\n");
+	}
+	rt_free(buffer);
+	va_end(ap);
+	
+	return 0;
+}
 
 static rt_err_t com2_photo_data_rx_indicate(rt_device_t device,rt_size_t len)
 {
@@ -461,6 +536,13 @@ void photo_struct_init(camera_dev_t camera)
 		camera->error = CM_DEV_INIT_ERROR;
 		return ;
 	}
+	camera->infrared = rt_device_find(DEVICE_NAME_CAMERA_PHOTOSENSOR);
+	if(RT_NULL == camera->infrared)
+	{
+		rt_kprintf("camera->infrared is RT_NULL");
+		camera->error = CM_DEV_INIT_ERROR;
+		return ;
+	}
 	camera->addr = 0;
 	camera->page = 0;
 	camera->size = 0;
@@ -504,7 +586,33 @@ void photo_deal(camera_dev_t camera,cm_recv_mq_t recv_mq)
 	{
 		rt_mq_send(mms_mq, &mms_mail_buf, sizeof(MMS_MAIL_TYPEDEF));
 	}
+	else
+	{
+		send_sms_mail(ALARM_TYPE_CAMERA_FAULT,0);
+	}
 		
+}
+void photo_light_control(camera_dev_t camera,rt_uint8_t status)
+{
+	rt_uint8_t dat = 0;
+	
+	if(RT_NULL== camera)
+	{
+		if(rt_device_read(camera->infrared,0,&dat,1))
+		{
+			if(1 == status)
+			{
+				if(1 == dat)
+				{
+					rt_device_write(camera->glint_led,0,&status,1);
+				}
+			}
+			else if(0 == status)
+			{
+				rt_device_write(camera->glint_led,0,&status,1);
+			}
+		}
+	}
 }
 void photo_thread_entry(void *arg)
 {
@@ -532,7 +640,9 @@ void photo_thread_entry(void *arg)
 			/*start camera job */
 			rt_timer_start(pic_timer);
 			
-			glint_light_control(&photo,1);
+//			glint_light_control(&photo,1);
+			photo_light_control(&photo,1);
+
 			
 			photo.time = recv_mq.time;
 			rt_device_set_rx_indicate(photo.device,com2_photo_data_rx_indicate);
@@ -551,7 +661,16 @@ void photo_thread_entry(void *arg)
 		}
 		else if(-RT_ETIMEOUT == result)			//timeout checout module
 		{
-			//camera_power_control(&photo,0); 
+			camera_power_control(&photo,1);	
+			
+			com2_release_buffer(&photo);
+			
+			if(com_recv_data_analyze(photo.device,200,100,1,"init") != 1)
+			{
+				send_sms_mail(ALARM_TYPE_CAMERA_FAULT,0);
+			}
+			camera_power_control(&photo,0); 
+			
 			rt_kprintf("close power\n");
 			continue;
 		}
