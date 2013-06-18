@@ -135,6 +135,7 @@ static void rfid_key_detect_process(void)
                                               RT_NULL,
                                               6000,
                                               RT_TIMER_FLAG_PERIODIC);
+      rt_timer_start(rfid_key_detect_timer);
     }
     else
     {
@@ -242,6 +243,7 @@ static void battery_switch_process(void)
                                              6000,
                                              RT_TIMER_FLAG_PERIODIC);
       battery_switch_timeout_counts = 20;
+      rt_timer_start(battery_switch_timer);
     }
   }
   else
@@ -289,19 +291,23 @@ static void battery_switch_timeout(void *parameters)
 
 static void lock_gate_process(void)
 {
-  gpio_pin_output(DEVICE_NAME_LOGO_LED, 1);
-  lock_gate_timer = rt_timer_create("tr_lg",
-                                    lock_gate_timeout,
-                                    RT_NULL,
-                                    6000,
-                                    RT_TIMER_FLAG_PERIODIC);
-  if (device_parameters.lock_gate_alarm_time < 0 || device_parameters.lock_gate_alarm_time > 99)
+  if (lock_gate_timer == RT_NULL)
   {
-    lock_gate_timeout_counts = 30;
-  }
-  else
-  {
-    lock_gate_timeout_counts = device_parameters.lock_gate_alarm_time;
+    gpio_pin_output(DEVICE_NAME_LOGO_LED, 1);
+    lock_gate_timer = rt_timer_create("tr_lg",
+                                      lock_gate_timeout,
+                                      RT_NULL,
+                                      6000,
+                                      RT_TIMER_FLAG_PERIODIC);
+    if (device_parameters.lock_gate_alarm_time < 0 || device_parameters.lock_gate_alarm_time > 99)
+    {
+      lock_gate_timeout_counts = 30;
+    }
+    else
+    {
+      lock_gate_timeout_counts = device_parameters.lock_gate_alarm_time;
+    }
+    rt_timer_start(lock_gate_timer);
   }
 }
 

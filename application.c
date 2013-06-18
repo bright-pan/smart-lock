@@ -269,7 +269,7 @@ int rt_application_init()
                                    RT_NULL,
                                    1000,
                                    RT_TIMER_FLAG_ONE_SHOT);
-
+  rt_timer_start(logo_led_timer);
   return 0;
 }
 
