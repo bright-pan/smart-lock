@@ -196,6 +196,7 @@ void rt_hw_board_init()
   rt_hw_lock_shell_register();
   rt_hw_lock_gate_register();
   rt_hw_lock_temperature_register();
+  rt_hw_gate_temperature_register();
   rt_hw_key2_register();
   /* camera device register */
 	//rt_hw_camera_init();// test spi interface

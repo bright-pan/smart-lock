@@ -84,13 +84,12 @@ rt_int8_t com_recv_data_analyze(rt_device_t usart,rt_uint32_t wait_t,rt_uint32_t
 	rt_uint8_t*      buffer = RT_NULL;
 	rt_uint8_t*      tmp_buffer = RT_NULL;
 	char*            analyze_result = RT_NULL;
-	rt_size_t        size = 0;
+	volatile rt_size_t        size = 0;
 	va_list          ap;
 	const char*      ap_str = RT_NULL;
 	rt_uint8_t       i = 0;
 	rt_bool_t        jmp_flag = 0;
 	
-	va_start(ap,mem_size);
 	buffer = rt_malloc(sizeof(rt_uint8_t)*mem_size);
 	
 	rt_memset(buffer,0,sizeof(rt_uint8_t)*mem_size);
@@ -102,46 +101,52 @@ rt_int8_t com_recv_data_analyze(rt_device_t usart,rt_uint32_t wait_t,rt_uint32_t
 #endif
 		return -1;
 	}
-	while(time>0)
+	while(wait_t>0)
 	{
+		wait_t--;
 		rt_thread_delay(1);
-
+		
 		size = rt_device_read(usart,0,tmp_buffer,1);
 		if(1 == size)
 		{
 			if((tmp_buffer - buffer) < mem_size)
 			{
 				tmp_buffer++;
+				va_start(ap,arg_num);
 				for(i = 0; i < arg_num;i++)
 				{
 					ap_str = va_arg(ap,const char*);
-					
+
 					analyze_result = rt_strstr((const char*)buffer,(const char*)ap_str);
 					if(analyze_result != RT_NULL)
 					{
-						jmp_flag = i;
+#ifdef CMAERA_DEBUG_INFO_PRINTF
+						rt_kprintf("buffer = %s \n",buffer);
+						rt_kprintf("ap_str = %s \n",ap_str);
+						rt_kprintf("analyze ok\n");
+#endif
+						jmp_flag = i+1;
 						break;
 					}
 				}	
+				va_end(ap);
 				if(jmp_flag)
 				{
 					rt_free(buffer);
-					va_end(ap);
 					return jmp_flag;
 				}
 			}
 			else
 			{
-				tmp_buffer = buffer;
+				tmp_buffer = buffer;						//prevent Array Bounds Write
 			}
 		}
 	}
-	if(0 == time)
+	if(0 == wait_t)
 	{
 		rt_kprintf("wait time\n");
 	}
 	rt_free(buffer);
-	va_end(ap);
 	
 	return 0;
 }
@@ -582,7 +587,7 @@ void photo_deal(camera_dev_t camera,cm_recv_mq_t recv_mq)
 	mms_mail_buf.alarm_type = recv_mq->alarm_type;
 	mms_mail_buf.time = recv_mq->date;
 	/*  Receive timeout make no difference */
-	if((CM_RUN_DEAL_OK == camera->error)||(CM_RECV_OUT_TIME | camera->error))
+	if((CM_RUN_DEAL_OK == camera->error)||(CM_RECV_OUT_TIME & camera->error))
 	{
 		rt_mq_send(mms_mq, &mms_mail_buf, sizeof(MMS_MAIL_TYPEDEF));
 	}
@@ -592,6 +597,8 @@ void photo_deal(camera_dev_t camera,cm_recv_mq_t recv_mq)
 	}
 		
 }
+
+
 void photo_light_control(camera_dev_t camera,rt_uint8_t status)
 {
 	rt_uint8_t dat = 0;
@@ -614,6 +621,38 @@ void photo_light_control(camera_dev_t camera,rt_uint8_t status)
 		}
 	}
 }
+
+void camera_module_self_test(camera_dev_t camera)
+{
+	rt_uint8_t i = 0;
+	rt_uint8_t error_num = 0;
+	const char result[6] = {0x76,0x00,0x36,0x00,0x00,'\0'};
+	
+	camera_power_control(camera,1);	
+/*
+  if(com_recv_data_analyze(camera->device,200,300,1,"User-defined") != 1)
+	{
+		rt_kprintf("camrea fun problem\n");
+		send_sms_mail(ALARM_TYPE_CAMERA_FAULT,0);
+	}
+*/
+	com_recv_data_analyze(camera->device,200,300,1,"@");
+	for(i = 0; i < 3; i++)
+	{
+		rt_device_write(camera->device,0,update_camrea_cmd,sizeof(update_camrea_cmd));
+		if(com_recv_data_analyze(camera->device,200,300,1,result) != 1)
+		{
+			error_num++;
+			if(error_num > 2)
+			{
+				send_sms_mail(ALARM_TYPE_CAMERA_FAULT,0);
+			}
+		}
+	}
+	camera_power_control(camera,0); 
+}
+
+
 void photo_thread_entry(void *arg)
 {
 	struct camera_dev photo;
@@ -627,7 +666,7 @@ void photo_thread_entry(void *arg)
 	camera_power_control(&photo,1);	
 	while(1)
 	{
-		result =  rt_mq_recv(photo_start_mq,&recv_mq,sizeof(recv_mq),1000);
+		result =  rt_mq_recv(photo_start_mq,&recv_mq,sizeof(recv_mq),24*36000);
 
 		if(RT_EOK == result)								//in working order
 		{
@@ -656,23 +695,14 @@ void photo_thread_entry(void *arg)
 			
 			photo_deal(&photo,&recv_mq);	
 
-			//camera_power_control(&photo,0); 	//close camera power
+			camera_power_control(&photo,0); 	//close camera power
 
 		}
 		else if(-RT_ETIMEOUT == result)			//timeout checout module
 		{
-			camera_power_control(&photo,1);	
+			camera_module_self_test(&photo);
 			
-			com2_release_buffer(&photo);
-			
-			if(com_recv_data_analyze(photo.device,200,100,1,"init") != 1)
-			{
-				send_sms_mail(ALARM_TYPE_CAMERA_FAULT,0);
-			}
-			camera_power_control(&photo,0); 
-			
-			rt_kprintf("close power\n");
-			continue;
+			rt_kprintf("camera close power!!!\n");
 		}
 	}
 }
