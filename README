@@ -134,7 +134,7 @@
 	newboot
    }
    open emacs and M-x gdb
-   /usr/local/gcc-arm-none-eabi-4_7-2013q1/bin/arm-none-eabi-gdb -i=mi smart_lock.elf -x gdb.init
+   /home/bright/CodeSourcery/Sourcery_CodeBench_Lite_for_ARM_EABI/bin/arm-none-eabi-gdb -i=mi smart_lock.elf -x gdb.init
 
    gdb.init:
    {

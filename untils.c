@@ -50,7 +50,7 @@ DEVICE_PARAMETERS_TYPEDEF device_parameters = {
   {
     {
       1,
-      0xAAAAAA
+      "\x00\x00\x00\x00"
     },
   },
   {

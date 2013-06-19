@@ -27,6 +27,7 @@ typedef struct
 
 extern rt_mq_t local_mq;
 extern rt_timer_t lock_gate_timer;
+extern rt_timer_t battery_switch_timer;
 
 void local_mail_process_thread_entry(void *parameter);
 

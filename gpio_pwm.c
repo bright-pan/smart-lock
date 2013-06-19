@@ -14,6 +14,7 @@
 #include "gpio_pwm.h"
 #include "gpio_exti.h"
 #include "gpio_pin.h"
+#include "sms.h"
 
 /*
  *  GPIO ops function interfaces
@@ -451,7 +452,11 @@ void voice_output(rt_uint16_t counts)
   rt_device_control(reset_device, RT_DEVICE_CTRL_SEND_PULSE, (void *)0);
 }
 
-int8_t motor_output(uint8_t direction)
+/*
+ * direction:
+ * lock -> mt_stat(1) -> mt_a（clockwise）, unlock -> mt_stat(0) -> mt_b(counterclockwise)
+ */
+int8_t lock_output(uint8_t direction)
 {
   rt_device_t device_motor_a = RT_NULL;
   rt_device_t device_motor_b = RT_NULL;
@@ -465,41 +470,18 @@ int8_t motor_output(uint8_t direction)
   device_motor_b = rt_device_find(DEVICE_NAME_MOTOR_B_PULSE);
   device_motor_status = rt_device_find(DEVICE_NAME_MOTOR_STATUS);
 
-
   rt_device_read(device_motor_status,0,&dat,0);
   //
   if (dat != direction)
   {
-    if (direction == 0)
-    {
-      while (counts-- > 0)
-      {
-        rt_device_control(device_motor_a, RT_DEVICE_CTRL_SET_PULSE_COUNTS, &period);
-        rt_device_control(device_motor_a, RT_DEVICE_CTRL_SEND_PULSE, (void *)0);
-        rt_device_read(device_motor_status,0,&dat,0);
-        if (dat == 0)
-        {
-          //adjust place
-          rt_device_control(device_motor_a, RT_DEVICE_CTRL_SET_PULSE_COUNTS, &adjust_period);
-          rt_device_control(device_motor_a, RT_DEVICE_CTRL_SEND_PULSE, (void *)0);
-          break;
-        }
-      }
-      rt_device_read(device_motor_status,0,&dat,0);
-      if (dat == 1)
-      {
-        //motor error
-        return -1;
-      }
-    }
-    else
+    if (direction == 0) //unlock
     {
       while (counts-- > 0)
       {
         rt_device_control(device_motor_b, RT_DEVICE_CTRL_SET_PULSE_COUNTS, &period);
         rt_device_control(device_motor_b, RT_DEVICE_CTRL_SEND_PULSE, (void *)0);
         rt_device_read(device_motor_status,0,&dat,0);
-        if (dat == 1)
+        if (dat == 0)
         {
           //adjust place
           rt_device_control(device_motor_b, RT_DEVICE_CTRL_SET_PULSE_COUNTS, &adjust_period);
@@ -508,12 +490,35 @@ int8_t motor_output(uint8_t direction)
         }
       }
       rt_device_read(device_motor_status,0,&dat,0);
+      if (dat == 1)
+      {
+        //motor error
+        send_sms_mail(ALARM_TYPE_MOTOR_FAULT, 0);
+        return -1;
+      }
+    }
+    else //lock
+    {
+      while (counts-- > 0)
+      {
+        rt_device_control(device_motor_a, RT_DEVICE_CTRL_SET_PULSE_COUNTS, &period);
+        rt_device_control(device_motor_a, RT_DEVICE_CTRL_SEND_PULSE, (void *)0);
+        rt_device_read(device_motor_status,0,&dat,0);
+        if (dat == 1)
+        {
+          //adjust place
+          rt_device_control(device_motor_a, RT_DEVICE_CTRL_SET_PULSE_COUNTS, &adjust_period);
+          rt_device_control(device_motor_a, RT_DEVICE_CTRL_SEND_PULSE, (void *)0);
+          break;
+        }
+      }
+      rt_device_read(device_motor_status,0,&dat,0);
       if (dat == 0)
       {
         //motor error
+        send_sms_mail(ALARM_TYPE_MOTOR_FAULT, 0);
         return -1;
       }
-
     }
   }
   else

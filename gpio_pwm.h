@@ -69,6 +69,8 @@ void rt_hw_voice_reset_register(void);
 
 void voice_output(rt_uint16_t counts);
 
-int8_t motor_output(uint8_t direction);
+#define GATE_LOCK 1
+#define GATE_UNLOCK 0
+int8_t lock_output(uint8_t direction);
 
 #endif

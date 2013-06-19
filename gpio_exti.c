@@ -420,6 +420,7 @@ void rt_hw_gsm_ring_register(void)
 /* lock_gate device */
 rt_err_t lock_gate_rx_ind(rt_device_t dev, rt_size_t size)
 {
+  static time_t time_old = 0;
   gpio_device *gpio = RT_NULL;
   time_t time;
 
@@ -427,8 +428,13 @@ rt_err_t lock_gate_rx_ind(rt_device_t dev, rt_size_t size)
   gpio = (gpio_device *)dev;
   /* produce mail */
   rt_device_control(rtc_device, RT_DEVICE_CTRL_RTC_GET_TIME, &time);
-  if (lock_gate_timer != RT_NULL)
+  if ((time - time_old) > ALARM_INTERVAL)
   {
+    time_old = time;
+  }
+  else
+  {
+    time_old = time;
     return RT_EOK;
   }
   /* send mail */

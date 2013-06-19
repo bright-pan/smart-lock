@@ -119,6 +119,10 @@ void send_alarm_mail(ALARM_TYPEDEF alarm_type, ALARM_PROCESS_FLAG_TYPEDEF alarm_
   {
     rt_device_control(rtc_device, RT_DEVICE_CTRL_RTC_GET_TIME, &(buf.time));
   }
+  else
+  {
+    buf.time = time;
+  }
   buf.alarm_process_flag = alarm_process_flag;
   buf.gpio_value = gpio_value;
   if (alarm_mq != NULL)
