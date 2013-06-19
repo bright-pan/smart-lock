@@ -439,8 +439,15 @@ void mms_get_send_file_size(mms_dev_t mms,rt_uint8_t pos)
 	
   if(pos < PER_MMC_PIC_MAXNUM)
   {
-    stat(mms->pic_name[pos],&status);
-    mms->pic_size[pos] = status.st_size;	
+  	if(mms->pic_name[pos] != RT_NULL)
+  	{
+			stat(mms->pic_name[pos],&status);
+			mms->pic_size[pos] = status.st_size;	
+  	}
+    else
+    {
+			rt_kprintf("mms send picture name file %d is RT_NULL\n",pos);
+    }
   }
   else
   {	

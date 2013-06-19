@@ -557,7 +557,11 @@ void photo_struct_init(camera_dev_t camera)
 //	camera->data = data_buffer;
 }
 
-
+void photo_change_pic_filename(cm_recv_mq_t recv_mq)
+{
+	rename(recv_mq->name1,"/pic1.jpg");
+	rename(recv_mq->name2,"/pic2.jpg");
+}
 void photo_deal(camera_dev_t camera,cm_recv_mq_t recv_mq)
 {
 	//struct cm_send_mq send_mq;
@@ -589,6 +593,8 @@ void photo_deal(camera_dev_t camera,cm_recv_mq_t recv_mq)
 	/*  Receive timeout make no difference */
 	if((CM_RUN_DEAL_OK == camera->error)||(CM_RECV_OUT_TIME & camera->error))
 	{
+		photo_change_pic_filename(recv_mq);
+		
 		rt_mq_send(mms_mq, &mms_mail_buf, sizeof(MMS_MAIL_TYPEDEF));
 	}
 	else

@@ -1,1 +1,2 @@
----- AT+MIPCALL 匹配 (0 in 0 文件) ----
+---- sms_mq is RT_NULL!!! 匹配 (1 in 1 文件) ----
+Sms.c (e:\code\smartlock):    rt_kprintf("sms_mq is RT_NULL!!!\n");
