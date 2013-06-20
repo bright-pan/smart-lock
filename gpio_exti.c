@@ -298,6 +298,7 @@ rt_err_t camera_irdasensor_rx_ind(rt_device_t dev, rt_size_t size)
   gpio_device *gpio = RT_NULL;
   time_t time;
   static time_t time_old = 0;
+  extern rt_sem_t cm_ir_sem;
 
   RT_ASSERT(dev != RT_NULL);
   gpio = (gpio_device *)dev;
@@ -316,6 +317,8 @@ rt_err_t camera_irdasensor_rx_ind(rt_device_t dev, rt_size_t size)
     return RT_EOK;
   }
   /* send mail */
+	rt_sem_release(cm_ir_sem);
+ 
   send_alarm_mail(ALARM_TYPE_CAMERA_IRDASENSOR, ALARM_PROCESS_FLAG_SMS | ALARM_PROCESS_FLAG_GPRS | ALARM_PROCESS_FLAG_LOCAL, gpio->pin_value, time);
 
   return RT_EOK;

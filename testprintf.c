@@ -20,6 +20,8 @@
 #include "sms.h"
 #include "gprs.h"
 #include "mms.h"
+#include "alarm.h"
+
 
 
 
@@ -186,6 +188,8 @@ void printf_format_string(rt_uint8_t *addr,rt_uint8_t format,rt_uint8_t len)
 		}
 	}
 }
+
+
 
 #ifdef RT_USING_FINSH
 #include <finsh.h>

@@ -54,6 +54,9 @@ rt_uint32_t	pic_timer_value = 0;
 volatile rt_uint32_t	buffer_len_test;
 volatile rt_bool_t		run = 0;
 
+void camera_infrared_thread_enter(void *arg);
+
+
 void test_recv_data(rt_uint8_t data[],rt_uint32_t len)
 {	
 	 rt_uint32_t i = 0;
@@ -718,7 +721,7 @@ void photo_thread_init(void)
 {
 	rt_thread_t	id;//threasd id
 
-	id = rt_thread_create("cm_task",photo_thread_entry,RT_NULL,1024*5,100,30);
+	id = rt_thread_create("cm_task",photo_thread_entry,RT_NULL,1024*4,100,30);
 	if(RT_NULL == id )
 	{
 		rt_kprintf("graph thread create fail\n");
@@ -739,6 +742,22 @@ void photo_thread_init(void)
 	if(RT_NULL == photo_start_mq)
 	{
 		rt_kprintf(" \"cmsend\" mq create fial\n");
+
+		return ;
+	}
+	id = rt_thread_create("cm_ir_c",camera_infrared_thread_enter,RT_NULL,256,108,100);
+	if(RT_NULL == id )
+	{
+		rt_kprintf("graph thread create fail\n");
+		
+		return ;
+	}
+	rt_thread_startup(id);
+		
+	cm_ir_sem = rt_sem_create("cmirsem",0,RT_IPC_FLAG_FIFO);
+	if(RT_NULL == cm_ir_sem)
+	{
+		rt_kprintf(" \"cmirsem\" sem create fail\n");
 
 		return ;
 	}
@@ -772,7 +791,52 @@ void camera_send_mail(ALARM_TYPEDEF alarm_type, time_t time)
 
 
 
+/*		camera infared detection  part*/
+rt_sem_t cm_ir_sem = RT_NULL;
 
+void camera_infrared_thread_enter(void *arg)
+{
+	rt_device_t dev;
+	rt_uint8_t	dat;
+	rt_uint32_t flag = 0;
+
+	dev = rt_device_find(DEVICE_NAME_CAMERA_IRDASENSOR);
+	while(1)
+	{
+		rt_sem_take(cm_ir_sem,RT_WAITING_FOREVER);
+		if(dev != RT_NULL)
+		{
+			flag = 0;
+			while(1)
+			{
+				rt_device_read(dev,0,&dat,1);
+				if(dat == 1)
+				{
+					if(flag>0)
+					{
+						flag--;
+					} 	
+				}
+				else
+				{
+					if(flag < 0x1ff)
+					{
+						flag++;
+						rt_kprintf("flag = %d\n",flag);
+					}
+					else
+					{
+						rt_kprintf("flag = %d\n",flag);
+						camera_send_mail(ALARM_TYPE_CAMERA_IRDASENSOR,0);
+						break;
+					}
+				}
+			}
+		}
+
+	}
+
+}
 
 
 
@@ -798,9 +862,12 @@ FINSH_FUNCTION_EXPORT(reset, reset());
 
 void mq(rt_uint32_t time)//(rt_uint8_t time,rt_uint8_t *file_name)
 {
-	struct cm_recv_mq send_mq = {0,0,0,"/1.jpg","/2.jpg"};
+	struct cm_recv_mq send_mq;
 
 	send_mq.time = time;
+	send_mq.date = 0;
+	send_mq.name1 = "/1.jpg";
+	send_mq.name2 = "/2.jpg";
 	rt_mq_send(photo_start_mq,&send_mq,sizeof(send_mq));
 }
 FINSH_FUNCTION_EXPORT(mq, mq(time,name));

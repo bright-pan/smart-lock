@@ -92,10 +92,12 @@ typedef struct cm_send_mq cm_send_mq_t;
 
 
 //extern rt_mq_t			photo_ok_mq;			//photo finish
+extern rt_sem_t cm_ir_sem;
 
 void photo_thread_init(void);
 void mq(rt_uint32_t time);//(rt_uint8_t time,rt_uint8_t *file_name);
 void camera_send_mail(ALARM_TYPEDEF alarm_type, time_t time);
+void camera_infrared_thread_init(void);	//camera infrared thread init function 
 
 
 
