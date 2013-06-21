@@ -164,7 +164,7 @@ static void logo_led_timeout(void *parameters)
 {
   gpio_pin_output(DEVICE_NAME_LOGO_LED, 0);
   rt_timer_stop(logo_led_timer);
-  rt_timer_delete(logo_led_timer);
+ // rt_timer_delete(logo_led_timer);
 }      
 
 int rt_application_init()
@@ -272,9 +272,9 @@ int rt_application_init()
                                    RT_NULL,
                                    1000,
                                    RT_TIMER_FLAG_ONE_SHOT);
-//  rt_timer_start(logo_led_timer);
+  //rt_timer_start(logo_led_timer);
   // initialing status
-//  lock_output(GATE_UNLOCK);//unlock
+  //lock_output(GATE_UNLOCK);//unlock
   return 0;
 }
 

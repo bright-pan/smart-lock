@@ -1,2 +1,14 @@
----- sms_mq is RT_NULL!!! 匹配 (1 in 1 文件) ----
-Sms.c (e:\code\smartlock):    rt_kprintf("sms_mq is RT_NULL!!!\n");
+---- lock_gate_timer 匹配 (13 in 2 文件) ----
+Local.c (e:\code\smartlock):rt_timer_t lock_gate_timer = RT_NULL;
+Local.c (e:\code\smartlock):  if (lock_gate_timer == RT_NULL)
+Local.c (e:\code\smartlock):    lock_gate_timer = rt_timer_create("tr_lg",
+Local.c (e:\code\smartlock):    rt_timer_start(lock_gate_timer);
+Local.c (e:\code\smartlock):    rt_timer_stop(lock_gate_timer);
+Local.c (e:\code\smartlock):    rt_timer_delete(lock_gate_timer);
+Local.c (e:\code\smartlock):        rt_timer_stop(lock_gate_timer);
+Local.c (e:\code\smartlock):        rt_timer_delete(lock_gate_timer);
+Local.c (e:\code\smartlock):        lock_gate_timer = RT_NULL;
+Local.c (e:\code\smartlock):      rt_timer_stop(lock_gate_timer);
+Local.c (e:\code\smartlock):      rt_timer_delete(lock_gate_timer);
+Local.c (e:\code\smartlock):      lock_gate_timer = RT_NULL;
+Local.h (e:\code\smartlock):extern rt_timer_t lock_gate_timer;

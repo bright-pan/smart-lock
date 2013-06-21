@@ -118,7 +118,7 @@ static void rfid_key_detect_process(void)
 {
   rt_device_t device;
   uint8_t rfid_key[4] = {0,};
-  uint8_t rfid_buf[8] = {0,};
+  uint8_t rfid_buf[9] = {0,};
   int8_t counts = 50;
   int8_t rfid_key_index = 0;
   int8_t rfid_error = 0;
@@ -135,75 +135,79 @@ static void rfid_key_detect_process(void)
                                               RT_NULL,
                                               6000,
                                               RT_TIMER_FLAG_PERIODIC);
-      rt_timer_start(rfid_key_detect_timer);
+      //rt_timer_start(rfid_key_detect_timer);
     }
     else
     {
     }
+	  gpio_pin_output(DEVICE_NAME_RFID_POWER, 1);
+	  device = rt_device_find(DEVICE_NAME_RFID_UART);
+	  if (device != RT_NULL)
+	  {
+	    while (counts > 0)
+	    {
+	      rt_device_read(device, 0, &rfid_key, 8);// clear rfid uart cache
+	      rt_device_read(device, 0, &rfid_key, 8);// clear rfid uart cache
+	      rt_device_write(device, 0, "\x50\x00\x06\xD4\x07\x01\x00\x00\x00\x04\x80", 11);
+	      //delay_us(100000);
+	      rt_thread_delay(10);
+	      rfid_recv = rt_device_read(device, 0, &rfid_buf, 9);
+	      if (rfid_recv == 9)
+	      {
+	        rfid_key[0] = rfid_buf[4]^rfid_buf[8];
+	        rfid_key[1] = rfid_buf[5]^rfid_buf[8];
+	        rfid_key[2] = rfid_buf[6]^rfid_buf[8];
+	        rfid_key[3] = rfid_buf[7]^rfid_buf[8];
+
+	        rfid_key_index = RFID_KEY_NUMBERS - 1;
+	        while (rfid_key_index >= 0)
+	        {
+	          if (device_parameters.rfid_key[rfid_key_index].flag && (*((uint32_t *)device_parameters.rfid_key[rfid_key_index].key) == *((uint32_t *)rfid_key)))
+	          {
+	            // success read rfid key
+	            gpio_pin_output(DEVICE_NAME_RFID_POWER, 0);
+	            lock_output(GATE_UNLOCK);//unlock
+	            send_gprs_mail(ALARM_TYPE_RFID_KEY_SUCCESS, 0);
+	            return;
+	          }
+	          rfid_key_index--;
+	        }
+	      }
+	      else if (rfid_recv == 0)
+	      {
+	        rfid_error++;
+	      }
+	      counts--;
+	    }
+	    gpio_pin_output(DEVICE_NAME_RFID_POWER, 0);
+	    if (!counts)
+	    {
+	      // error read rfid_key
+	      if (rfid_error > 20)
+	      {
+	        // rfid fault
+	        send_sms_mail(ALARM_TYPE_RFID_FAULT, 0);
+	        send_gprs_mail(ALARM_TYPE_RFID_FAULT, 0);
+	        return;
+	      }
+	      // send rfid key error mail
+	      send_sms_mail(ALARM_TYPE_RFID_KEY_ERROR, 0);
+	      send_gprs_mail(ALARM_TYPE_RFID_KEY_ERROR, 0);
+	      voice_output(3);		
+	      camera_send_mail(ALARM_TYPE_RFID_KEY_ERROR,0);//camera photo 
+	    }
+	  }
+	  else
+	  {
+	    rt_kprintf("device %s is not exist!\n", DEVICE_NAME_RFID_UART);
+	  }
+	  gpio_pin_output(DEVICE_NAME_RFID_POWER, 0);
   }
   else
   {
 
   }
-  gpio_pin_output(DEVICE_NAME_RFID_POWER, 1);
-  device = rt_device_find(DEVICE_NAME_RFID_UART);
-  if (device != RT_NULL)
-  {
-    while (counts > 0)
-    {
-      rt_device_read(device, 0, &rfid_key, 8);// clear rfid uart cache
-      rt_device_read(device, 0, &rfid_key, 8);// clear rfid uart cache
-      rt_device_write(device, 0, "\x50\x00\x06\xD4\x07\x01\x00\x00\x00\x04\x80", 11);
-      delay_us(200000);
-      rfid_recv = rt_device_read(device, 0, &rfid_buf, 8);
-      if (rfid_recv == 8)
-      {
-        rfid_key[0] = rfid_buf[5]^rfid_buf[8];
-        rfid_key[1] = rfid_buf[6]^rfid_buf[8];
-        rfid_key[2] = rfid_buf[7]^rfid_buf[8];
-        rfid_key[3] = rfid_buf[8]^rfid_buf[8];
-
-        rfid_key_index = RFID_KEY_NUMBERS - 1;
-        while (rfid_key_index >= 0)
-        {
-          if (device_parameters.rfid_key[rfid_key_index].flag && (*((uint32_t *)device_parameters.rfid_key[rfid_key_index].key) == *((uint32_t *)rfid_key)))
-          {
-            // success read rfid key
-            gpio_pin_output(DEVICE_NAME_RFID_POWER, 0);
-            lock_output(GATE_UNLOCK);//unlock
-            send_gprs_mail(ALARM_TYPE_RFID_KEY_SUCCESS, 0);
-            return;
-          }
-          rfid_key_index--;
-        }
-      }
-      else if (rfid_recv == 0)
-      {
-        rfid_error++;
-      }
-      counts--;
-    }
-    gpio_pin_output(DEVICE_NAME_RFID_POWER, 0);
-    if (!counts)
-    {
-      // error read rfid_key
-      if (rfid_error > 20)
-      {
-        // rfid fault
-        send_sms_mail(ALARM_TYPE_RFID_FAULT, 0);
-        send_gprs_mail(ALARM_TYPE_RFID_FAULT, 0);
-        return;
-      }
-      // send rfid key error mail
-      send_sms_mail(ALARM_TYPE_RFID_KEY_ERROR, 0);
-      send_gprs_mail(ALARM_TYPE_RFID_KEY_ERROR, 0);
-    }
-  }
-  else
-  {
-    rt_kprintf("device %s is not exist!\n", DEVICE_NAME_RFID_UART);
-  }
-  gpio_pin_output(DEVICE_NAME_RFID_POWER, 0);
+  
 
 }
 static void rfid_key_detect_timeout(void *parameters)
@@ -225,8 +229,8 @@ static void rfid_key_detect_timeout(void *parameters)
     }
   }
   rt_timer_stop(rfid_key_detect_timer);
-  rt_timer_delete(rfid_key_detect_timer);
-  rfid_key_detect_timer = RT_NULL;
+//  rt_timer_delete(rfid_key_detect_timer);
+//  rfid_key_detect_timer = RT_NULL;
 }
 
 static void battery_switch_process(void)
@@ -320,7 +324,7 @@ static void lock_gate_timeout(void *parameters)
   if (device == RT_NULL)
   {
     rt_timer_stop(lock_gate_timer);
-    rt_timer_delete(lock_gate_timer);
+//    rt_timer_delete(lock_gate_timer);
     gpio_pin_output(DEVICE_NAME_LOGO_LED, 0);// close led
   }
   else
@@ -331,7 +335,7 @@ static void lock_gate_timeout(void *parameters)
       if (!data) // gate is closed
       {
         rt_timer_stop(lock_gate_timer);
-        rt_timer_delete(lock_gate_timer);
+ //       rt_timer_delete(lock_gate_timer);
         gpio_pin_output(DEVICE_NAME_LOGO_LED, 0);// close led
         lock_gate_timer = RT_NULL;
         lock_gate_timeout_counts = 0;
@@ -340,7 +344,7 @@ static void lock_gate_timeout(void *parameters)
     else
     {
       rt_timer_stop(lock_gate_timer);
-      rt_timer_delete(lock_gate_timer);
+//      rt_timer_delete(lock_gate_timer);
       gpio_pin_output(DEVICE_NAME_LOGO_LED, 0);//close logo
       lock_gate_timer = RT_NULL;
       lock_gate_timeout_counts = 0;

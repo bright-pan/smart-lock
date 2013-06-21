@@ -950,11 +950,6 @@
               <FileType>1</FileType>
               <FilePath>.\testprintf.c</FilePath>
             </File>
-            <File>
-              <FileName>tcptest.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\tcptest.c</FilePath>
-            </File>
           </Files>
         </Group>
       </Groups>

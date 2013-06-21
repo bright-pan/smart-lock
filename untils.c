@@ -56,7 +56,7 @@ DEVICE_PARAMETERS_TYPEDEF device_parameters = {
   {
     {
       1,
-      "\x00\x00\x00\x00"
+      "\x86\x6E\xEB\x14"
     },
   },
   {

@@ -49,7 +49,6 @@ rt_mutex_t	pic_file_mutex = RT_NULL;
 
 
 volatile rt_uint32_t release_com2_data = 0;
-static rt_timer_t cm_ir_timer = RT_NULL;
 rt_timer_t	pic_timer = RT_NULL;
 rt_uint32_t	pic_timer_value = 0;
 
@@ -728,7 +727,7 @@ void photo_thread_init(void)
 {
 	rt_thread_t	id;//threasd id
 
-	id = rt_thread_create("cm_task",photo_thread_entry,RT_NULL,1024*4,100,30);
+	id = rt_thread_create("cm_task",photo_thread_entry,RT_NULL,1024*4,103,30);
 	if(RT_NULL == id )
 	{
 		rt_kprintf("graph thread create fail\n");
@@ -806,10 +805,20 @@ void camera_send_mail(ALARM_TYPEDEF alarm_type, time_t time)
 
 
 /*		camera infared detection  part*/
-#define CM_IR_TEST_TIME									0XFF
+#define CM_IR_TEST_TIME	55
+#define CM_IR_ALARM_TOUCH_PERIOD	1
 rt_sem_t cm_ir_sem = RT_NULL;
-volatile rt_uint8_t cm_ir_time_value = 0;
+static rt_timer_t cm_ir_timer = RT_NULL;
+static rt_timer_t cm_alarm_timer = RT_NULL;
 
+volatile rt_uint8_t cm_ir_time_value = 0;
+volatile rt_uint8_t cm_alarm_cnt_time_value = 0;
+
+void camera_alarm_time_interval(void *arg)
+{
+	cm_alarm_cnt_time_value++;
+	rt_kprintf("%d\n",cm_alarm_cnt_time_value);
+}
 void camera_infrared_timer(void *arg)
 {
 	cm_ir_time_value++;
@@ -819,69 +828,96 @@ void camera_infrared_thread_enter(void *arg)
 	rt_device_t ir_dev;											//ir device
 	rt_uint8_t	ir_pin_dat;
 	rt_uint32_t flag = 0;										//ir pin status real-time monitoring
-	rt_uint8_t	leave_flag = 0;
+	rt_uint8_t	leave_flag = 0;				
+	rt_err_t 		result = RT_NULL;
 
 	cm_ir_timer = rt_timer_create("cm_ir_t",camera_infrared_timer,RT_NULL,100,\
+	RT_TIMER_FLAG_PERIODIC);
+
+	cm_alarm_timer = rt_timer_create("cm_ir_t",camera_alarm_time_interval,RT_NULL,3000,\
 	RT_TIMER_FLAG_PERIODIC);
 
 	ir_dev = rt_device_find(DEVICE_NAME_CAMERA_IRDASENSOR);
 	while(1)
 	{
-		rt_sem_take(cm_ir_sem,RT_WAITING_FOREVER);
-		
-		rt_timer_start(cm_ir_timer);
-		if(ir_dev != RT_NULL)
-		{
-			cm_ir_time_value = 0;
-			leave_flag = 0;
-			flag = 0;
-			while(1)
+		result = rt_sem_take(cm_ir_sem,RT_WAITING_FOREVER);//ir alarm touch off
+		if(RT_EOK == result)
+		{	
+			if(2 == leave_flag) 	//touch off period not arrive
 			{
-				rt_device_read(ir_dev,0,&ir_pin_dat,1);
-				if(ir_pin_dat == 1)
+				if(cm_alarm_cnt_time_value > CM_IR_ALARM_TOUCH_PERIOD)
 				{
-					if(flag>0)
-					{
-						flag--;
-					} 	
+					leave_flag = 0;
+					rt_timer_stop(cm_alarm_timer);
+
+					rt_kprintf("############################################\n");
 				}
-				else
+				if(2 == leave_flag)
 				{
-					if(flag < CM_IR_TEST_TIME)
+					continue;
+				}
+			}
+			rt_timer_start(cm_ir_timer);
+			if(ir_dev != RT_NULL)
+			{
+				cm_ir_time_value = 0;
+				leave_flag = 0;
+				flag = 0;
+				while(1)
+				{
+					rt_device_read(ir_dev,0,&ir_pin_dat,1);
+					rt_thread_delay(1);
+					if(ir_pin_dat == 1)
 					{
-						flag++;
-						rt_kprintf("flag = %d\n",flag);
+						if(flag>0)
+						{
+							flag--;
+						} 	
 					}
 					else
 					{
-						rt_kprintf("flag = %d\n",flag);
-						if(1 == leave_flag)
+						if(flag < CM_IR_TEST_TIME)
 						{
-							camera_send_mail(ALARM_TYPE_CAMERA_IRDASENSOR,0);//send sem camera 
+							flag++;
+				//			rt_kprintf("flag = %d\n",flag);
 						}
-						
-						break;
+						else
+						{
+							rt_kprintf("flag = %d\n",flag);
+							if(1 == leave_flag)
+							{
+								leave_flag = 2;//start	photo 
+								cm_alarm_cnt_time_value = 0;
+								rt_timer_start(cm_alarm_timer);//start alarm cnt timer
+								camera_send_mail(ALARM_TYPE_CAMERA_IRDASENSOR,0);//send sem camera 
+							}
+							
+							break;
+						}
 					}
-				}
-				if(cm_ir_time_value >= 2)
-				{
-					rt_device_t rtc_dev;
-					time_t 			cur_data;
-					
-					cm_ir_time_value = 0;
-					leave_flag = 1;
-					rt_timer_stop(cm_ir_timer);
-					
-					rtc_dev = rt_device_find("rtc");
-					
-					rt_device_control(rtc_dev, RT_DEVICE_CTRL_RTC_GET_TIME, &cur_data);
-					//send sem alarm information
-					send_alarm_mail(ALARM_TYPE_CAMERA_IRDASENSOR, ALARM_PROCESS_FLAG_SMS |\
-					ALARM_PROCESS_FLAG_GPRS | ALARM_PROCESS_FLAG_LOCAL, ir_pin_dat, cur_data);
+					if(cm_ir_time_value >= 2)
+					{
+						rt_device_t rtc_dev;
+						time_t			cur_data;
+						
+						cm_ir_time_value = 0;
+						leave_flag = 1;
+						rt_timer_stop(cm_ir_timer);
+						
+						rtc_dev = rt_device_find("rtc");
+						
+						rt_device_control(rtc_dev, RT_DEVICE_CTRL_RTC_GET_TIME, &cur_data);
+						//send sem alarm information
+						send_alarm_mail(ALARM_TYPE_CAMERA_IRDASENSOR, ALARM_PROCESS_FLAG_SMS |\
+						ALARM_PROCESS_FLAG_GPRS | ALARM_PROCESS_FLAG_LOCAL, ir_pin_dat, cur_data);
+					}
 				}
 			}
 		}
+		else //if()
+		{
 
+		}
 	}
 
 }
