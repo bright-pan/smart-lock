@@ -392,7 +392,7 @@ void sms_mail_process_thread_entry(void *parameter)
             resend_counts = 5;
             while (resend_counts > 0)
             {
-              if (!sms_pdu_ucs_send(device_parameters.alarm_telephone[alarm_telephone_counts].address, smsc, sms_ucs, sms_ucs_length))
+   //           if (!sms_pdu_ucs_send(device_parameters.alarm_telephone[alarm_telephone_counts].address, smsc, sms_ucs, sms_ucs_length))
               {
                 break;
               }

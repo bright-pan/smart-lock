@@ -52,7 +52,7 @@
           <ListingPath>.\obj\</ListingPath>
           <HexFormatSelection>1</HexFormatSelection>
           <Merge32K>0</Merge32K>
-          <CreateBatchFile>0</CreateBatchFile>
+          <CreateBatchFile>1</CreateBatchFile>
           <BeforeCompile>
             <RunUserProg1>0</RunUserProg1>
             <RunUserProg2>0</RunUserProg2>
@@ -949,6 +949,11 @@
               <FileName>testprintf.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\testprintf.c</FilePath>
+            </File>
+            <File>
+              <FileName>tcptest.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\tcptest.c</FilePath>
             </File>
           </Files>
         </Group>

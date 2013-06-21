@@ -123,7 +123,9 @@ void mms_send_pic_fun(mms_dev_t mms, rt_uint8_t pic_pos)
   rt_uint32_t 				size = 0;
   volatile rt_uint8_t	buffer;
   rt_uint32_t 				fzise = 0;
-	
+  extern rt_mutex_t	 pic_file_mutex;
+
+	rt_mutex_take(pic_file_mutex,RT_WAITING_FOREVER);
   if(pic_pos < PER_MMC_PIC_MAXNUM)
   {
     rt_kprintf("%s",mms->pic_name[pic_pos]);
@@ -153,6 +155,7 @@ void mms_send_pic_fun(mms_dev_t mms, rt_uint8_t pic_pos)
     }
   }
   rt_kprintf(">>>\n%d\n",fzise);
+  rt_mutex_release(pic_file_mutex);
 }
 
 void mms_send_exit_cmd(mms_dev_t mms,rt_int8_t time)
