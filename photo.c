@@ -849,8 +849,6 @@ void camera_infrared_thread_enter(void *arg)
 				{
 					leave_flag = 0;
 					rt_timer_stop(cm_alarm_timer);
-
-					rt_kprintf("############################################\n");
 				}
 				if(2 == leave_flag)
 				{
@@ -879,11 +877,9 @@ void camera_infrared_thread_enter(void *arg)
 						if(flag < CM_IR_TEST_TIME)
 						{
 							flag++;
-				//			rt_kprintf("flag = %d\n",flag);
 						}
 						else
 						{
-							rt_kprintf("flag = %d\n",flag);
 							if(1 == leave_flag)
 							{
 								leave_flag = 2;//start	photo 

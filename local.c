@@ -135,10 +135,11 @@ static void rfid_key_detect_process(void)
                                               RT_NULL,
                                               6000,
                                               RT_TIMER_FLAG_PERIODIC);
-      //rt_timer_start(rfid_key_detect_timer);
+      rt_timer_start(rfid_key_detect_timer);
     }
     else
     {
+    	rt_timer_start(rfid_key_detect_timer);
     }
 	  gpio_pin_output(DEVICE_NAME_RFID_POWER, 1);
 	  device = rt_device_find(DEVICE_NAME_RFID_UART);
@@ -229,8 +230,8 @@ static void rfid_key_detect_timeout(void *parameters)
     }
   }
   rt_timer_stop(rfid_key_detect_timer);
-//  rt_timer_delete(rfid_key_detect_timer);
-//  rfid_key_detect_timer = RT_NULL;
+	//rt_timer_delete(rfid_key_detect_timer);
+  //rfid_key_detect_timer = RT_NULL;
 }
 
 static void battery_switch_process(void)
@@ -249,6 +250,11 @@ static void battery_switch_process(void)
       battery_switch_timeout_counts = 20;
       rt_timer_start(battery_switch_timer);
     }
+    else
+    {
+			battery_switch_timeout_counts = 20;
+			rt_timer_start(battery_switch_timer);
+    }
   }
   else
   {
@@ -265,7 +271,7 @@ static void battery_switch_timeout(void *parameters)
   if (device == RT_NULL)
   {
     rt_timer_stop(battery_switch_timer);
-    rt_timer_delete(battery_switch_timer);
+    //rt_timer_delete(battery_switch_timer);
   }
   else
   {
@@ -275,16 +281,16 @@ static void battery_switch_timeout(void *parameters)
       if (data != POWER_BATTERY) // power is external
       {
         rt_timer_stop(battery_switch_timer);
-        rt_timer_delete(battery_switch_timer);
-        battery_switch_timer = RT_NULL;
+        //rt_timer_delete(battery_switch_timer);
+        //battery_switch_timer = RT_NULL;
         battery_switch_timeout_counts = 0;
       }
     }
     else
     {
       rt_timer_stop(battery_switch_timer);
-      rt_timer_delete(battery_switch_timer);
-      battery_switch_timer = RT_NULL;
+      //rt_timer_delete(battery_switch_timer);
+      //battery_switch_timer = RT_NULL;
       battery_switch_timeout_counts = 0;
       //send mail
       send_sms_mail(ALARM_TYPE_BATTERY_WORKING_20M, 0);
@@ -295,15 +301,19 @@ static void battery_switch_timeout(void *parameters)
 
 static void lock_gate_process(void)
 {
+	gpio_pin_output(DEVICE_NAME_LOGO_LED, 1);
   if (lock_gate_timer == RT_NULL)
   {
-    gpio_pin_output(DEVICE_NAME_LOGO_LED, 1);
     lock_gate_timer = rt_timer_create("tr_lg",
                                       lock_gate_timeout,
                                       RT_NULL,
                                       6000,
                                       RT_TIMER_FLAG_PERIODIC);
-    if (device_parameters.lock_gate_alarm_time < 0 || device_parameters.lock_gate_alarm_time > 99)
+  }
+  else
+  {	
+  }
+  if (device_parameters.lock_gate_alarm_time < 0 || device_parameters.lock_gate_alarm_time > 99)
     {
       lock_gate_timeout_counts = 30;
     }
@@ -312,7 +322,6 @@ static void lock_gate_process(void)
       lock_gate_timeout_counts = device_parameters.lock_gate_alarm_time;
     }
     rt_timer_start(lock_gate_timer);
-  }
 }
 
 static void lock_gate_timeout(void *parameters)
@@ -337,7 +346,7 @@ static void lock_gate_timeout(void *parameters)
         rt_timer_stop(lock_gate_timer);
  //       rt_timer_delete(lock_gate_timer);
         gpio_pin_output(DEVICE_NAME_LOGO_LED, 0);// close led
-        lock_gate_timer = RT_NULL;
+        //lock_gate_timer = RT_NULL;
         lock_gate_timeout_counts = 0;
       }
     }
@@ -346,7 +355,7 @@ static void lock_gate_timeout(void *parameters)
       rt_timer_stop(lock_gate_timer);
 //      rt_timer_delete(lock_gate_timer);
       gpio_pin_output(DEVICE_NAME_LOGO_LED, 0);//close logo
-      lock_gate_timer = RT_NULL;
+      //lock_gate_timer = RT_NULL;
       lock_gate_timeout_counts = 0;
       //send mail
       send_sms_mail(ALARM_TYPE_LOCK_GATE, 0);

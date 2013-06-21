@@ -483,6 +483,31 @@ void rname(const char *l_name,const char *n_name)
 }
 
 FINSH_FUNCTION_EXPORT(rname,file rename);
+void test_thread(void *arg)
+{
+	rt_thread_delay(1000);
+}
+void test_k(void)
+{
+	rt_thread_t	id;//threasd id
+	rt_uint8_t str[10];
+	static rt_uint8_t i = 0;
+
+//	while(1)
+	{
+
+		i++;
+		rt_sprintf(str,"rt%d",i);
+		id = rt_thread_create(str,test_thread,&i,1024*4,103,30);
+		if(RT_NULL == id )
+		{
+			rt_kprintf("graph thread create fail\n");
+			return ;
+		}
+		rt_thread_startup(id);
+	}
+}
+FINSH_FUNCTION_EXPORT(test_k,--thread creat test);
 
 #endif
 
