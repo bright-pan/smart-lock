@@ -1909,7 +1909,24 @@ int8_t gsm_gprs_to_gprs_cmd(void)
 
 int8_t gprs_send_heart(void)
 {
-  return 1;
+  GPRS_RECV_FRAME_TYPEDEF recv_frame;
+  send_gprs_frame(ALARM_TYPE_GPRS_HEART, 0);
+  rt_thread_delay(50);
+  if (recv_gprs_frame(&recv_frame) > 0)
+  {
+    if (recv_frame.cmd == 0x80)
+    {
+      return 1;
+    }
+    else
+    {
+      return -1;
+    }
+  }
+  else
+  {
+    return -1;
+  }
 }
 
 int8_t gsm_gprs_cmd_to_gprs(void)
@@ -1948,7 +1965,6 @@ void gsm_process_thread_entry(void *parameters)
   rt_uint32_t request_event, response_event;
   rt_err_t result;
 
-
   event_gsm_mode_request = rt_event_create("evt_g_mrq", RT_IPC_FLAG_FIFO);
   event_gsm_mode_response = rt_event_create("evt_g_mrp", RT_IPC_FLAG_FIFO);  
   mutex_gsm_mode = rt_mutex_create("mut_g_m", RT_IPC_FLAG_FIFO);
@@ -1973,6 +1989,7 @@ void gsm_process_thread_entry(void *parameters)
           {
             rt_kprintf("\ngsm mode switch cmd -> gprs\n");
             gsm_mode_set(EVENT_GSM_MODE_GPRS);
+            send_gprs_frame(ALARM_TYPE_GPRS_AUTH, 0);
           }
           else
           {
@@ -2069,14 +2086,32 @@ void gsm_process_thread_entry(void *parameters)
       {
         //send gprs heart;
         rt_kprintf("\ngsm mode is gprs\n");
-        if (1)
+        /*
+        counts = 10;
+        rt_mutex_take(mutex_gsm_mode, RT_WAITING_FOREVER);
+        while (counts-- > 0)
         {
-          // gprs heart success
+          if (gprs_send_heart() == 1)
+          {
+            // gprs heart success
+            break;
+          }
+          else
+          {
+            //gprs heart failure
+          }
         }
-        else
+        if (counts < 0)
         {
-          //gprs heart failure
+          rt_event_recv(event_gsm_mode_request,
+                           EVENT_GSM_MODE_GPRS | EVENT_GSM_MODE_CMD | EVENT_GSM_MODE_GPRS_CMD,
+                           RT_EVENT_FLAG_OR | RT_EVENT_FLAG_CLEAR, RT_WAITING_NO, &request_event);
+          rt_event_recv(event_gsm_mode_response, EVENT_GSM_MODE_SETUP, RT_EVENT_FLAG_AND | RT_EVENT_FLAG_CLEAR, RT_WAITING_NO, &response_event);
+          rt_event_send(event_gsm_mode_request, EVENT_GSM_MODE_CMD);
+          gsm_mode_set(EVENT_GSM_MODE_CMD);
         }
+        rt_mutex_release(mutex_gsm_mode);
+        */
       }
       else if (gsm_mode_get() & EVENT_GSM_MODE_GPRS_CMD)
       {

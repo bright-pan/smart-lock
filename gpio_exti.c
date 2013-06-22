@@ -441,7 +441,7 @@ rt_err_t lock_gate_rx_ind(rt_device_t dev, rt_size_t size)
     return RT_EOK;
   }
   /* send mail */
-  send_alarm_mail(ALARM_TYPE_LOCK_GATE, ALARM_PROCESS_FLAG_GPRS | ALARM_PROCESS_FLAG_LOCAL, gpio->pin_value, time);
+  send_alarm_mail(ALARM_TYPE_LOCK_GATE, ALARM_PROCESS_FLAG_LOCAL, gpio->pin_value, time);
 
   return RT_EOK;
 }
