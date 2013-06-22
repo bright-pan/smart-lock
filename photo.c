@@ -614,21 +614,19 @@ void photo_light_control(camera_dev_t camera,rt_uint8_t status)
 {
 	rt_uint8_t dat = 0;
 	
-	if(RT_NULL== camera)
+	if(RT_NULL!= camera)
 	{
-		if(rt_device_read(camera->infrared,0,&dat,1))
+		rt_device_read(camera->infrared,0,&dat,1);
+		if(1 == status)
 		{
-			if(1 == status)
-			{
-				if(1 == dat)
-				{
-					rt_device_write(camera->glint_led,0,&status,1);
-				}
-			}
-			else if(0 == status)
+			if(1 == dat)
 			{
 				rt_device_write(camera->glint_led,0,&status,1);
 			}
+		}
+		else if(0 == status)
+		{
+			rt_device_write(camera->glint_led,0,&status,1);
 		}
 	}
 }
@@ -840,7 +838,7 @@ void camera_infrared_thread_enter(void *arg)
 	ir_dev = rt_device_find(DEVICE_NAME_CAMERA_IRDASENSOR);
 	while(1)
 	{
-		result = rt_sem_take(cm_ir_sem,RT_WAITING_FOREVER);//ir alarm touch off
+		result = rt_sem_take(cm_ir_sem,200);//ir alarm touch off
 		if(RT_EOK == result)
 		{	
 			if(2 == leave_flag) 	//touch off period not arrive
@@ -910,9 +908,21 @@ void camera_infrared_thread_enter(void *arg)
 				}
 			}
 		}
-		else //if()
+		else if(result == -RT_ETIMEOUT)
 		{
+			if(2 == leave_flag)
+			{
 
+			}
+			else if(0 == leave_flag)
+			{
+				rt_device_read(ir_dev,0,&ir_pin_dat,1);
+				if(ir_pin_dat == 1)
+				{
+					cm_ir_time_value = 2;
+					rt_sem_release(cm_ir_sem);	
+				}
+			}
 		}
 	}
 
@@ -956,6 +966,7 @@ void s_cm_mq()
 	camera_send_mail(ALARM_TYPE_CAMERA_IRDASENSOR,0);
 }
 FINSH_FUNCTION_EXPORT(s_cm_mq,);
+
 
 #endif
 
