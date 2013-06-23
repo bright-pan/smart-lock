@@ -168,7 +168,7 @@ static void rfid_key_detect_process(void)
 	            // success read rfid key
 	            gpio_pin_output(DEVICE_NAME_RFID_POWER, 0);
 	            lock_output(GATE_UNLOCK);//unlock
-	            send_gprs_mail(ALARM_TYPE_RFID_KEY_SUCCESS, 0);
+	            send_gprs_mail(ALARM_TYPE_RFID_KEY_SUCCESS, 0, 0);
 	            return;
 	          }
 	          rfid_key_index--;
@@ -188,12 +188,12 @@ static void rfid_key_detect_process(void)
 	      {
 	        // rfid fault
 	        send_sms_mail(ALARM_TYPE_RFID_FAULT, 0);
-	        send_gprs_mail(ALARM_TYPE_RFID_FAULT, 0);
+	        send_gprs_mail(ALARM_TYPE_RFID_FAULT, 0, 0);
 	        return;
 	      }
 	      // send rfid key error mail
 	      send_sms_mail(ALARM_TYPE_RFID_KEY_ERROR, 0);
-	      send_gprs_mail(ALARM_TYPE_RFID_KEY_ERROR, 0);
+	      send_gprs_mail(ALARM_TYPE_RFID_KEY_ERROR, 0, 0);
 	      voice_output(3);		
 	      camera_send_mail(ALARM_TYPE_RFID_KEY_ERROR,0);//camera photo 
 	    }
@@ -226,7 +226,7 @@ static void rfid_key_detect_timeout(void *parameters)
     if (data == 1) // rfid key is plugin
     {
       send_sms_mail(ALARM_TYPE_RFID_KEY_PLUGIN, 0);
-      send_gprs_mail(ALARM_TYPE_RFID_KEY_PLUGIN, 0);
+      send_gprs_mail(ALARM_TYPE_RFID_KEY_PLUGIN, 0, 0);
     }
   }
   rt_timer_stop(rfid_key_detect_timer);
@@ -294,7 +294,7 @@ static void battery_switch_timeout(void *parameters)
       battery_switch_timeout_counts = 0;
       //send mail
       send_sms_mail(ALARM_TYPE_BATTERY_WORKING_20M, 0);
-      send_gprs_mail(ALARM_TYPE_BATTERY_WORKING_20M, 0);
+      send_gprs_mail(ALARM_TYPE_BATTERY_WORKING_20M, 0, 0);
     }
   }
 }
@@ -359,7 +359,7 @@ static void lock_gate_timeout(void *parameters)
       lock_gate_timeout_counts = 0;
       //send mail
       send_sms_mail(ALARM_TYPE_LOCK_GATE, 0);
-      send_gprs_mail(ALARM_TYPE_LOCK_GATE, 0);
+      send_gprs_mail(ALARM_TYPE_LOCK_GATE, 0, 0);
     }
   }
 }

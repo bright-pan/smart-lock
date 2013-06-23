@@ -1909,24 +1909,30 @@ int8_t gsm_gprs_to_gprs_cmd(void)
 
 int8_t gprs_send_heart(void)
 {
-  GPRS_RECV_FRAME_TYPEDEF recv_frame;
-  send_gprs_frame(ALARM_TYPE_GPRS_HEART, 0);
-  rt_thread_delay(50);
-  if (recv_gprs_frame(&recv_frame) > 0)
+  int8_t result;
+  GPRS_RECV_FRAME_TYPEDEF *recv_frame = (GPRS_RECV_FRAME_TYPEDEF *)rt_malloc(sizeof(GPRS_RECV_FRAME_TYPEDEF));
+  send_gprs_frame(ALARM_TYPE_GPRS_HEART, 0, 0);
+  rt_thread_delay(200);
+  result = recv_gprs_frame(recv_frame);
+  if (result > 0)
   {
-    if (recv_frame.cmd == 0x80)
+    if (recv_frame->cmd == 0x80)
     {
+      rt_free(recv_frame);
       return 1;
     }
     else
     {
+      rt_free(recv_frame);
       return -1;
     }
   }
   else
   {
+    rt_free(recv_frame);
     return -1;
   }
+  rt_free(recv_frame);
 }
 
 int8_t gsm_gprs_cmd_to_gprs(void)
@@ -1989,7 +1995,7 @@ void gsm_process_thread_entry(void *parameters)
           {
             rt_kprintf("\ngsm mode switch cmd -> gprs\n");
             gsm_mode_set(EVENT_GSM_MODE_GPRS);
-            send_gprs_frame(ALARM_TYPE_GPRS_AUTH, 0);
+            send_gprs_frame(ALARM_TYPE_GPRS_AUTH, 0, 0);
           }
           else
           {
