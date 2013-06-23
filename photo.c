@@ -815,7 +815,11 @@ volatile rt_uint8_t cm_alarm_cnt_time_value = 0;
 void camera_alarm_time_interval(void *arg)
 {
 	cm_alarm_cnt_time_value++;
-	rt_kprintf("%d\n",cm_alarm_cnt_time_value);
+	rt_kprintf("cm_alarm_cnt_time_value = %d\n",cm_alarm_cnt_time_value);
+	if(cm_ir_time_value > CM_IR_ALARM_TOUCH_PERIOD)
+	{
+		rt_kprintf("start camare loopg!!!!!!!!!!!!!!!!!!!!!\n");
+	}
 }
 void camera_infrared_timer(void *arg)
 {
@@ -885,6 +889,7 @@ void camera_infrared_thread_enter(void *arg)
 								rt_timer_start(cm_alarm_timer);//start alarm cnt timer
 								camera_send_mail(ALARM_TYPE_CAMERA_IRDASENSOR,0);//send sem camera 
 							}
+							rt_timer_stop(cm_ir_timer);
 							
 							break;
 						}
