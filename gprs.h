@@ -63,10 +63,9 @@ typedef struct {
 typedef struct {
 
   uint16_t type;
-  uint8_t status;
   uint8_t time[6];
 
-}GPRS_DEVICE_FAULT;
+}GPRS_FAULT_ALARM;
 
 typedef struct {
 
@@ -93,7 +92,7 @@ typedef struct
     GPRS_LOCK_OPEN lock_open;
     GPRS_POWER_FAULT power_fault;
     GPRS_WORK_ALARM work_alarm;
-    GPRS_DEVICE_FAULT device_fault;
+    GPRS_FAULT_ALARM fault_alarm;
     GPRS_HEART heart;
     GPRS_AUTH auth;
 

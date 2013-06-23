@@ -27,9 +27,15 @@
 #define WORK_ALARM_RFID_KEY_PLUGIN (1 << 5)
 #define WORK_ALARM_LOCK_GATE (1 << 6)
 
+#define FAULT_ALARM_CAMERA_FAULT (1 << 0)
+#define FAULT_ALARM_RFID_FAULT (1 << 1)
+#define FAULT_ALARM_POWER_FAULT (1 << 2)
+#define FAULT_ALARM_MOTOR_FAULT (1 << 6)
+
 rt_mq_t gprs_mq;
 static uint8_t gprs_order = 0;
 static uint16_t work_alarm_type_map[50] = {0, };
+static uint16_t fault_alarm_type_map[50] = {0, };
 
 void work_alarm_type_map_init(void)
 {
@@ -39,6 +45,14 @@ void work_alarm_type_map_init(void)
   work_alarm_type_map[ALARM_TYPE_LOCK_TEMPERATURE] = WORK_ALARM_LOCK_TEMPERATURE;
   work_alarm_type_map[ALARM_TYPE_RFID_KEY_PLUGIN] = WORK_ALARM_RFID_KEY_PLUGIN;
   work_alarm_type_map[ALARM_TYPE_LOCK_GATE] = WORK_ALARM_LOCK_GATE;
+}
+
+void fault_alarm_type_map_init(void)
+{
+  fault_alarm_type_map[ALARM_TYPE_CAMERA_FAULT] = FAULT_ALARM_CAMERA_FAULT;
+  fault_alarm_type_map[ALARM_TYPE_RFID_FAULT] = FAULT_ALARM_RFID_FAULT;
+  fault_alarm_type_map[ALARM_TYPE_POWER_FAULT] = FAULT_ALARM_POWER_FAULT;
+  fault_alarm_type_map[ALARM_TYPE_MOTOR_FAULT] = FAULT_ALARM_MOTOR_FAULT;
 }
 
 int8_t recv_gprs_frame(GPRS_RECV_FRAME_TYPEDEF *recv_frame);
@@ -69,6 +83,7 @@ void gprs_mail_process_thread_entry(void *parameter)
 
   create_k1();
   work_alarm_type_map_init();
+  fault_alarm_type_map_init();
   /* initial msg queue */
   gprs_mq = rt_mq_create("gprs", sizeof(GPRS_MAIL_TYPEDEF), \
                          GPRS_MAIL_MAX_MSGS, \
@@ -285,6 +300,25 @@ void work_alarm_process(ALARM_TYPEDEF alarm_type, GPRS_WORK_ALARM *work_alarm, t
   work_alarm->time[4] = bcd((uint8_t)(tm_time.tm_min % 100));
   work_alarm->time[5] = bcd((uint8_t)(tm_time.tm_sec % 100));  
 }
+
+void fault_alarm_process(ALARM_TYPEDEF alarm_type, GPRS_FAULT_ALARM *fault_alarm, time_t time)
+{
+  struct tm tm_time;
+
+  fault_alarm->type = fault_alarm_type_map[alarm_type];
+
+  tm_time = *localtime(&time);
+  tm_time.tm_year += 1900;
+  tm_time.tm_mon += 1;
+
+  fault_alarm->time[0] = bcd((uint8_t)(tm_time.tm_year % 100));
+  fault_alarm->time[1] = bcd((uint8_t)(tm_time.tm_mon % 100));
+  fault_alarm->time[2] = bcd((uint8_t)(tm_time.tm_mday % 100));
+  fault_alarm->time[3] = bcd((uint8_t)(tm_time.tm_hour % 100));
+  fault_alarm->time[4] = bcd((uint8_t)(tm_time.tm_min % 100));
+  fault_alarm->time[5] = bcd((uint8_t)(tm_time.tm_sec % 100));
+}
+
 int8_t send_gprs_frame(ALARM_TYPEDEF alarm_type, time_t time)
 {
 
@@ -384,6 +418,46 @@ int8_t send_gprs_frame(ALARM_TYPEDEF alarm_type, time_t time)
       gprs_send_frame->order = gprs_order++;
 
       work_alarm_process(ALARM_TYPE_RFID_KEY_PLUGIN, &(gprs_send_frame->work_alarm), time);
+
+      break;
+    };
+    case ALARM_TYPE_RFID_FAULT: {
+
+      gprs_send_frame->length = 0x8;
+      gprs_send_frame->cmd = 0x4;
+      gprs_send_frame->order = gprs_order++;
+
+      fault_alarm_process(ALARM_TYPE_RFID_FAULT, &(gprs_send_frame->fault_alarm), time);
+
+      break;
+    };
+    case ALARM_TYPE_CAMERA_FAULT: {
+
+      gprs_send_frame->length = 0x8;
+      gprs_send_frame->cmd = 0x4;
+      gprs_send_frame->order = gprs_order++;
+
+      fault_alarm_process(ALARM_TYPE_CAMERA_FAULT, &(gprs_send_frame->fault_alarm), time);
+
+      break;
+    };
+    case ALARM_TYPE_POWER_FAULT: {
+
+      gprs_send_frame->length = 0x8;
+      gprs_send_frame->cmd = 0x4;
+      gprs_send_frame->order = gprs_order++;
+
+      fault_alarm_process(ALARM_TYPE_POWER_FAULT, &(gprs_send_frame->fault_alarm), time);
+
+      break;
+    };
+    case ALARM_TYPE_MOTOR_FAULT: {
+
+      gprs_send_frame->length = 0x8;
+      gprs_send_frame->cmd = 0x4;
+      gprs_send_frame->order = gprs_order++;
+
+      fault_alarm_process(ALARM_TYPE_MOTOR_FAULT, &(gprs_send_frame->fault_alarm), time);
 
       break;
     };
@@ -497,6 +571,47 @@ int8_t send_gprs_frame(ALARM_TYPEDEF alarm_type, time_t time)
       
       memcpy(process_buf_bk, gprs_send_frame->work_alarm.time, 6);
       process_length += 6;      
+      break;
+    };
+
+    case ALARM_TYPE_RFID_FAULT: {
+
+      *process_buf_bk++ = (uint8_t)((gprs_send_frame->fault_alarm.type) >> 8 & 0xff);
+      *process_buf_bk++ = (uint8_t)(gprs_send_frame->fault_alarm.type & 0xff);
+      process_length += 2;
+
+      memcpy(process_buf_bk, gprs_send_frame->fault_alarm.time, 6);
+      process_length += 6;
+      break;
+    };
+    case ALARM_TYPE_CAMERA_FAULT: {
+
+      *process_buf_bk++ = (uint8_t)((gprs_send_frame->fault_alarm.type) >> 8 & 0xff);
+      *process_buf_bk++ = (uint8_t)(gprs_send_frame->fault_alarm.type & 0xff);
+      process_length += 2;
+
+      memcpy(process_buf_bk, gprs_send_frame->fault_alarm.time, 6);
+      process_length += 6;
+      break;
+    };
+    case ALARM_TYPE_POWER_FAULT: {
+
+      *process_buf_bk++ = (uint8_t)((gprs_send_frame->fault_alarm.type) >> 8 & 0xff);
+      *process_buf_bk++ = (uint8_t)(gprs_send_frame->fault_alarm.type & 0xff);
+      process_length += 2;
+
+      memcpy(process_buf_bk, gprs_send_frame->fault_alarm.time, 6);
+      process_length += 6;
+      break;
+    };
+    case ALARM_TYPE_MOTOR_FAULT: {
+
+      *process_buf_bk++ = (uint8_t)((gprs_send_frame->fault_alarm.type) >> 8 & 0xff);
+      *process_buf_bk++ = (uint8_t)(gprs_send_frame->fault_alarm.type & 0xff);
+      process_length += 2;
+
+      memcpy(process_buf_bk, gprs_send_frame->fault_alarm.time, 6);
+      process_length += 6;
       break;
     };
   }

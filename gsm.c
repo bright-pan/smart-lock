@@ -1147,7 +1147,7 @@ ATCommandStatus gsm_send_at_cipstart(void)
     gsm_put_char(at_temp, strlen(at_temp));
     rt_device_write(device_gsm_usart, 0, at_temp, strlen(at_temp));
     rt_free(at_temp);
-    rt_thread_delay(300);
+    rt_thread_delay(400);
     recv_size = rt_device_read(device_gsm_usart, 0, recv_buf, RECV_BUF_SIZE);
     if (recv_size <= 0)
     {
