@@ -511,7 +511,7 @@ struct gpio_exti_user_data lock_shell_user_data =
   DEVICE_NAME_LOCK_SHELL,
   GPIOD,
   GPIO_Pin_11,
-  GPIO_Mode_IPD,
+  GPIO_Mode_IN_FLOATING,
   GPIO_Speed_50MHz,
   RCC_APB2Periph_GPIOD |RCC_APB2Periph_AFIO,
   GPIO_PortSourceGPIOD,

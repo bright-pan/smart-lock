@@ -92,7 +92,8 @@ typedef struct cm_send_mq cm_send_mq_t;
 
 
 //extern rt_mq_t			photo_ok_mq;			//photo finish
-extern rt_sem_t cm_ir_sem;
+extern rt_sem_t 	cm_ir_sem;
+extern rt_sem_t		start_work_sem;
 
 void photo_thread_init(void);
 void mq(rt_uint32_t time);//(rt_uint8_t time,rt_uint8_t *file_name);

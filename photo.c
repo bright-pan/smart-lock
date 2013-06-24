@@ -40,6 +40,7 @@ rt_uint8_t get_photo_fbuf_cmd[16] = {0x56,0x00,0x32,0x0C,0x00,0x0a,0x00,0x00,0x0
 
 
 rt_sem_t		usart_data_sem = RT_NULL;		//photograph sem
+rt_sem_t		start_work_sem = RT_NULL;		//start camrea mms gprs flow
 rt_sem_t		photo_sem = RT_NULL;				//test use
 rt_mq_t			photo_start_mq = RT_NULL;		//start work mq
 //rt_mq_t			photo_ok_mq = RT_NULL;			//photo finish
@@ -677,6 +678,12 @@ void photo_thread_entry(void *arg)
 	{
 		result =  rt_mq_recv(photo_start_mq,&recv_mq,sizeof(recv_mq),24*36000);
 
+		if(rt_sem_take(start_work_sem,100) != RT_EOK)//start input work cycle
+		{
+			rt_kprintf("not photo \n\n\n");
+			continue;
+		}
+		
 		if(RT_EOK == result)								//in working order
 		{
 			camera_power_control(&photo,1); 	//open camera power
@@ -772,6 +779,13 @@ void photo_thread_init(void)
 
 		return ;
 	}
+	start_work_sem = rt_sem_create("start_w",1,RT_IPC_FLAG_FIFO);
+	if(RT_NULL == start_work_sem)
+	{
+		rt_kprintf(" \"start_w\" sem create fail\n");
+
+		return ;
+	}
 /*
 	photo_ok_mq = rt_mq_create("cmok",64,8,RT_IPC_FLAG_FIFO);
 	if(RT_NULL == photo_ok_mq)
@@ -804,7 +818,7 @@ void camera_send_mail(ALARM_TYPEDEF alarm_type, time_t time)
 
 /*		camera infared detection  part*/
 #define CM_IR_TEST_TIME	55
-#define CM_IR_ALARM_TOUCH_PERIOD	1
+#define CM_IR_ALARM_TOUCH_PERIOD	10		//10min
 rt_sem_t cm_ir_sem = RT_NULL;
 static rt_timer_t cm_ir_timer = RT_NULL;
 static rt_timer_t cm_alarm_timer = RT_NULL;
@@ -836,7 +850,7 @@ void camera_infrared_thread_enter(void *arg)
 	cm_ir_timer = rt_timer_create("cm_ir_t",camera_infrared_timer,RT_NULL,100,\
 	RT_TIMER_FLAG_PERIODIC);
 
-	cm_alarm_timer = rt_timer_create("cm_ir_t",camera_alarm_time_interval,RT_NULL,3000,\
+	cm_alarm_timer = rt_timer_create("cm_ir_t",camera_alarm_time_interval,RT_NULL,6000,\
 	RT_TIMER_FLAG_PERIODIC);
 
 	ir_dev = rt_device_find(DEVICE_NAME_CAMERA_IRDASENSOR);
