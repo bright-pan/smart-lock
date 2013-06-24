@@ -131,6 +131,20 @@ typedef struct
 typedef struct
 {
 
+  uint8_t result;
+
+}GPRS_SEND_SET_TIME;
+
+typedef struct
+{
+
+  uint8_t result;
+
+}GPRS_SEND_SET_KEY0;
+
+typedef struct
+{
+
   uint16_t length;
   uint8_t cmd;
   uint8_t order;
@@ -149,6 +163,8 @@ typedef struct
     GPRS_SEND_SET_RFID_KEY set_rfid_key;
     GPRS_SEND_LIST_USER_PARAMETERS list_user_parameters;
     GPRS_SEND_SET_USER_PARAMETERS set_user_parameters;
+    GPRS_SEND_SET_TIME set_time;
+    GPRS_SEND_SET_KEY0 set_key0;
   };
 
 }GPRS_SEND_FRAME_TYPEDEF;
@@ -194,6 +210,18 @@ typedef struct
 
 typedef struct
 {
+  uint8_t time[6];
+
+}GPRS_SET_TIME;
+
+typedef struct
+{
+  uint8_t key0[8];
+
+}GPRS_SET_KEY0;
+
+typedef struct
+{
 
   uint16_t length;
   uint8_t cmd;
@@ -206,6 +234,8 @@ typedef struct
     GPRS_SET_RFID_KEY set_rfid_key;
     GPRS_LIST_USER_PARAMETERS list_user_parameters;
     GPRS_SET_USER_PARAMETERS set_user_parameters;
+    GPRS_SET_TIME set_time;
+    GPRS_SET_KEY0 set_key0;
   };
 
 }GPRS_RECV_FRAME_TYPEDEF;
