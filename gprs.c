@@ -132,6 +132,7 @@ void gprs_mail_process_thread_entry(void *parameter)
         }
         // send gprs data
         rt_kprintf("\nsend gprs data!!!\n");
+        send_gprs_frame(gprs_mail_buf->alarm_type, gprs_mail_buf->time, gprs_mail_buf->order);
       }
       else// gsm is not setup
       {
