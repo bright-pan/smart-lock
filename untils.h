@@ -60,4 +60,6 @@ typedef struct {
 
 extern DEVICE_PARAMETERS_TYPEDEF device_parameters;
 
+void system_file_operate(DEVICE_PARAMETERS_TYPEDEF *arg,rt_uint8_t flag);
+
 #endif
