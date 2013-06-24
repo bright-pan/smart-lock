@@ -142,6 +142,26 @@ typedef struct
 
 }GPRS_SEND_SET_KEY0;
 
+union gprs_send_data
+{
+
+  GPRS_LOCK_OPEN lock_open;
+  GPRS_POWER_FAULT power_fault;
+  GPRS_WORK_ALARM work_alarm;
+  GPRS_FAULT_ALARM fault_alarm;
+  GPRS_HEART heart;
+  GPRS_AUTH auth;
+  GPRS_SEND_LIST_TELEPHONE list_telephone;
+  GPRS_SEND_SET_TELEPHONE set_telephone;
+  GPRS_SEND_LIST_RFID_KEY list_rfid_key;
+  GPRS_SEND_SET_RFID_KEY set_rfid_key;
+  GPRS_SEND_LIST_USER_PARAMETERS list_user_parameters;
+  GPRS_SEND_SET_USER_PARAMETERS set_user_parameters;
+  GPRS_SEND_SET_TIME set_time;
+  GPRS_SEND_SET_KEY0 set_key0;
+
+};
+
 typedef struct
 {
 
@@ -149,23 +169,7 @@ typedef struct
   uint8_t cmd;
   uint8_t order;
 
-  union {
-
-    GPRS_LOCK_OPEN lock_open;
-    GPRS_POWER_FAULT power_fault;
-    GPRS_WORK_ALARM work_alarm;
-    GPRS_FAULT_ALARM fault_alarm;
-    GPRS_HEART heart;
-    GPRS_AUTH auth;
-    GPRS_SEND_LIST_TELEPHONE list_telephone;
-    GPRS_SEND_SET_TELEPHONE set_telephone;
-    GPRS_SEND_LIST_RFID_KEY list_rfid_key;
-    GPRS_SEND_SET_RFID_KEY set_rfid_key;
-    GPRS_SEND_LIST_USER_PARAMETERS list_user_parameters;
-    GPRS_SEND_SET_USER_PARAMETERS set_user_parameters;
-    GPRS_SEND_SET_TIME set_time;
-    GPRS_SEND_SET_KEY0 set_key0;
-  };
+  union gprs_send_data data;
 
 }GPRS_SEND_FRAME_TYPEDEF;
 
@@ -220,13 +224,8 @@ typedef struct
 
 }GPRS_SET_KEY0;
 
-typedef struct
+union gprs_recv_data
 {
-
-  uint16_t length;
-  uint8_t cmd;
-  uint8_t order;
-  union {
 
     GPRS_LIST_TELEPHONE list_telephone;
     GPRS_SET_TELEPHONE set_telephone;
@@ -236,7 +235,16 @@ typedef struct
     GPRS_SET_USER_PARAMETERS set_user_parameters;
     GPRS_SET_TIME set_time;
     GPRS_SET_KEY0 set_key0;
-  };
+
+};
+
+typedef struct
+{
+
+  uint16_t length;
+  uint8_t cmd;
+  uint8_t order;
+  union gprs_recv_data data;
 
 }GPRS_RECV_FRAME_TYPEDEF;
 
