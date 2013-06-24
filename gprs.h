@@ -142,7 +142,7 @@ typedef struct
 
 }GPRS_SEND_SET_KEY0;
 
-union gprs_send_data
+typedef union
 {
 
   GPRS_LOCK_OPEN lock_open;
@@ -160,7 +160,7 @@ union gprs_send_data
   GPRS_SEND_SET_TIME set_time;
   GPRS_SEND_SET_KEY0 set_key0;
 
-};
+}GPRS_SEND_DATA;
 
 typedef struct
 {
@@ -168,8 +168,7 @@ typedef struct
   uint16_t length;
   uint8_t cmd;
   uint8_t order;
-
-  union gprs_send_data data;
+  GPRS_SEND_DATA data;
 
 }GPRS_SEND_FRAME_TYPEDEF;
 
@@ -224,19 +223,19 @@ typedef struct
 
 }GPRS_SET_KEY0;
 
-union gprs_recv_data
+typedef union
 {
 
-    GPRS_LIST_TELEPHONE list_telephone;
-    GPRS_SET_TELEPHONE set_telephone;
-    GPRS_LIST_RFID_KEY list_rfid_key;
-    GPRS_SET_RFID_KEY set_rfid_key;
-    GPRS_LIST_USER_PARAMETERS list_user_parameters;
-    GPRS_SET_USER_PARAMETERS set_user_parameters;
-    GPRS_SET_TIME set_time;
-    GPRS_SET_KEY0 set_key0;
+  GPRS_LIST_TELEPHONE list_telephone;
+  GPRS_SET_TELEPHONE set_telephone;
+  GPRS_LIST_RFID_KEY list_rfid_key;
+  GPRS_SET_RFID_KEY set_rfid_key;
+  GPRS_LIST_USER_PARAMETERS list_user_parameters;
+  GPRS_SET_USER_PARAMETERS set_user_parameters;
+  GPRS_SET_TIME set_time;
+  GPRS_SET_KEY0 set_key0;
 
-};
+}GPRS_RECV_DATA;
 
 typedef struct
 {
@@ -244,7 +243,7 @@ typedef struct
   uint16_t length;
   uint8_t cmd;
   uint8_t order;
-  union gprs_recv_data data;
+  GPRS_RECV_DATA data;
 
 }GPRS_RECV_FRAME_TYPEDEF;
 
