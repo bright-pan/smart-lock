@@ -176,6 +176,7 @@ int rt_application_init()
   rt_thread_t gprs_mail_process_thread;
   rt_thread_t local_mail_process_thread;
   rt_thread_t gsm_process_thread;
+  rt_thread_t gprs_heart_process_thread;
   rt_thread_t battery_check_process_thread;
 
   /* alarm mail process thread */
@@ -185,6 +186,14 @@ int rt_application_init()
   if (gsm_process_thread != RT_NULL)
   {
     rt_thread_startup(gsm_process_thread);
+  }
+  /* gprs heart process thread */
+  gprs_heart_process_thread = rt_thread_create("g_heart",
+                                        gprs_heart_process_thread_entry, RT_NULL,
+                                        512, 110, 20);
+  if (gprs_heart_process_thread != RT_NULL)
+  {
+    rt_thread_startup(gprs_heart_process_thread);
   }
   
   /* alarm mail process thread */

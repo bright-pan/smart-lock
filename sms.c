@@ -102,7 +102,7 @@ const uint16_t sms_content_rfid_key_error[] = {
   0x975E,0x6CD5,0x5F00,0x542F,0xFF0C,
   0x8BF7,0x6CE8,0x610F,0x5B89,0x5168
 };
-const uint16_t sms_content_rfid_key_detect[] = {
+const uint16_t sms_content_rfid_key_plugin[] = {
 
   0x5C0A,0x656C,0x7684,0x7528,0x6237,
   0xFF0C,0x4F60,0x7684,0x95E8,0x94A5,
@@ -197,8 +197,8 @@ static void sms_data_init(SMS_DATA_TYPEDEF sms_data[])
   sms_data[ALARM_TYPE_RFID_KEY_ERROR].data = sms_content_rfid_key_error;
   sms_data[ALARM_TYPE_RFID_KEY_ERROR].length = sizeof(sms_content_rfid_key_error) / sizeof(uint16_t);
   // rfid key detect alarm type
-  sms_data[ALARM_TYPE_RFID_KEY_DETECT].data = sms_content_rfid_key_detect;
-  sms_data[ALARM_TYPE_RFID_KEY_DETECT].length = sizeof(sms_content_rfid_key_detect) / sizeof(uint16_t);
+  sms_data[ALARM_TYPE_RFID_KEY_PLUGIN].data = sms_content_rfid_key_plugin;
+  sms_data[ALARM_TYPE_RFID_KEY_PLUGIN].length = sizeof(sms_content_rfid_key_plugin) / sizeof(uint16_t);
   // camera irda sensor alarm
   sms_data[ALARM_TYPE_CAMERA_IRDASENSOR].data = sms_content_camera_idrasensor;
   sms_data[ALARM_TYPE_CAMERA_IRDASENSOR].length = sizeof(sms_content_camera_idrasensor) / sizeof(uint16_t);
@@ -354,7 +354,7 @@ void sms_mail_process_thread_entry(void *parameter)
       {
         if (gsm_mode_get() & EVENT_GSM_MODE_GPRS)
         {
-        	rt_kprintf("\ngsm mode requset for gprs_cmd mode\n");
+          rt_kprintf("\ngsm mode requset for gprs_cmd mode\n");
           rt_event_recv(event_gsm_mode_response, EVENT_GSM_MODE_GPRS_CMD, RT_EVENT_FLAG_AND | RT_EVENT_FLAG_CLEAR, RT_WAITING_NO, &event);
           rt_event_send(event_gsm_mode_request, EVENT_GSM_MODE_GPRS_CMD);
           result = rt_event_recv(event_gsm_mode_response, EVENT_GSM_MODE_GPRS_CMD, RT_EVENT_FLAG_AND | RT_EVENT_FLAG_CLEAR, RT_WAITING_FOREVER, &event);
@@ -365,7 +365,7 @@ void sms_mail_process_thread_entry(void *parameter)
             rt_event_recv(event_gsm_mode_response, EVENT_GSM_MODE_SETUP, RT_EVENT_FLAG_AND|RT_EVENT_FLAG_CLEAR, RT_WAITING_NO, &event);
             if (!(gsm_mode_get() & EVENT_GSM_MODE_CMD))
             {
-            	rt_kprintf("\ngsm mode requset for cmd mode\n");
+              rt_kprintf("\ngsm mode requset for cmd mode\n");
               rt_event_recv(event_gsm_mode_response, EVENT_GSM_MODE_CMD, RT_EVENT_FLAG_AND | RT_EVENT_FLAG_CLEAR, RT_WAITING_NO, &event);
               rt_event_send(event_gsm_mode_request, EVENT_GSM_MODE_CMD);
               result = rt_event_recv(event_gsm_mode_response, EVENT_GSM_MODE_CMD, RT_EVENT_FLAG_AND | RT_EVENT_FLAG_CLEAR, RT_WAITING_FOREVER, &event);
