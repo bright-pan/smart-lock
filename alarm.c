@@ -41,59 +41,18 @@ void alarm_mail_process_thread_entry(void *parameter)
     {
       if (alarm_mail_buf->alarm_process_flag & ALARM_PROCESS_FLAG_SMS)
       {
-        /* produce mail */
-        sms_mail_buf->time = alarm_mail_buf->time;
-        sms_mail_buf->alarm_type = alarm_mail_buf->alarm_type;
-        /* send to sms_mq */
-        rt_mq_send(sms_mq, sms_mail_buf, sizeof(SMS_MAIL_TYPEDEF));
+        send_sms_mail(alarm_mail_buf->alarm_type, alarm_mail_buf->time);
       }
       if (alarm_mail_buf->alarm_process_flag & ALARM_PROCESS_FLAG_GPRS)
       {
-        /* produce mail */
-        gprs_mail_buf->time = alarm_mail_buf->time;
-        gprs_mail_buf->alarm_type = alarm_mail_buf->alarm_type;
-        /* send to gprs_mq */
-        rt_mq_send(gprs_mq, gprs_mail_buf, sizeof(GPRS_MAIL_TYPEDEF));
+				send_gprs_mail(alarm_mail_buf->alarm_type, alarm_mail_buf->time, 0);
       }
       if (alarm_mail_buf->alarm_process_flag & ALARM_PROCESS_FLAG_MMS)
       {
-        /* produce mail */
-        mms_mail_buf->time = alarm_mail_buf->time;
-        mms_mail_buf->alarm_type = alarm_mail_buf->alarm_type;
-        /* send to mms_mq */
-        rt_mq_send(mms_mq, mms_mail_buf, sizeof(MMS_MAIL_TYPEDEF));
       }
       if (alarm_mail_buf->alarm_process_flag & ALARM_PROCESS_FLAG_LOCAL)
       {
-        /* produce mail */
-        local_mail_buf->time = alarm_mail_buf->time;
-        local_mail_buf->alarm_type = alarm_mail_buf->alarm_type;
-        /* send to local_mq */
-        rt_mq_send(local_mq, local_mail_buf, sizeof(LOCAL_MAIL_TYPEDEF));
-        /*        rt_kprintf("send msg in local, mail - %d, %x, %x\n", alarm_mail_buf->time, alarm_mail_buf->alarm_type, alarm_mail_buf->alarm_process_flag);
-        rt_kprintf("\n%s\n", setlocale( LC_ALL, "zh_CN.gbk"));
-        rt_kprintf("\n%d\n", sizeof(wchar_t));
-        const wchar_t string[] = L"工作愉快！";
-        //        iconv_t cd = iconv_open("UTF-8", "ISO-8859-1");
-        rt_kprintf("\n%d\n", sizeof(string));
-        
-        rt_kprintf("\n%d\n", sizeof(string));
-        int i = 0;
-        while (i < sizeof(string))
-        {
-          rt_kprintf("%x\n",((char *)string)[i]);
-          i++;
-        }
-
-        wcstombs(s, string, sizeof(string));
-        i = 0;
-        while (i < sizeof(string))
-        {
-          rt_kprintf("%x\n", s[i]);
-          i++;
-        }
-        
-        */
+        send_local_mail(alarm_mail_buf->alarm_type, alarm_mail_buf->time);
       }
     }
     else

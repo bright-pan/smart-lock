@@ -435,21 +435,10 @@ void delay(rt_uint32_t counts)
 
 void voice_output(rt_uint16_t counts)
 {
-  rt_device_t device = RT_NULL;
-  rt_device_t reset_device = RT_NULL;
-  rt_int16_t dat = 0;
-  reset_device = rt_device_find(DEVICE_NAME_VOICE_RESET);
-  dat = 1;
-  rt_device_control(reset_device, RT_DEVICE_CTRL_SET_PULSE_COUNTS, &dat);
-  device = rt_device_find(DEVICE_NAME_VOICE_DATA);
-  rt_device_control(device, RT_DEVICE_CTRL_SET_PULSE_COUNTS, (void *)&counts);
-  device = rt_device_find(DEVICE_NAME_VOICE_SWITCH);
-  dat = 1;
-  rt_device_write(device, 0, &dat, 0);
-  device = rt_device_find(DEVICE_NAME_VOICE_AMP);
-  dat = 1;
-  rt_device_write(device, 0, &dat, 0);
-  rt_device_control(reset_device, RT_DEVICE_CTRL_SEND_PULSE, (void *)0);
+	extern rt_sem_t voice_start_sem;
+	
+	rt_sem_release(voice_start_sem);
+	counts++;//avoid warning
 }
 
 /*

@@ -637,15 +637,15 @@ void camera_module_self_test(camera_dev_t camera)
 	rt_uint8_t i = 0;
 	rt_uint8_t error_num = 0;
 	const char result[6] = {0x76,0x00,0x36,0x00,0x00,'\0'};
-	
+
 	camera_power_control(camera,1);	
-/*
-  if(com_recv_data_analyze(camera->device,200,300,1,"User-defined") != 1)
+	/*
+	if(com_recv_data_analyze(camera->device,200,300,1,"User-defined") != 1)
 	{
 		rt_kprintf("camrea fun problem\n");
 		send_sms_mail(ALARM_TYPE_CAMERA_FAULT,0);
 	}
-*/
+	*/
 	com_recv_data_analyze(camera->device,200,300,1,"@");
 	for(i = 0; i < 3; i++)
 	{
@@ -678,7 +678,7 @@ void photo_thread_entry(void *arg)
 	{
 		result =  rt_mq_recv(photo_start_mq,&recv_mq,sizeof(recv_mq),24*36000);
 
-		if(rt_sem_take(start_work_sem,100) != RT_EOK)//start input work cycle
+		if(rt_sem_take(start_work_sem,1000) != RT_EOK)//start input work cycle
 		{
 			rt_kprintf("not photo \n\n\n");
 			continue;
@@ -854,6 +854,7 @@ void camera_infrared_thread_enter(void *arg)
 	RT_TIMER_FLAG_PERIODIC);
 
 	ir_dev = rt_device_find(DEVICE_NAME_CAMERA_IRDASENSOR);
+	
 	while(1)
 	{
 		result = rt_sem_take(cm_ir_sem,200);//ir alarm touch off
@@ -868,6 +869,7 @@ void camera_infrared_thread_enter(void *arg)
 				}
 				if(2 == leave_flag)
 				{
+					rt_kprintf("@@@not is photo time\n\n");
 					continue;
 				}
 			}

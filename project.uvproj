@@ -470,6 +470,11 @@
               <FileType>1</FileType>
               <FilePath>.\des.c</FilePath>
             </File>
+            <File>
+              <FileName>voiceapp.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\voiceapp.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
