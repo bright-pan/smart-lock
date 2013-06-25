@@ -61,7 +61,7 @@ DEVICE_PARAMETERS_TYPEDEF device_parameters = {
   },
   {
     "iyuet.com",
-    6800
+    4123
   },
   //lock gate alarm time
   30,

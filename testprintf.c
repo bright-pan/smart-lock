@@ -28,6 +28,7 @@
 
 
 
+
 void printf_write_to_file(void)
 {
 	static rt_uint8_t i = 0;
@@ -509,5 +510,10 @@ void test_k(void)
 }
 FINSH_FUNCTION_EXPORT(test_k,--thread creat test);
 
+void send_sever_dat(rt_uint8_t dat)
+{
+	send_gprs_frame(dat,0,0);	
+}
+FINSH_FUNCTION_EXPORT(send_sever_dat,--server test);
 #endif
 

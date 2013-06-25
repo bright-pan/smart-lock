@@ -892,6 +892,7 @@ int8_t send_gprs_frame(ALARM_TYPEDEF alarm_type, time_t time, uint8_t order)
   gsm_put_hex(process_buf, process_length);
   rt_device_write(device, 0, process_buf, process_length);
 
+	rt_thread_delay(50);
   rt_free(gprs_send_frame);
   rt_free(process_buf);
   return 1;
@@ -1114,4 +1115,8 @@ int8_t recv_gprs_frame(GPRS_RECV_FRAME_TYPEDEF *recv_frame)
   rt_free(process_buf);
   return 1;
 }
+
+
+
+
 

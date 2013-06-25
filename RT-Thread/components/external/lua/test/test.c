@@ -4,6 +4,7 @@
 
 #include "finsh.h"
 
+
 int c_print(lua_State *L)
 {
     int n = lua_gettop(L);
