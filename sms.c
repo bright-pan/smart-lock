@@ -694,11 +694,11 @@ void sms(char *address, short *data, char length)
   {
     if (length == 0)
     {
-      sms_pdu_ucs_send(address,smsc,default_data, 5);
+      //sms_pdu_ucs_send(address,smsc,default_data, 5);
     }
     else
     {
-      sms_pdu_ucs_send(address,smsc,default_data, length);
+      //sms_pdu_ucs_send(address,smsc,default_data, length);
     }
   }
   else

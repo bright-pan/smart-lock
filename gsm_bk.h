@@ -51,32 +51,35 @@ typedef enum
   AT_CIFSR,
   AT_CIPSHUT,
   AT_CIPSTATUS,
-  AT_CIPSTART,
   ATO,
   PLUS3,
-}AT_COMMAND_INDEX_TYPEDEF;
+}AT_INDEX_TYPEDEF;
 
 typedef enum
 {
-
   EVENT_GSM_MODE_GPRS = 0x01,// AT
   EVENT_GSM_MODE_CMD = 0x02,
   EVENT_GSM_MODE_GPRS_CMD = 0x04,
   EVENT_GSM_MODE_SETUP = 0x08,
-
 }EVENT_GSM_MODE_TYPEDEF;
 
 
+typedef struct
+{
+  AT_INDEX_TYPEDEF at_index;
+}GSM_SEND_MAIL_TYPEDEF;
+
+typedef struct
+{
+  AT_INDEX_TYPEDEF at_index;
+  char *at_response;
+}GSM_RECV_MAIL_TYPEDEF;
+
 typedef enum {
-
-  AT_RESPONSE_OK,
-  AT_RESPONSE_ERROR,
-  AT_RESPONSE_NO_CARRIER,
-  AT_RESPONSE_TCP_CLOSED,
-  AT_RESPONSE_CONNECT_OK,
-  AT_RESPONSE_PDP_DEACT,
-
-}AT_RESPONSE_TYPEDEF;
+  AT_OK,
+  AT_ERROR,
+  AT_NO_RESPONSE,
+}ATCommandStatus;
 
 GsmStatus gsm_reset(void);
 GsmStatus gsm_setup(FunctionalState state);
