@@ -45,7 +45,7 @@ void alarm_mail_process_thread_entry(void *parameter)
       }
       if (alarm_mail_buf->alarm_process_flag & ALARM_PROCESS_FLAG_GPRS)
       {
-				send_gprs_mail(alarm_mail_buf->alarm_type, alarm_mail_buf->time, 0);
+				send_gprs_mail(alarm_mail_buf->alarm_type, alarm_mail_buf->time, 0,RT_NULL);
       }
       if (alarm_mail_buf->alarm_process_flag & ALARM_PROCESS_FLAG_MMS)
       {

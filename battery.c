@@ -78,7 +78,7 @@ void battery_check_process_thread_entry(void *parameters)
             // first < 20%
             battery_status |= BATTERY_STATUS_REMAIN_20P;
             send_sms_mail(ALARM_TYPE_BATTERY_REMAIN_20P, 0);
-            send_gprs_mail(ALARM_TYPE_BATTERY_REMAIN_20P, 0, 0);
+            send_gprs_mail(ALARM_TYPE_BATTERY_REMAIN_20P, 0, 0,RT_NULL);
           }
         }
         else // battery > 20%
@@ -95,7 +95,7 @@ void battery_check_process_thread_entry(void *parameters)
               // first < 50%
               battery_status |= BATTERY_STATUS_REMAIN_50P;
               send_sms_mail(ALARM_TYPE_BATTERY_REMAIN_50P, 0);
-              send_gprs_mail(ALARM_TYPE_BATTERY_REMAIN_50P, 0, 0);
+              send_gprs_mail(ALARM_TYPE_BATTERY_REMAIN_50P, 0, 0,RT_NULL);
             }
           }
           else // battery > 50%

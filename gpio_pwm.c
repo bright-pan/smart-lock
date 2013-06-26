@@ -15,6 +15,9 @@
 #include "gpio_exti.h"
 #include "gpio_pin.h"
 #include "sms.h"
+#include "gprs.h"
+#include "local.h"
+
 
 /*
  *  GPIO ops function interfaces
@@ -475,6 +478,7 @@ int8_t lock_output(uint8_t direction)
           //adjust place
           rt_device_control(device_motor_b, RT_DEVICE_CTRL_SET_PULSE_COUNTS, &adjust_period);
           rt_device_control(device_motor_b, RT_DEVICE_CTRL_SEND_PULSE, (void *)0);
+          send_gprs_mail(ALARM_TYPE_RFID_KEY_SUCCESS, 0, 0,&gprs_mail_user);//lock open ok
           break;
         }
       }
@@ -483,6 +487,20 @@ int8_t lock_output(uint8_t direction)
       {
         //motor error
         send_sms_mail(ALARM_TYPE_MOTOR_FAULT, 0);
+        send_gprs_mail(ALARM_TYPE_MOTOR_FAULT, 0, 0,RT_NULL);
+/*       {
+        	rt_uint8_t i;
+
+        	for(i = 0 ;i < 8;i++)
+        	{
+						if (gprs_send_heart() == 1)
+						{
+							rt_kprintf("heart ok\n");
+						}
+        	}
+					
+        }
+*/
         return -1;
       }
     }
@@ -506,6 +524,7 @@ int8_t lock_output(uint8_t direction)
       {
         //motor error
         send_sms_mail(ALARM_TYPE_MOTOR_FAULT, 0);
+        send_gprs_mail(ALARM_TYPE_MOTOR_FAULT, 0, 0,RT_NULL);
         return -1;
       }
     }

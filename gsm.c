@@ -1911,7 +1911,7 @@ int8_t gprs_send_heart(void)
 {
   int8_t result;
   GPRS_RECV_FRAME_TYPEDEF *recv_frame = (GPRS_RECV_FRAME_TYPEDEF *)rt_malloc(sizeof(GPRS_RECV_FRAME_TYPEDEF));
-  send_gprs_frame(ALARM_TYPE_GPRS_HEART, 0, 0);
+  send_gprs_frame(ALARM_TYPE_GPRS_HEART, 0, 0,RT_NULL);
   rt_thread_delay(200);
   result = recv_gprs_frame(recv_frame);
   if (result > 0)
@@ -1938,16 +1938,23 @@ int8_t gprs_send_heart(void)
 int8_t gsm_gprs_cmd_to_gprs(void)
 {
   int8_t counts = 10;
+  rt_uint8_t flag = 0;
   while(counts-- > 0)
   {
-    if (gsm_send_ato() == AT_OK)
+    if (gsm_send_ato() == AT_OK && flag == 0 )
     {
+    	flag = 1;
       if (gprs_send_heart() == 1)
       {
         return 1;
       }
       else
       {
+      	rt_kprintf("reset tcp connect \n\n\n");
+				gsm_tcp_init();
+		//		gsm_mode_set(EVENT_GSM_MODE_GPRS);
+				send_gprs_frame(ALARM_TYPE_GPRS_AUTH, 0, 0,RT_NULL);
+				rt_thread_delay(100);
         continue;
       }
     }
@@ -1995,7 +2002,7 @@ void gsm_process_thread_entry(void *parameters)
           {
             rt_kprintf("\ngsm mode switch cmd -> gprs\n");
             gsm_mode_set(EVENT_GSM_MODE_GPRS);
-            send_gprs_frame(ALARM_TYPE_GPRS_AUTH, 0, 0);
+            send_gprs_frame(ALARM_TYPE_GPRS_AUTH, 0, 0,RT_NULL);
           }
           else
           {
@@ -2067,6 +2074,14 @@ void gsm_process_thread_entry(void *parameters)
           {
             rt_kprintf("\ngsm mode switch gprs_cmd -> gprs\n");
             gsm_mode_set(EVENT_GSM_MODE_GPRS);
+            rt_event_send(event_gsm_mode_response, EVENT_GSM_MODE_GPRS);
+          }
+          else //fial
+          {
+          	rt_kprintf("reset tcp connect \n\n\n");
+						gsm_tcp_init();
+						gsm_mode_set(EVENT_GSM_MODE_GPRS);
+            send_gprs_frame(ALARM_TYPE_GPRS_AUTH, 0, 0,RT_NULL);
             rt_event_send(event_gsm_mode_response, EVENT_GSM_MODE_GPRS);
           }
         }

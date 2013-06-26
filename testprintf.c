@@ -512,7 +512,14 @@ FINSH_FUNCTION_EXPORT(test_k,--thread creat test);
 
 void send_sever_dat(rt_uint8_t dat)
 {
-	send_gprs_frame(dat,0,0);	
+	rt_device_t dev;
+	rt_uint32_t time;
+
+	dev = rt_device_find("rtc");
+
+	rt_device_control(dev, RT_DEVICE_CTRL_RTC_GET_TIME, &time);
+	
+	send_gprs_frame(dat,time,0,RT_NULL);	
 }
 FINSH_FUNCTION_EXPORT(send_sever_dat,--server test);
 #endif

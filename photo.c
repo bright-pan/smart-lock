@@ -23,6 +23,8 @@
 #include "mms.h"
 #include "stdarg.h"
 #include "sms.h"
+#include "gprs.h"
+
 
 
 
@@ -606,6 +608,7 @@ void photo_deal(camera_dev_t camera,cm_recv_mq_t recv_mq)
 	else
 	{
 		send_sms_mail(ALARM_TYPE_CAMERA_FAULT,0);
+		send_gprs_mail(ALARM_TYPE_CAMERA_FAULT, 0, 0,RT_NULL);
 	}
 		
 }

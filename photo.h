@@ -27,7 +27,7 @@
 
 
 
-#define CMAERA_DEBUG_INFO_PRINTF				//printf debug information
+//#define CMAERA_DEBUG_INFO_PRINTF				//printf debug information
 
 
 

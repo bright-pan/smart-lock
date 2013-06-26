@@ -24,6 +24,7 @@
 
 /* local msg queue for local alarm */
 rt_mq_t local_mq;
+GPRS_MAIL_USER gprs_mail_user;
 
 rt_timer_t lock_gate_timer = RT_NULL;
 rt_timer_t battery_switch_timer = RT_NULL;
@@ -166,9 +167,10 @@ static void rfid_key_detect_process(void)
 	          if (device_parameters.rfid_key[rfid_key_index].flag && (*((uint32_t *)device_parameters.rfid_key[rfid_key_index].key) == *((uint32_t *)rfid_key)))
 	          {
 	            // success read rfid key
+	            strncpy(gprs_mail_user.key,rfid_key,4);//save rfid 
 	            gpio_pin_output(DEVICE_NAME_RFID_POWER, 0);
 	            lock_output(GATE_UNLOCK);//unlock
-	            send_gprs_mail(ALARM_TYPE_RFID_KEY_SUCCESS, 0, 0);
+	            
 	            return;
 	          }
 	          rfid_key_index--;
@@ -188,12 +190,12 @@ static void rfid_key_detect_process(void)
 	      {
 	        // rfid fault
 	        send_sms_mail(ALARM_TYPE_RFID_FAULT, 0);
-	        send_gprs_mail(ALARM_TYPE_RFID_FAULT, 0, 0);
+	        send_gprs_mail(ALARM_TYPE_RFID_FAULT, 0, 0,RT_NULL);
 	        return;
 	      }
 	      // send rfid key error mail
 	      send_sms_mail(ALARM_TYPE_RFID_KEY_ERROR, 0);
-	      send_gprs_mail(ALARM_TYPE_RFID_KEY_ERROR, 0, 0);
+	      send_gprs_mail(ALARM_TYPE_RFID_KEY_ERROR, 0, 0,RT_NULL);
 	      voice_output(3);		
 	      camera_send_mail(ALARM_TYPE_RFID_KEY_ERROR,0);//camera photo 
 	    }
@@ -226,7 +228,7 @@ static void rfid_key_detect_timeout(void *parameters)
     if (data == 1) // rfid key is plugin
     {
       send_sms_mail(ALARM_TYPE_RFID_KEY_PLUGIN, 0);
-      send_gprs_mail(ALARM_TYPE_RFID_KEY_PLUGIN, 0, 0);
+      send_gprs_mail(ALARM_TYPE_RFID_KEY_PLUGIN, 0, 0,RT_NULL);
     }
   }
   rt_timer_stop(rfid_key_detect_timer);
@@ -245,7 +247,7 @@ static void battery_switch_process(void)
       battery_switch_timer = rt_timer_create("tr_bs",
                                              battery_switch_timeout,
                                              RT_NULL,
-                                             6000,
+                                             100,
                                              RT_TIMER_FLAG_PERIODIC);
       battery_switch_timeout_counts = 20;
       rt_timer_start(battery_switch_timer);
@@ -258,7 +260,7 @@ static void battery_switch_process(void)
   }
   else
   {
-
+		rt_kprintf("power battery pin is H\n\n");
   }
 }
 
@@ -294,7 +296,7 @@ static void battery_switch_timeout(void *parameters)
       battery_switch_timeout_counts = 0;
       //send mail
       send_sms_mail(ALARM_TYPE_BATTERY_WORKING_20M, 0);
-      send_gprs_mail(ALARM_TYPE_BATTERY_WORKING_20M, 0, 0);
+      send_gprs_mail(ALARM_TYPE_BATTERY_WORKING_20M, 0, 0,RT_NULL);
     }
   }
 }
@@ -359,7 +361,7 @@ static void lock_gate_timeout(void *parameters)
       lock_gate_timeout_counts = 0;
       //send mail
       send_sms_mail(ALARM_TYPE_LOCK_GATE, 0);
-      send_gprs_mail(ALARM_TYPE_LOCK_GATE, 0, 0);
+      send_gprs_mail(ALARM_TYPE_LOCK_GATE, 0, 0,RT_NULL);
     }
   }
 }
