@@ -20,6 +20,7 @@
 #include "untils.h"
 #include "des.h"
 #include <string.h>
+#include "battery.h"
 #include <rtc.h>
 
 #define WORK_ALARM_CAMERA_IRDASENSOR (1 << 0)
@@ -207,6 +208,7 @@ void gprs_heart_process_thread_entry(void *parameters)
     {
       if (gsm_mode_get() & EVENT_GSM_MODE_GPRS)
       {
+      	extern int8_t gprs_send_heart(void);
         //send heart
         gprs_send_heart();
       }
@@ -286,12 +288,25 @@ uint8_t dec_to_bcd(uint8_t dec)
   return ((temp / 10)<<4) + ((temp % 10) & 0x0F); 
 }
 
-
+static get_dec_to_bcd_time(uint8_t date[],time_t time)
+{
+	struct tm time_tm;
+	
+	time_tm = *localtime(&time);
+	time_tm.tm_year += 1900;
+  time_tm.tm_mon += 1;
+	date[0] = dec_to_bcd((uint8_t)(time_tm.tm_year % 100));
+  date[1] = dec_to_bcd((uint8_t)(time_tm.tm_mon % 100));
+  date[2] = dec_to_bcd((uint8_t)(time_tm.tm_mday % 100));
+  date[3] = dec_to_bcd((uint8_t)(time_tm.tm_hour % 100));
+  date[4] = dec_to_bcd((uint8_t)(time_tm.tm_min % 100));
+  date[5] = dec_to_bcd((uint8_t)(time_tm.tm_sec % 100));
+}
 void lock_open_process(GPRS_LOCK_OPEN *lock_open,time_t time,rt_uint8_t key[])
 {
 	struct tm time_tm;
-	strncpy(lock_open->key,(const char*)key,4);
-
+	
+	strncpy((char*)lock_open->key,(const char*)key,4);
 	time_tm = *localtime(&time);
   time_tm.tm_year += 1900;
   time_tm.tm_mon += 1;
@@ -301,6 +316,7 @@ void lock_open_process(GPRS_LOCK_OPEN *lock_open,time_t time,rt_uint8_t key[])
   lock_open->time[3] = dec_to_bcd((uint8_t)(time_tm.tm_hour % 100));
   lock_open->time[4] = dec_to_bcd((uint8_t)(time_tm.tm_min % 100));
   lock_open->time[5] = dec_to_bcd((uint8_t)(time_tm.tm_sec % 100));
+  //get_dec_to_bcd_time(lock_open->time,time)
 }
 
 void work_alarm_process(ALARM_TYPEDEF alarm_type, GPRS_WORK_ALARM *work_alarm, time_t time)
@@ -348,32 +364,12 @@ void fault_alarm_process(ALARM_TYPEDEF alarm_type, GPRS_FAULT_ALARM* fault_alarm
 
 void battery_alarm_process(GPRS_POWER_ALARM* power_alarm,time_t time)
 {
-	rt_device_t status_dev;
-	rt_device_t adc_dev;
-	rt_uint8_t	work_time;
-	rt_uint8_t	pin_status;
-	rt_uint32_t adc_value;
 	struct tm		date;
+	Battery_Data battery_dat;
 
-	status_dev = rt_device_find(DEVICE_NAME_BATTERY_SWITCH);
-	if(RT_NULL != status_dev)
-	{
-		rt_device_read(status_dev,0,&pin_status,1);
-	}
-	adc_dev = rt_device_find(DEVICE_NAME_BATTERY_ADC);
-	if(RT_NULL != adc_dev)
-	{
-		bat_enable();
-
-		rt_device_read(adc_dev,0,&adc_value,1);
-
-		bat_disable();
-
-		//	To compute work time
-		work_time = 12;
-	}
-	power_alarm->status = pin_status;
-	power_alarm->dump_energy = work_time;
+	battery_get_data(&battery_dat);
+	power_alarm->status = battery_dat.status;
+	power_alarm->dump_energy = battery_dat.work_time;
   date = *localtime(&time);
   date.tm_year += 1900;
   date.tm_mon += 1;
@@ -749,7 +745,7 @@ int8_t send_gprs_frame(ALARM_TYPEDEF alarm_type, time_t time, uint8_t order,void
     case ALARM_TYPE_BATTERY_WORKING_20M:{
     	*process_buf_bk++ = gprs_send_frame->data.battery.status;
     	*process_buf_bk++ = gprs_send_frame->data.battery.dump_energy;
-    	memcpy(process_buf_bk, gprs_send_frame->data.auth.enc_data, 6);
+    	memcpy(process_buf_bk, gprs_send_frame->data.battery.time, 6);
     	process_length += 8;
 			break;
     }
@@ -988,7 +984,7 @@ int8_t send_gprs_frame(ALARM_TYPEDEF alarm_type, time_t time, uint8_t order,void
   }
 
   //send frame
-  gsm_put_hex(process_buf, process_length);
+  gsm_put_hex((const char*)process_buf, process_length);
   rt_device_write(device, 0, process_buf, process_length);
 
 	rt_thread_delay(50);
@@ -1073,6 +1069,8 @@ uint8_t bcd_to_dec(uint8_t bcd)
 }
 void process_gprs_set_time(GPRS_SET_TIME *gprs_set_time)
 {
+	extern rt_err_t set_date(rt_uint32_t year, rt_uint32_t month, rt_uint32_t day);
+	
   set_date(bcd_to_dec(gprs_set_time->time[0]) + 2000, bcd_to_dec(gprs_set_time->time[1]), bcd_to_dec(gprs_set_time->time[2]));
   set_time(bcd_to_dec(gprs_set_time->time[3]),bcd_to_dec(gprs_set_time->time[4]),bcd_to_dec(gprs_set_time->time[5]));
 }

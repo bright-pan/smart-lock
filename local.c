@@ -152,7 +152,7 @@ static void rfid_key_detect_process(void)
 	      rt_device_read(device, 0, &rfid_key, 8);// clear rfid uart cache
 	      rt_device_write(device, 0, "\x50\x00\x06\xD4\x07\x01\x00\x00\x00\x04\x80", 11);
 	      //delay_us(100000);
-	      rt_thread_delay(10);
+	      rt_thread_delay(50);
 	      rfid_recv = rt_device_read(device, 0, &rfid_buf, 9);
 	      if (rfid_recv == 9)
 	      {
@@ -167,9 +167,10 @@ static void rfid_key_detect_process(void)
 	          if (device_parameters.rfid_key[rfid_key_index].flag && (*((uint32_t *)device_parameters.rfid_key[rfid_key_index].key) == *((uint32_t *)rfid_key)))
 	          {
 	            // success read rfid key
-	            strncpy(gprs_mail_user.key,rfid_key,4);//save rfid 
-	            gpio_pin_output(DEVICE_NAME_RFID_POWER, 0);
-	            lock_output(GATE_UNLOCK);//unlock
+	            strncpy((char*)gprs_mail_user.key,(const char*)rfid_key,4);				//save rfid 
+	            gpio_pin_output(DEVICE_NAME_RFID_POWER, 0);												//close RFIO power
+	            lock_output(GATE_UNLOCK);																					//unlock
+	            send_gprs_mail(ALARM_TYPE_RFID_KEY_SUCCESS, 0, 0,&gprs_mail_user);//lock open 
 	            
 	            return;
 	          }

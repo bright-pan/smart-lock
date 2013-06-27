@@ -35,6 +35,8 @@
 #include "gsm.h"
 #include "battery.h"
 #include "mms.h"
+#include "untils.h"
+
 /* board configuration */
 // <o> SDCard Driver <1=>SDIO sdcard <0=>SPI MMC card
 // 	<i>Default: 1

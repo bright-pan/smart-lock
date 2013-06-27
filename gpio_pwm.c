@@ -478,7 +478,6 @@ int8_t lock_output(uint8_t direction)
           //adjust place
           rt_device_control(device_motor_b, RT_DEVICE_CTRL_SET_PULSE_COUNTS, &adjust_period);
           rt_device_control(device_motor_b, RT_DEVICE_CTRL_SEND_PULSE, (void *)0);
-          send_gprs_mail(ALARM_TYPE_RFID_KEY_SUCCESS, 0, 0,&gprs_mail_user);//lock open ok
           break;
         }
       }

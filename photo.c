@@ -45,8 +45,9 @@ rt_sem_t		usart_data_sem = RT_NULL;		//photograph sem
 rt_sem_t		start_work_sem = RT_NULL;		//start camrea mms gprs flow
 rt_sem_t		photo_sem = RT_NULL;				//test use
 rt_mq_t			photo_start_mq = RT_NULL;		//start work mq
-//rt_mq_t			photo_ok_mq = RT_NULL;			//photo finish
-rt_mutex_t	pic_file_mutex = RT_NULL;
+//rt_mq_t			photo_ok_mq = RT_NULL;		//photo finish
+rt_mutex_t	pic_file_mutex = RT_NULL;		//picture file operate mutex
+rt_event_t	alarm_inform_event = RT_NULL;//
 
 
 
@@ -89,14 +90,14 @@ void test_run(void)
 *******************************************************************************/
 rt_int8_t com_recv_data_analyze(rt_device_t usart,rt_uint32_t wait_t,rt_uint32_t mem_size,rt_uint32_t arg_num,...)
 {	
-	rt_uint8_t*      buffer = RT_NULL;
-	rt_uint8_t*      tmp_buffer = RT_NULL;
-	char*            analyze_result = RT_NULL;
-	volatile rt_size_t        size = 0;
-	va_list          ap;
-	const char*      ap_str = RT_NULL;
-	rt_uint8_t       i = 0;
-	rt_bool_t        jmp_flag = 0;
+	rt_uint8_t*      		buffer = RT_NULL;
+	rt_uint8_t*      		tmp_buffer = RT_NULL;
+	char*            		analyze_result = RT_NULL;
+	volatile rt_size_t  size = 0;
+	va_list          		ap;
+	const char*      		ap_str = RT_NULL;
+	rt_uint8_t       		i = 0;
+	rt_bool_t        		jmp_flag = 0;
 	
 	buffer = rt_malloc(sizeof(rt_uint8_t)*mem_size);
 	
@@ -789,6 +790,11 @@ void photo_thread_init(void)
 
 		return ;
 	}
+	alarm_inform_event = rt_event_create("infosend",RT_IPC_FLAG_FIFO);
+	if(RT_NULL == alarm_inform_event)
+	{
+		rt_kprintf(" \"infosend\" sem create fail\n");
+	}
 /*
 	photo_ok_mq = rt_mq_create("cmok",64,8,RT_IPC_FLAG_FIFO);
 	if(RT_NULL == photo_ok_mq)
@@ -845,7 +851,7 @@ void camera_infrared_timer(void *arg)
 void camera_infrared_thread_enter(void *arg)
 {
 	rt_device_t ir_dev;											//ir device
-	rt_uint8_t	ir_pin_dat;
+	rt_uint8_t	ir_pin_dat;									
 	rt_uint32_t flag = 0;										//ir pin status real-time monitoring
 	rt_uint8_t	leave_flag = 0;				
 	rt_err_t 		result = RT_NULL;
