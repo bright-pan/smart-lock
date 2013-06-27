@@ -304,7 +304,7 @@ int8_t at_response_process(AT_COMMAND_INDEX_TYPEDEF index)
             {
               result = AT_RESPONSE_NO_CARRIER;
             }
-            else if (strstr((char *)process_buf, "OK"))
+            else if (strstr((char *)process_buf, "CONNECT"))
             {
               result = AT_RESPONSE_OK;
             }
@@ -428,6 +428,7 @@ int8_t at_response_process(AT_COMMAND_INDEX_TYPEDEF index)
     else
     {
       // no result process
+      result = AT_NO_RESPONSE;
     }
     counts++;
     rt_thread_delay(20);
@@ -492,26 +493,97 @@ int8_t gsm_command(AT_COMMAND_INDEX_TYPEDEF index, uint16_t delay, uint8_t *buf)
 int8_t gsm_mode_switch(GSM_MODE_TYPEDEF *gsm_mode, GSM_MAIL_TYPEDEF *buf)
 {
   uint8_t *process_buf = (uint8_t *)rt_malloc(512);
-  uint16_t result;
+  int8_t result = 1;
+  int8_t gsm_command_result;
   
   switch (*gsm_mode)
   {
     case GSM_MODE_CMD : {
+      if (gsm_command(AT, 20, (uint8_t *)"") == AT_NO_RESPONSE)
+      {
+        gsm_setup(DISABLE);
+        result = -1;
+        break;
+      }
       if (buf->gsm_mode == GSM_MODE_GPRS)
       {
         //test cipstatus mode if test tcp is online send ATO\r or send cipstart
         // if ATO success , SET gsm mode GSM_MODE_GPRS,
+        if ((gsm_command(AT_CIPSTATUS, 100, (uint8_t *)"") == AT_RESPONSE_CONNECT_OK) &&
+            (gsm_command(ATO, 100, (uint8_t *)"") == AT_RESPONSE_OK))
+        {
+          *gsm_mode = GSM_MODE_GPRS;
+          result = 1;
+        }
+        else
+        {
+          if ((gsm_command(AT_CIPSHUT,50,(uint8_t *)"") == AT_RESPONSE_OK) &&
+              (gsm_command(AT_CIPMODE,50,(uint8_t *)"") == AT_RESPONSE_OK) &&
+              (gsm_command(AT_CSTT,50,(uint8_t *)"") == AT_RESPONSE_OK) &&
+              (gsm_command(AT_CIICR,100,(uint8_t *)"") == AT_RESPONSE_OK) &&
+              (gsm_command(AT_CIPSTART,200,(uint8_t *)"")== AT_RESPONSE_CONNECT_OK))
+          {
+            *gsm_mode = GSM_MODE_GPRS;
+            result = 1;
+            //send auth
+          }
+          else
+          {
+            result = 0;
+          }
+        }
       }
       break;
     };
     case GSM_MODE_GPRS : {
-            
+      if (buf->gsm_mode == GSM_MODE_CMD)
+      {
+        // send plus3 to gsm, return !AT_NO_RESPONSE is success, or disable gsm.
+        if (gsm_command(PLUS3, 100, (uint8_t *)"") == AT_NO_RESPONSE)
+        {
+          gsm_setup(DISABLE);
+          result = -1;
+        }
+        else
+        {
+          *gsm_mode = GSM_MODE_CMD;
+          result = 1;
+        }
+      }
       break;
     };
   }
   rt_free(process_buf);
-  return;
+  return result;
 }
+
+int8_t gsm_init_process(void)
+{
+  uint16_t counts = 0;
+  int8_t result = AT_RESPONSE_ERROR;
+  uint8_t *process_buf = (uint8_t *)rt_malloc(512);
+
+  while (counts < 100)
+  {
+    gsm_recv_frame(process_buf);
+    if (strstr((char *)process_buf, "Call Ready"))
+    {
+      break;
+    }
+    counts++;
+    rt_thread_delay(50);
+  }
+  if (counts >= 100)
+  {
+    result = -1;
+  }
+  else
+  {
+    result = 1;
+  }
+  return result;
+}
+
 void gsm_process_thread_entry(void *parameters)
 {
 
@@ -531,17 +603,16 @@ void gsm_process_thread_entry(void *parameters)
 
   while (1)
   {
-    if (gsm_reset() == GSM_RESET_FAILURE)
+    if (gsm_reset() == GSM_RESET_SUCCESS)
     {
-      rt_thread_delay(100*300); // if reset failure delay 300s
-    }
-    else if (gsm_reset() == GSM_RESET_SUCCESS)
-    {
-      break;// success reset
+      if (gsm_init_process() == 1)
+      {
+        break;// success reset
+      }
     }
     else
     {
-
+      rt_thread_delay(100*300); // if reset failure delay 300s
     }
   }
   rt_thread_delay(100*10); // delay 10S
@@ -568,20 +639,21 @@ void gsm_process_thread_entry(void *parameters)
     else
     {
       // gsm is not setup
-      if (gsm_reset() == GSM_RESET_FAILURE)
+      while (1)
       {
-        rt_thread_delay(100*300); // if reset failure delay 300s
-      }
-      else if (gsm_reset() == GSM_RESET_SUCCESS)
-      {
-
-      }
-      else
-      {
-
+        if (gsm_reset() == GSM_RESET_SUCCESS)
+        {
+          if (gsm_init_process() == 1)
+          {
+            break;// success reset
+          }
+        }
+        else
+        {
+          rt_thread_delay(100*300); // if reset failure delay 300s
+        }
       }
     }
-
   }
 }
 

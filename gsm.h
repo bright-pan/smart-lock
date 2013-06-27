@@ -69,6 +69,7 @@ typedef enum
 
 typedef enum {
 
+  AT_NO_RESPONSE,
   AT_RESPONSE_OK,
   AT_RESPONSE_ERROR,
   AT_RESPONSE_NO_CARRIER,
