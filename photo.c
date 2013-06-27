@@ -795,6 +795,7 @@ void photo_thread_init(void)
 	{
 		rt_kprintf(" \"infosend\" sem create fail\n");
 	}
+	rt_event_send(alarm_inform_event,INFO_SEND_SMS | INFO_SEND_MMS);
 /*
 	photo_ok_mq = rt_mq_create("cmok",64,8,RT_IPC_FLAG_FIFO);
 	if(RT_NULL == photo_ok_mq)
@@ -827,10 +828,10 @@ void camera_send_mail(ALARM_TYPEDEF alarm_type, time_t time)
 
 /*		camera infared detection  part*/
 #define CM_IR_TEST_TIME	55
-#define CM_IR_ALARM_TOUCH_PERIOD	10		//10min
+#define CM_IR_ALARM_TOUCH_PERIOD	1		//10min
 rt_sem_t cm_ir_sem = RT_NULL;
 static rt_timer_t cm_ir_timer = RT_NULL;
-static rt_timer_t cm_alarm_timer = RT_NULL;
+rt_timer_t cm_alarm_timer = RT_NULL;
 
 volatile rt_uint8_t cm_ir_time_value = 0;
 volatile rt_uint8_t cm_alarm_cnt_time_value = 0;
@@ -838,10 +839,11 @@ volatile rt_uint8_t cm_alarm_cnt_time_value = 0;
 void camera_alarm_time_interval(void *arg)
 {
 	cm_alarm_cnt_time_value++;
-	rt_kprintf("cm_alarm_cnt_time_value = %d\n",cm_alarm_cnt_time_value);
-	if(cm_ir_time_value > CM_IR_ALARM_TOUCH_PERIOD)
+	if(cm_alarm_cnt_time_value > CM_IR_ALARM_TOUCH_PERIOD)
 	{
-		rt_kprintf("start camare loopg!!!!!!!!!!!!!!!!!!!!!\n");
+		rt_timer_stop(cm_alarm_timer);
+		rt_event_send(alarm_inform_event,INFO_SEND_MMS | INFO_SEND_SMS);//send alarm info event
+		rt_kprintf("start camare loopg!!!!!!!!!!!!!!!!!!!!!\n\n");
 	}
 }
 void camera_infrared_timer(void *arg)
@@ -855,11 +857,12 @@ void camera_infrared_thread_enter(void *arg)
 	rt_uint32_t flag = 0;										//ir pin status real-time monitoring
 	rt_uint8_t	leave_flag = 0;				
 	rt_err_t 		result = RT_NULL;
+	rt_uint32_t	recv_e;
 
 	cm_ir_timer = rt_timer_create("cm_ir_t",camera_infrared_timer,RT_NULL,100,\
 	RT_TIMER_FLAG_PERIODIC);
 
-	cm_alarm_timer = rt_timer_create("cm_ir_t",camera_alarm_time_interval,RT_NULL,6000,\
+	cm_alarm_timer = rt_timer_create("alam_t",camera_alarm_time_interval,RT_NULL,3000,\
 	RT_TIMER_FLAG_PERIODIC);
 
 	ir_dev = rt_device_find(DEVICE_NAME_CAMERA_IRDASENSOR);
@@ -869,7 +872,7 @@ void camera_infrared_thread_enter(void *arg)
 		result = rt_sem_take(cm_ir_sem,200);//ir alarm touch off
 		if(RT_EOK == result)
 		{	
-			if(2 == leave_flag) 	//touch off period not arrive
+/*			if(2 == leave_flag) 	//touch off period not arrive
 			{
 				if(cm_alarm_cnt_time_value > CM_IR_ALARM_TOUCH_PERIOD)
 				{
@@ -882,6 +885,14 @@ void camera_infrared_thread_enter(void *arg)
 					continue;
 				}
 			}
+*/
+			result = rt_event_recv(alarm_inform_event,INFO_SEND_MMS,
+					RT_EVENT_FLAG_AND|RT_EVENT_FLAG_CLEAR,RT_WAITING_NO,&recv_e);
+			if(result == -RT_ETIMEOUT)
+			{
+				continue;
+			}
+					
 			rt_timer_start(cm_ir_timer);
 			if(ir_dev != RT_NULL)
 			{
@@ -913,6 +924,10 @@ void camera_infrared_thread_enter(void *arg)
 								cm_alarm_cnt_time_value = 0;
 								rt_timer_start(cm_alarm_timer);//start alarm cnt timer
 								camera_send_mail(ALARM_TYPE_CAMERA_IRDASENSOR,0);//send sem camera 
+							}
+							else
+							{
+								rt_event_send(alarm_inform_event,INFO_SEND_MMS);//send alarm info event
 							}
 							rt_timer_stop(cm_ir_timer);
 							

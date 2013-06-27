@@ -43,8 +43,11 @@
 #define CM_RECV_OUT_TIME							0X04
 #define CM_DEV_INIT_ERROR							0X08
 
+#define INFO_SEND_MMS		(0X01<<0)
+#define INFO_SEND_SMS		(0X01<<1)
 
-
+extern rt_event_t	alarm_inform_event;
+extern rt_timer_t cm_alarm_timer;
 
 
 /*--------------Camera Data Type ------------*/
