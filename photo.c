@@ -313,8 +313,8 @@ void photo_get_size(camera_dev_t camera,rt_uint8_t frame_flag)
 		length = rt_device_read(camera->device,0,camera->data,CM_BUFFER_LEN);
 		
 		/*    calculate receive size	*/
-		camera->size = (camera->data[5] << 24) |(camera->data[6] << 16) |\
-		(camera->data[7] << 8) |(camera->data[8]); 
+		camera->size = ((*(camera->data+5)) << 24) |((*(camera->data+6))  << 16) |\
+		((*(camera->data+7))  << 8) |((*(camera->data+8)) ); 
 		
 		max_cnt++;
 		if(max_cnt>10)
@@ -328,8 +328,8 @@ void photo_get_size(camera_dev_t camera,rt_uint8_t frame_flag)
 	}
 	while((camera->size >60000) ||(camera->size < 0));
 	/*   calculate receive size		*/
-	camera->size = (camera->data[5] << 24) |(camera->data[6] << 16) \
-	|(camera->data[7] << 8) |(camera->data[8]); 
+	//camera->size = (camera->data[5] << 24) |(camera->data[6] << 16) \
+	//|(camera->data[7] << 8) |(camera->data[8]); 
 	camera->page = camera->size / CM_BUFFER_LEN;
 	camera->surplus = camera->size % CM_BUFFER_LEN;
 	length = rt_device_read(camera->device,0,camera->data,CM_BUFFER_LEN);
@@ -694,6 +694,8 @@ void photo_thread_entry(void *arg)
 			
 			rt_thread_delay(1);
 
+			photo.data = (rt_uint8_t*)rt_malloc(CM_BUFFER_LEN);
+			rt_memset(photo.data,0,CM_BUFFER_LEN);
 			photo_reset(&photo);
 
 			/*start camera job */
@@ -728,6 +730,7 @@ void photo_thread_entry(void *arg)
 			
 			rt_kprintf("camera close power!!!\n");
 		}
+		rt_free(photo.data);
 	}
 }
 
@@ -736,7 +739,7 @@ void photo_thread_init(void)
 {
 	rt_thread_t	id;//threasd id
 
-	id = rt_thread_create("cm_task",photo_thread_entry,RT_NULL,1024*4,103,30);
+	id = rt_thread_create("cm_task",photo_thread_entry,RT_NULL,1024*1,103,30);
 	if(RT_NULL == id )
 	{
 		rt_kprintf("graph thread create fail\n");
