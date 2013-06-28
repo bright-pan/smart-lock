@@ -179,7 +179,7 @@ int rt_application_init()
   rt_thread_t gprs_heart_process_thread;
   rt_thread_t battery_check_process_thread;
 
-  /* alarm mail process thread
+  /* gsm process thread
   gsm_process_thread = rt_thread_create("gsm",
                                         gsm_process_thread_entry, RT_NULL,
                                         2048, 100, 20);

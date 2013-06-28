@@ -347,89 +347,32 @@ void sms_mail_process_thread_entry(void *parameter)
         *sms_ucs_bk++ = *temp_ucs++;
       }
       rt_free(time_ucs);
-
-      rt_mutex_take(mutex_gsm_mode, RT_WAITING_FOREVER);
-      result = rt_event_recv(event_gsm_mode_response, EVENT_GSM_MODE_SETUP, RT_EVENT_FLAG_AND, RT_WAITING_FOREVER, &event);
-      if (result == RT_EOK)
+      // send sms
+      rt_kprintf("\nsend sms!!!\n");
+      alarm_telephone_counts = TELEPHONE_NUMBERS - 1;
+      while (alarm_telephone_counts >= 0)
       {
-        if (gsm_mode_get() & EVENT_GSM_MODE_GPRS)
+        if (device_parameters.alarm_telephone[alarm_telephone_counts].flag)
         {
-          rt_kprintf("\ngsm mode requset for gprs_cmd mode\n");
-          rt_event_recv(event_gsm_mode_response, EVENT_GSM_MODE_GPRS_CMD, RT_EVENT_FLAG_AND | RT_EVENT_FLAG_CLEAR, RT_WAITING_NO, &event);
-          rt_event_send(event_gsm_mode_request, EVENT_GSM_MODE_GPRS_CMD);
-          result = rt_event_recv(event_gsm_mode_response, EVENT_GSM_MODE_GPRS_CMD, RT_EVENT_FLAG_AND | RT_EVENT_FLAG_CLEAR, RT_WAITING_FOREVER, &event);
-          if ((result == RT_EOK) && !(gsm_mode_get() & EVENT_GSM_MODE_GPRS_CMD))
+          rt_kprintf((char *)(device_parameters.alarm_telephone[alarm_telephone_counts].address));
+          resend_counts = 5;
+          while (resend_counts > 0)
           {
-            rt_kprintf("\ngsm mode gprs switch to gprs_cmd is error, and try resend|\n");
-            // clear gsm setup event, do gsm check or initial for test gsm problem.
-            rt_event_recv(event_gsm_mode_response, EVENT_GSM_MODE_SETUP, RT_EVENT_FLAG_AND|RT_EVENT_FLAG_CLEAR, RT_WAITING_NO, &event);
-            if (!(gsm_mode_get() & EVENT_GSM_MODE_CMD))
+            if (!sms_pdu_ucs_send(device_parameters.alarm_telephone[alarm_telephone_counts].address, smsc, sms_ucs, sms_ucs_length))
             {
-              rt_kprintf("\ngsm mode requset for cmd mode\n");
-              rt_event_recv(event_gsm_mode_response, EVENT_GSM_MODE_CMD, RT_EVENT_FLAG_AND | RT_EVENT_FLAG_CLEAR, RT_WAITING_NO, &event);
-              rt_event_send(event_gsm_mode_request, EVENT_GSM_MODE_CMD);
-              result = rt_event_recv(event_gsm_mode_response, EVENT_GSM_MODE_CMD, RT_EVENT_FLAG_AND | RT_EVENT_FLAG_CLEAR, RT_WAITING_FOREVER, &event);
-              if ((result == RT_EOK) && !(gsm_mode_get() & EVENT_GSM_MODE_CMD))
-              {
-                rt_kprintf("\ngsm mode switch to cmd is error, and try resend|\n");
-              }
-            }
-            rt_event_send(event_gsm_mode_request, EVENT_GSM_MODE_CMD);
-            rt_mq_urgent(sms_mq, sms_mail_buf, sizeof(SMS_MAIL_TYPEDEF));
-            rt_free(sms_ucs);
-            rt_mutex_release(mutex_gsm_mode);
-            continue;
-          }
-        }
-        // send sms
-        rt_kprintf("\nsend sms!!!\n");
-        alarm_telephone_counts = TELEPHONE_NUMBERS - 1;
-        while (alarm_telephone_counts >= 0)
-        {
-          if (device_parameters.alarm_telephone[alarm_telephone_counts].flag)
-          {
-            rt_kprintf((char *)(device_parameters.alarm_telephone[alarm_telephone_counts].address));
-            resend_counts = 5;
-            while (resend_counts > 0)
-            {
-   //           if (!sms_pdu_ucs_send(device_parameters.alarm_telephone[alarm_telephone_counts].address, smsc, sms_ucs, sms_ucs_length))
-              {
-                break;
-              }
-              resend_counts--;
-            }
-            rt_kprintf("\nresend counts :%d\n", resend_counts);
-            if (!resend_counts)
-            {
-              rt_kprintf("\nsend sms failure!!!\n");
-              // send failure
-              rt_event_recv(event_gsm_mode_response, EVENT_GSM_MODE_SETUP, RT_EVENT_FLAG_AND|RT_EVENT_FLAG_CLEAR, RT_WAITING_FOREVER , &event);
-              if (!(gsm_mode_get() & EVENT_GSM_MODE_CMD))
-              {
-              	rt_kprintf("\ngsm mode requset for cmd mode\n");
-                rt_event_recv(event_gsm_mode_response, EVENT_GSM_MODE_CMD, RT_EVENT_FLAG_AND | RT_EVENT_FLAG_CLEAR, RT_WAITING_NO, &event);
-                rt_event_send(event_gsm_mode_request, EVENT_GSM_MODE_CMD);
-                result = rt_event_recv(event_gsm_mode_response, EVENT_GSM_MODE_CMD, RT_EVENT_FLAG_AND | RT_EVENT_FLAG_CLEAR, RT_WAITING_FOREVER, &event);
-                if ((result == RT_EOK) && !(gsm_mode_get() & EVENT_GSM_MODE_CMD))
-                {
-                  rt_kprintf("\ngsm mode switch to cmd is error, and try resend|\n");
-                }
-              }
-              rt_event_send(event_gsm_mode_request, EVENT_GSM_MODE_CMD);
-              rt_mq_urgent(sms_mq, sms_mail_buf, sizeof(SMS_MAIL_TYPEDEF));
               break;
             }
+            resend_counts--;
           }
-          alarm_telephone_counts--;
+          rt_kprintf("\nresend counts :%d\n", resend_counts);
+          if (!resend_counts)
+          {
+            rt_kprintf("\nsend sms failure!!!\n");
+            // send failure
+          }
         }
+        alarm_telephone_counts--;
       }
-      else // gsm is not setup
-      {
-        rt_mq_urgent(sms_mq, sms_mail_buf, sizeof(SMS_MAIL_TYPEDEF));
-      }
-      // exit mail process
-      rt_free(sms_ucs);
-      rt_mutex_release(mutex_gsm_mode);
     }
     else
     {
@@ -536,6 +479,7 @@ int8_t sms_pdu_ucs_send(char *dest_address, char *smsc_address, uint16_t *conten
   char *at_temp, *process_buf;
   uint8_t sms_pdu_length;
   rt_device_t device;
+  int8_t result;
 
   device = rt_device_find(DEVICE_NAME_GSM_USART);
   if (device == RT_NULL)
@@ -591,11 +535,11 @@ int8_t sms_pdu_ucs_send(char *dest_address, char *smsc_address, uint16_t *conten
   }
   */
 
-
+  /*
   memset(at_temp, '\0', 512);
   memset(process_buf, '\0', 512);
   rt_sprintf(at_temp,"AT+CMGS=%d\x0D",
-           send_pdu_frame->TPDU.TP_UDL + (sizeof(send_pdu_frame->TPDU) - sizeof(send_pdu_frame->TPDU.TP_UD)));
+             send_pdu_frame->TPDU.TP_UDL + (sizeof(send_pdu_frame->TPDU) - sizeof(send_pdu_frame->TPDU.TP_UD)));
   rt_device_write(device, 0, at_temp, strlen(at_temp));
   rt_thread_delay(50);
   rt_device_read(device, 0,  process_buf, 50);
@@ -633,19 +577,35 @@ int8_t sms_pdu_ucs_send(char *dest_address, char *smsc_address, uint16_t *conten
     //error send
     goto send_error;
   }
+  */
+  GSM_MAIL_TYPEDEF gsm_mail_buf;
+  gsm_mail_buf.send_mode = GSM_MODE_CMD;
 
+  gsm_mail_buf.result = &result;
+  gsm_mail_buf.result_sem = rt_sem_create("result", 0, RT_IPC_FLAG_FIFO);
+  gsm_mail_buf.mail_data.cmd.index = AT_CMGS;
+  gsm_mail_buf.mail_data.cmd.delay = 50;
+  gsm_mail_buf.mail_data.cmd.cmd_data.cmgs.length = send_pdu_frame->TPDU.TP_UDL + sizeof(send_pdu_frame->TPDU) - sizeof(send_pdu_frame->TPDU.TP_UD);
+  gsm_mail_buf.mail_data.cmd.cmd_data.cmgs.buf = send_pdu_string;
+
+
+  rt_mq_send(mq_gsm, &gsm_mail_buf, sizeof(GSM_MAIL_TYPEDEF));
+
+  rt_sem_take(gsm_mail_buf.result_sem, RT_WAITING_FOREVER);
+
+  if (result == AT_RESPONSE_OK)
+  {
+    result = 1;
+  }
+  else
+  {
+    result = -1;
+  }
   rt_free(send_pdu_frame);
   rt_free(send_pdu_string);
   rt_free(at_temp);
   rt_free(process_buf);
-  return 0;
-
-send_error:
-  rt_free(send_pdu_frame);
-  rt_free(send_pdu_string);
-  rt_free(at_temp);
-  rt_free(process_buf);
-  return -1;
+  return result;
 
 }
 
@@ -694,11 +654,11 @@ void sms(char *address, short *data, char length)
   {
     if (length == 0)
     {
-      //sms_pdu_ucs_send(address,smsc,default_data, 5);
+      sms_pdu_ucs_send(address,smsc,default_data, 5);
     }
     else
     {
-      //sms_pdu_ucs_send(address,smsc,default_data, length);
+      sms_pdu_ucs_send(address,smsc,default_data, length);
     }
   }
   else

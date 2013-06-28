@@ -40,6 +40,7 @@ const char *at_command_map[] =
   "AT+CIPSHUT\r",
   "AT+CIPSTATUS\r",
   "AT+CIPSTART=\"TCP\",\"%s\",%d\r",
+  "AT+CMGS=%d\x0D",
   "ATO\r",
   "+++",
 };
@@ -197,25 +198,6 @@ GsmStatus gsm_reset(void)
   }
 }
 
-
-typedef enum {
-
-  GSM_MODE_CMD,
-  GSM_MODE_GPRS,
-  GSM_MODE_GPRS_CMD,
-
-}GSM_MODE_TYPEDEF;
-
-rt_mq_t mq_gsm;
-
-typedef struct{
-
-  GSM_MODE_TYPEDEF gsm_mode;
-  uint8_t *request;
-  uint8_t *response;
-
-}GSM_MAIL_TYPEDEF;
-
 uint16_t gsm_recv_frame(uint8_t *buf)
 {
   uint8_t *buf_bk = buf;
@@ -269,7 +251,7 @@ rescan_frame:
   return length;
 }
 
-int8_t at_response_process(AT_COMMAND_INDEX_TYPEDEF index)
+int8_t at_response_process(AT_COMMAND_INDEX_TYPEDEF index, uint8_t *buf)
 {
   uint8_t counts = 0;
   uint16_t recv_counts;
@@ -280,150 +262,192 @@ int8_t at_response_process(AT_COMMAND_INDEX_TYPEDEF index)
   {
     memset(process_buf, 0, 512);
     recv_counts = gsm_recv_frame(process_buf);
-    if (recv_counts > 2)
+    gsm_put_char(process_buf, strlen((char *)process_buf));
+    gsm_put_hex(process_buf, strlen((char *)process_buf));
+    if (recv_counts)
     {
-      gsm_put_char(process_buf, strlen((char *)process_buf));
-      gsm_put_hex(process_buf, strlen((char *)process_buf));
-        
-      if (strstr((char *)process_buf, at_command_map[index]))
+      switch (index)
       {
-        if (index == PLUS3)
-        {
-          result = AT_RESPONSE_ERROR;
-          break;
-        }
-        memset(process_buf, 0, 512);
-        recv_counts = gsm_recv_frame(process_buf);
-        if (recv_counts > 2)
-        {
-          gsm_put_char(process_buf, strlen((char *)process_buf));
-          gsm_put_hex(process_buf, strlen((char *)process_buf));
-          if (index == ATO)
-          {
-            if (strstr((char *)process_buf, "NO CARRIER"))
-            {
-              result = AT_RESPONSE_NO_CARRIER;
-            }
-            else if (strstr((char *)process_buf, "CONNECT"))
-            {
-              result = AT_RESPONSE_OK;
-            }
-            break;
+        case AT :
+        case AT_CNMI :
+        case AT_CMGF :
+        case AT_CPIN :
+        case AT_CIPMODE:
+        case AT_CSTT :
+        case AT_CIICR :
+        case AT_CIPSHUT : {
 
-          }
-          if (strstr((char *)process_buf, "OK"))
+          if (strstr((char *)process_buf, at_command_map[index]))
           {
-            if (index == AT_CIPSTATUS)
+            memset(process_buf, 0, 512);
+            recv_counts = gsm_recv_frame(process_buf);
+            if (recv_counts)
             {
-              memset(process_buf, 0, 512);
-              gsm_recv_frame(process_buf);
               gsm_put_char(process_buf, strlen((char *)process_buf));
               gsm_put_hex(process_buf, strlen((char *)process_buf));
-              if (strstr((char *)process_buf, "CONNECT OK"))
+              if (strstr((char *)process_buf, "OK"))
               {
-                result = AT_RESPONSE_CONNECT_OK;
+            
+                result = AT_RESPONSE_OK;
               }
-              else if(strstr((char *)process_buf, "TCP CLOSED"))
-              {
-                result = AT_RESPONSE_TCP_CLOSED;
-              }
-              break;
-
             }
-            if (index == AT_CIPSTART)
+            goto complete;
+          }
+          break;
+        };
+        case AT_CSCA : {
+
+          if (strstr((char *)process_buf, at_command_map[index]))
+          {
+            memset(process_buf, 0, 512);
+            recv_counts = gsm_recv_frame(process_buf);
+            if (recv_counts)
             {
-              rt_thread_delay(200);
-              memset(process_buf, 0, 512);
-              recv_counts = gsm_recv_frame(process_buf);
-              if (recv_counts > 2)
+              gsm_put_char(process_buf, strlen((char *)process_buf));
+              gsm_put_hex(process_buf, strlen((char *)process_buf));
+              if (!strstr((char *)process_buf, "ERROR"))
               {
-                if (strstr((char *)process_buf, "CONNECT OK"))
+                memset(process_buf + 200, 0, 512);
+                recv_counts = gsm_recv_frame(process_buf + 200);
+                if (recv_counts)
                 {
-                  result = AT_RESPONSE_CONNECT_OK;
-                }
-                else if(strstr((char *)process_buf, "TCP CLOSED"))
-                {
-                  result = AT_RESPONSE_TCP_CLOSED;
-                }
-                else if(strstr((char *)process_buf, "PDP DEACT"))
-                {
-                  result = AT_RESPONSE_PDP_DEACT;
+                  gsm_put_char(process_buf+200, strlen((char *)process_buf+200));
+                  gsm_put_hex(process_buf+200, strlen((char *)process_buf+200));
+
+                  if (strstr((char *)process_buf + 200, "OK"))
+                  {
+                    sscanf((char *)process_buf, "%*[^\"]\"+%[^\"]", smsc);
+                    result = AT_RESPONSE_OK;
+                  }
                 }
               }
-              else
+            }
+            goto complete;
+          }
+          break;
+        }
+        case AT_CIPSTATUS : {
+
+          if (strstr((char *)process_buf, at_command_map[index]))
+          {
+            memset(process_buf, 0, 512);
+            recv_counts = gsm_recv_frame(process_buf);
+            if (recv_counts)
+            {
+              gsm_put_char(process_buf, strlen((char *)process_buf));
+              gsm_put_hex(process_buf, strlen((char *)process_buf));
+              if (strstr((char *)process_buf, "OK"))
               {
-                rt_thread_delay(2000);
                 memset(process_buf, 0, 512);
                 recv_counts = gsm_recv_frame(process_buf);
-                if (recv_counts > 2)
+                if (recv_counts)
                 {
+                  gsm_put_char(process_buf, strlen((char *)process_buf));
+                  gsm_put_hex(process_buf, strlen((char *)process_buf));
                   if (strstr((char *)process_buf, "CONNECT OK"))
                   {
                     result = AT_RESPONSE_CONNECT_OK;
                   }
-                  else if(strstr((char *)process_buf, "TCP_CLOSED"))
+                  else if (strstr((char *)process_buf, "TCP CLOSED"))
                   {
                     result = AT_RESPONSE_TCP_CLOSED;
                   }
                 }
               }
-              break;
-
             }
+            goto complete;
+          }
+          
+          break;
+        };
+        case AT_CIPSTART : {
 
-            result = AT_RESPONSE_OK;
-            break;
-          }
-          else if (strstr((char *)process_buf, "ERROR"))
+          if (strstr((char *)process_buf, (char *)buf))
           {
-            result = AT_RESPONSE_ERROR;
-            break;
-          }
-          else
-          {
-            memset(process_buf + 200, 0, 512);
-            recv_counts = gsm_recv_frame(process_buf + 200);
-            if (recv_counts > 2)
+            memset(process_buf, 0, 512);
+            recv_counts = gsm_recv_frame(process_buf);
+            if (recv_counts)
             {
-              gsm_put_char(process_buf+200, strlen((char *)process_buf+200));
-              gsm_put_hex(process_buf+200, strlen((char *)process_buf+200));
-
-              if (strstr((char *)process_buf + 200, "OK"))
+              gsm_put_char(process_buf, strlen((char *)process_buf));
+              gsm_put_hex(process_buf, strlen((char *)process_buf));
+              if (strstr((char *)process_buf, "OK"))
               {
-                if (index == AT_CSCA)
+                memset(process_buf, 0, 512);
+                recv_counts = gsm_recv_frame(process_buf);
+                if (recv_counts)
                 {
-                    sscanf((char *)process_buf, "%*[^\"]\"+%[^\"]", smsc);
+                  gsm_put_char(process_buf, strlen((char *)process_buf));
+                  gsm_put_hex(process_buf, strlen((char *)process_buf));
+                  if (strstr((char *)process_buf, "CONNECT") && !strstr((char *)process_buf, "FAIL"))
+                  {
+                    result = AT_RESPONSE_CONNECT_OK;
+                  }
                 }
-                result = AT_RESPONSE_OK;
-                break;
-              }
-              else
-              {
-                result = AT_RESPONSE_ERROR;
-                break;
               }
             }
-            else
-            {
-              result = AT_RESPONSE_ERROR;
-              break;
-            }
+            goto complete;
           }
 
-        }
-        else 
-        {
-              
-        }
-      }
-      else if (strstr((char *)process_buf, "OK"))
-      {
-        if (index == PLUS3)
-        {
-          result = AT_RESPONSE_OK;
           break;
         }
+        case AT_CMGS : {
+
+          if (strstr((char *)process_buf, (char *)buf))
+          {
+            memset(process_buf, 0, 512);
+            recv_counts = gsm_recv_frame(process_buf);
+            if (recv_counts)
+            {
+              gsm_put_char(process_buf, strlen((char *)process_buf));
+              gsm_put_hex(process_buf, strlen((char *)process_buf));
+              if (strstr((char *)process_buf, ">"))
+              {
+                result = AT_RESPONSE_OK;
+              }
+            }
+            goto complete;
+          }
+          
+          break;
+        };
+        case ATO : {
+
+          if (strstr((char *)process_buf, at_command_map[index]))
+          {
+            memset(process_buf, 0, 512);
+            recv_counts = gsm_recv_frame(process_buf);
+            if (recv_counts)
+            {
+              gsm_put_char(process_buf, strlen((char *)process_buf));
+              gsm_put_hex(process_buf, strlen((char *)process_buf));
+              if (strstr((char *)process_buf, "NO CARRIER"))
+              {
+                result = AT_RESPONSE_NO_CARRIER;
+              }
+              else if (strstr((char *)process_buf, "CONNECT"))
+              {
+                result = AT_RESPONSE_OK;
+              }
+            }
+            goto complete;
+          }
+          break;
+        };
+        case PLUS3 : {
+
+          if (strstr((char *)process_buf, "OK"))
+          {
+            result = AT_RESPONSE_OK;
+          }
+          goto complete;
+          break;
+        }
+        default:{
+          goto complete;
+          break;
+        };
       }
+      
     }
     else
     {
@@ -433,11 +457,13 @@ int8_t at_response_process(AT_COMMAND_INDEX_TYPEDEF index)
     counts++;
     rt_thread_delay(20);
   }
+
+complete:
   rt_free(process_buf);
   return result;
 }
 
-int8_t gsm_command(AT_COMMAND_INDEX_TYPEDEF index, uint16_t delay, uint8_t *buf)
+int8_t gsm_command(AT_COMMAND_INDEX_TYPEDEF index, uint16_t delay, GSM_MAIL_CMD *mail_cmd)
 {
   rt_device_t device_gsm_usart;
   int8_t result;
@@ -461,6 +487,22 @@ int8_t gsm_command(AT_COMMAND_INDEX_TYPEDEF index, uint16_t delay, uint8_t *buf)
 
       break;
     };
+    case AT_CMGS:{
+
+      memset(process_buf, 0, 512);
+      rt_sprintf((char *)process_buf,
+                 at_command_map[index],
+                 mail_cmd->cmd_data.cmgs.length);
+
+      rt_device_write(device_gsm_usart, 0,
+                      process_buf,
+                      strlen((char *)process_buf));
+
+      gsm_put_char(process_buf, strlen((char *)process_buf));
+
+      break;
+    };
+
     case PLUS3 : {
       rt_thread_delay(150);
       rt_device_write(device_gsm_usart, 0,
@@ -480,12 +522,37 @@ int8_t gsm_command(AT_COMMAND_INDEX_TYPEDEF index, uint16_t delay, uint8_t *buf)
       break;
     }
   }
-  memcpy(process_buf, at_command_map[index], strlen(at_command_map[index]));
-
   rt_thread_delay(delay);
-  result = at_response_process(index);
+  result = at_response_process(index, process_buf);
 
+  switch (index)
+  {
+    case AT_CMGS:{
+      if (result == AT_RESPONSE_OK)
+      {
+        memset(process_buf, 0, 512);
+        memcpy(process_buf, mail_cmd->cmd_data.cmgs.buf, strlen((char *)mail_cmd->cmd_data.cmgs.buf));
+        rt_device_write(device_gsm_usart, 0,
+                        process_buf,
+                        strlen((char *)process_buf));
+        rt_device_write(device_gsm_usart, 0, "\x1A", 1);
+        gsm_put_char(process_buf, strlen((char *)process_buf));
+        rt_thread_delay(5*delay);
+        result = at_response_process(index, process_buf);
+      }
+      else
+      {
+        result = AT_RESPONSE_ERROR;
+      }
+      break;
+    };
+    default: {
+      break;
+    }
+  }
+  
   rt_free(process_buf);
+  rt_kprintf("\n\nresult = %d\n\n", result);
   return result;
 }
 
@@ -494,34 +561,34 @@ int8_t gsm_mode_switch(GSM_MODE_TYPEDEF *gsm_mode, GSM_MAIL_TYPEDEF *buf)
 {
   uint8_t *process_buf = (uint8_t *)rt_malloc(512);
   int8_t result = 1;
-  int8_t gsm_command_result;
-  
+  GSM_MAIL_CMD gsm_mail_cmd;
+
   switch (*gsm_mode)
   {
     case GSM_MODE_CMD : {
-      if (gsm_command(AT, 20, (uint8_t *)"") == AT_NO_RESPONSE)
+      if (gsm_command(AT, 20, &gsm_mail_cmd) == AT_NO_RESPONSE)
       {
         gsm_setup(DISABLE);
         result = -1;
         break;
       }
-      if (buf->gsm_mode == GSM_MODE_GPRS)
+      if (buf->send_mode == GSM_MODE_GPRS)
       {
         //test cipstatus mode if test tcp is online send ATO\r or send cipstart
         // if ATO success , SET gsm mode GSM_MODE_GPRS,
-        if ((gsm_command(AT_CIPSTATUS, 100, (uint8_t *)"") == AT_RESPONSE_CONNECT_OK) &&
-            (gsm_command(ATO, 100, (uint8_t *)"") == AT_RESPONSE_OK))
+        if ((gsm_command(AT_CIPSTATUS, 100, &gsm_mail_cmd) == AT_RESPONSE_CONNECT_OK) &&
+            (gsm_command(ATO, 100, &gsm_mail_cmd) == AT_RESPONSE_OK))
         {
           *gsm_mode = GSM_MODE_GPRS;
           result = 1;
         }
         else
         {
-          if ((gsm_command(AT_CIPSHUT,50,(uint8_t *)"") == AT_RESPONSE_OK) &&
-              (gsm_command(AT_CIPMODE,50,(uint8_t *)"") == AT_RESPONSE_OK) &&
-              (gsm_command(AT_CSTT,50,(uint8_t *)"") == AT_RESPONSE_OK) &&
-              (gsm_command(AT_CIICR,100,(uint8_t *)"") == AT_RESPONSE_OK) &&
-              (gsm_command(AT_CIPSTART,200,(uint8_t *)"")== AT_RESPONSE_CONNECT_OK))
+          if ((gsm_command(AT_CIPSHUT,50,&gsm_mail_cmd) == AT_RESPONSE_OK) &&
+              (gsm_command(AT_CIPMODE,50,&gsm_mail_cmd) == AT_RESPONSE_OK) &&
+              (gsm_command(AT_CSTT,50,&gsm_mail_cmd) == AT_RESPONSE_OK) &&
+              (gsm_command(AT_CIICR,100,&gsm_mail_cmd) == AT_RESPONSE_OK) &&
+              (gsm_command(AT_CIPSTART,200,&gsm_mail_cmd)== AT_RESPONSE_CONNECT_OK))
           {
             *gsm_mode = GSM_MODE_GPRS;
             result = 1;
@@ -536,10 +603,10 @@ int8_t gsm_mode_switch(GSM_MODE_TYPEDEF *gsm_mode, GSM_MAIL_TYPEDEF *buf)
       break;
     };
     case GSM_MODE_GPRS : {
-      if (buf->gsm_mode == GSM_MODE_CMD)
+      if (buf->send_mode == GSM_MODE_CMD)
       {
         // send plus3 to gsm, return !AT_NO_RESPONSE is success, or disable gsm.
-        if (gsm_command(PLUS3, 100, (uint8_t *)"") == AT_NO_RESPONSE)
+        if (gsm_command(PLUS3, 100, &gsm_mail_cmd) == AT_NO_RESPONSE)
         {
           gsm_setup(DISABLE);
           result = -1;
@@ -560,15 +627,24 @@ int8_t gsm_mode_switch(GSM_MODE_TYPEDEF *gsm_mode, GSM_MAIL_TYPEDEF *buf)
 int8_t gsm_init_process(void)
 {
   uint16_t counts = 0;
-  int8_t result = AT_RESPONSE_ERROR;
+  int8_t result = -1;
   uint8_t *process_buf = (uint8_t *)rt_malloc(512);
-
+  GSM_MAIL_CMD gsm_mail_cmd;
   while (counts < 100)
   {
+    memset(process_buf,0,512);
     gsm_recv_frame(process_buf);
     if (strstr((char *)process_buf, "Call Ready"))
     {
-      break;
+      gsm_put_char(process_buf, strlen((char *)process_buf));
+      gsm_put_hex(process_buf, strlen((char *)process_buf));
+      if ((gsm_command(AT_CNMI, 50, &gsm_mail_cmd) == AT_RESPONSE_OK) &&
+          (gsm_command(AT_CSCA, 50, &gsm_mail_cmd) == AT_RESPONSE_OK) &&
+          (gsm_command(AT_CMGF, 50, &gsm_mail_cmd) == AT_RESPONSE_OK))
+      {
+        result = 1;
+        break;
+      }
     }
     counts++;
     rt_thread_delay(50);
@@ -581,6 +657,7 @@ int8_t gsm_init_process(void)
   {
     result = 1;
   }
+  rt_free(process_buf);
   return result;
 }
 
@@ -629,10 +706,31 @@ void gsm_process_thread_entry(void *parameters)
       if (result == RT_EOK)
       {
         // process mail
+        if (gsm_mail_buf->send_mode == GSM_MODE_CMD)
+        {
+          // cmd data
+          if (gsm_mode_switch(&gsm_mode, gsm_mail_buf) == 1)
+          {
+            
+            *(gsm_mail_buf->result) = gsm_command(gsm_mail_buf->mail_data.cmd.index, gsm_mail_buf->mail_data.cmd.delay, &(gsm_mail_buf->mail_data.cmd));
+            rt_sem_release(gsm_mail_buf->result_sem);
+          }
+        }
+        else
+        {
+          //gprs data
+        }
       }
       else
       {
-        // no mail
+        if (gsm_mail_buf->send_mode == GSM_MODE_CMD)
+        {
+          //cmd data
+        }
+        else
+        {
+          //gprs data
+        }
       }
       rt_free(gsm_mail_buf);
     }

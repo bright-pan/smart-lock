@@ -52,6 +52,7 @@ typedef enum
   AT_CIPSHUT,
   AT_CIPSTATUS,
   AT_CIPSTART,
+  AT_CMGS,
   ATO,
   PLUS3,
 }AT_COMMAND_INDEX_TYPEDEF;
@@ -69,6 +70,57 @@ typedef enum
 
 typedef enum {
 
+  GSM_MODE_CMD,
+  GSM_MODE_GPRS,
+
+}GSM_MODE_TYPEDEF;
+
+rt_mq_t mq_gsm;
+
+typedef struct
+{
+  uint8_t *request;
+  uint8_t *response;
+  uint16_t request_length;
+  uint16_t response_length;
+}GSM_MAIL_GPRS;
+
+typedef struct
+{
+  uint16_t length;
+  uint8_t *buf;
+}GSM_MAIL_CMD_CMGS;
+
+typedef union
+{
+  GSM_MAIL_CMD_CMGS cmgs;
+}GSM_MAIL_CMD_DATA;
+
+typedef struct
+{
+  AT_COMMAND_INDEX_TYPEDEF index;
+  uint16_t delay;
+  GSM_MAIL_CMD_DATA cmd_data;
+}GSM_MAIL_CMD;
+
+typedef union
+{
+  GSM_MAIL_CMD cmd;
+  GSM_MAIL_GPRS gprs;
+}GSM_MAIL_DATA;
+
+typedef struct{
+
+  GSM_MODE_TYPEDEF send_mode;
+  GSM_MAIL_DATA mail_data;
+  int8_t *result;
+  rt_sem_t result_sem;
+
+}GSM_MAIL_TYPEDEF;
+
+
+typedef enum {
+
   AT_NO_RESPONSE,
   AT_RESPONSE_OK,
   AT_RESPONSE_ERROR,
@@ -78,6 +130,8 @@ typedef enum {
   AT_RESPONSE_PDP_DEACT,
 
 }AT_RESPONSE_TYPEDEF;
+
+//typedef struct GSM_MAIL_TYPEDEF
 
 GsmStatus gsm_reset(void);
 GsmStatus gsm_setup(FunctionalState state);
