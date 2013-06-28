@@ -42,12 +42,11 @@ rt_uint8_t get_photo_fbuf_cmd[16] = {0x56,0x00,0x32,0x0C,0x00,0x0a,0x00,0x00,0x0
 
 
 rt_sem_t		usart_data_sem = RT_NULL;		//photograph sem
-rt_sem_t		start_work_sem = RT_NULL;		//start camrea mms gprs flow
 rt_sem_t		photo_sem = RT_NULL;				//test use
 rt_mq_t			photo_start_mq = RT_NULL;		//start work mq
 rt_mutex_t	pic_file_mutex = RT_NULL;		//picture file operate mutex
 rt_event_t	alarm_inform_event = RT_NULL;//
-
+rt_event_t	work_flow_ok = RT_NULL;			//one work flow
 
 
 
@@ -593,20 +592,12 @@ void photo_deal(camera_dev_t camera,cm_recv_mq_t recv_mq)
 		photo_create_file_one(camera,recv_mq->name2);	
 	}
 	/* camera woker finish send Message Queuing */
-/*	
-	send_mq.error = camera->error;
-	send_mq.name1 = recv_mq->name1;
-	send_mq.name2 = recv_mq->name2;
-	rt_mq_send(photo_ok_mq,&send_mq,sizeof(send_mq));//·¢ËÍÓÊÏä
-*/
 	mms_mail_buf.alarm_type = recv_mq->alarm_type;
 	mms_mail_buf.time = recv_mq->date;
 	/*  Receive timeout make no difference */
 	if((CM_RUN_DEAL_OK == camera->error)||(CM_RECV_OUT_TIME & camera->error))
 	{
-//		photo_change_pic_filename(recv_mq);
-		
-		rt_mq_send(mms_mq, &mms_mail_buf, sizeof(MMS_MAIL_TYPEDEF));
+	rt_mq_send(mms_mq, &mms_mail_buf, sizeof(MMS_MAIL_TYPEDEF));
 	}
 	else
 	{
@@ -668,15 +659,32 @@ void camera_module_self_test(camera_dev_t camera)
 	camera_power_control(camera,0); 
 }
 
+rt_err_t work_flow_status(void)
+{
+	rt_err_t result = RT_EOK;
+	rt_uint32_t	event;
 
+	result = rt_event_recv(work_flow_ok,
+												 FLOW_OK_FLAG,
+												 RT_EVENT_FLAG_AND|RT_EVENT_FLAG_CLEAR,
+												 RT_WAITING_NO,
+												 &event);
+	if(RT_EOK == result)
+	{
+		return result;
+	}
+	return result;
+}
 void photo_thread_entry(void *arg)
 {
 	struct camera_dev photo;
 	struct cm_recv_mq recv_mq;
 	rt_err_t	result;
 	
-	pic_timer = rt_timer_create("cm_time",pic_timer_test,RT_NULL,10,RT_TIMER_FLAG_PERIODIC);
-	
+	pic_timer = rt_timer_create("cm_time",
+															pic_timer_test,RT_NULL,
+															10,
+															RT_TIMER_FLAG_PERIODIC);
 	photo_struct_init(&photo);
 
 	camera_power_control(&photo,1);	
@@ -684,12 +692,13 @@ void photo_thread_entry(void *arg)
 	{
 		result =  rt_mq_recv(photo_start_mq,&recv_mq,sizeof(recv_mq),24*36000);
 
-		if(rt_sem_take(start_work_sem,1000) != RT_EOK)//start input work cycle
+		if(work_flow_status() == -RT_ETIMEOUT)
 		{
-			rt_kprintf("not photo \n\n\n");
+#ifdef	CMAERA_DEBUG_INFO_PRINTF
+			rt_kprintf("one work flow not finsh\n\n");
+#endif
 			continue;
 		}
-		
 		if(RT_EOK == result)								//in working order
 		{
 			camera_power_control(&photo,1); 	//open camera power
@@ -778,13 +787,14 @@ void photo_thread_init(void)
 		return ;
 	}
 
-	/*camera start work sem */
-	start_work_sem = rt_sem_create("cmauth",1,RT_IPC_FLAG_FIFO);
-	if(RT_NULL == start_work_sem)
+	/*camera start work flow event */
+	work_flow_ok  = rt_event_create("workflow",RT_IPC_FLAG_FIFO);
+	if(RT_NULL == work_flow_ok)
 	{
-		rt_kprintf(" \"start_w\" sem create fail\n\n");
+		rt_kprintf(" \"workflow\" sem create fail\n\n");
 		return ;
 	}
+	rt_event_send(work_flow_ok,FLOW_OK_FLAG);
 	
 	/*enable work event creat*/
 	alarm_inform_event = rt_event_create("infosend",RT_IPC_FLAG_FIFO);

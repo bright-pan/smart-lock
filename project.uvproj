@@ -475,6 +475,11 @@
               <FileType>1</FileType>
               <FilePath>.\voiceapp.c</FilePath>
             </File>
+            <File>
+              <FileName>gprs_pic.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\gprs_pic.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>

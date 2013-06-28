@@ -151,8 +151,8 @@ static void rfid_key_detect_process(void)
 	      rt_device_read(device, 0, &rfid_key, 8);// clear rfid uart cache
 	      rt_device_read(device, 0, &rfid_key, 8);// clear rfid uart cache
 	      rt_device_write(device, 0, "\x50\x00\x06\xD4\x07\x01\x00\x00\x00\x04\x80", 11);
-	      //delay_us(100000);
-	      rt_thread_delay(10);
+	      delay_us(500000);
+	    //  rt_thread_delay(10);
 	      rfid_recv = rt_device_read(device, 0, &rfid_buf, 9);
 	      if (rfid_recv == 9)
 	      {
@@ -316,15 +316,15 @@ static void lock_gate_process(void)
   else
   {	
   }
-  if (device_parameters.lock_gate_alarm_time < 0 || device_parameters.lock_gate_alarm_time > 99)
-    {
-      lock_gate_timeout_counts = 30;
-    }
-    else
-    {
-      lock_gate_timeout_counts = device_parameters.lock_gate_alarm_time;
-    }
-    rt_timer_start(lock_gate_timer);
+  if(device_parameters.lock_gate_alarm_time < 0 || device_parameters.lock_gate_alarm_time > 99)
+	{
+	  lock_gate_timeout_counts = 30;
+	}
+	else
+	{
+	  lock_gate_timeout_counts = device_parameters.lock_gate_alarm_time;
+	}
+	rt_timer_start(lock_gate_timer);
 }
 
 static void lock_gate_timeout(void *parameters)

@@ -23,6 +23,7 @@ SET CPU_CLOCK=0x00000000
 "C:\Keil\ARM\BIN40\ArmCC" --Via ".\obj\battery.__i"
 "C:\Keil\ARM\BIN40\ArmCC" --Via ".\obj\des.__i"
 "C:\Keil\ARM\BIN40\ArmCC" --Via ".\obj\voiceapp.__i"
+"C:\Keil\ARM\BIN40\ArmCC" --Via ".\obj\gprs_pic.__i"
 "C:\Keil\ARM\BIN40\ArmCC" --Via ".\obj\clock.__i"
 "C:\Keil\ARM\BIN40\ArmCC" --Via ".\obj\device.__i"
 "C:\Keil\ARM\BIN40\ArmCC" --Via ".\obj\idle.__i"

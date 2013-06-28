@@ -1106,8 +1106,16 @@ int8_t recv_gprs_frame(GPRS_RECV_FRAME_TYPEDEF *recv_frame)
     rt_free(process_buf);
     return -1;
   }
-  gsm_put_hex(process_buf, recv_counts);
-  gprs_recv_frame = (GPRS_RECV_FRAME_TYPEDEF *)process_buf;
+  rt_kprintf("/*******************\nData from the network\n\n");
+	gsm_put_hex(process_buf, recv_counts);
+	gprs_recv_frame = (GPRS_RECV_FRAME_TYPEDEF *)process_buf;
+
+	/*	Large end into a small side*/
+	gprs_recv_frame->length = __REV16(gprs_recv_frame->length);
+	
+	gsm_put_hex(process_buf, recv_counts);
+	
+	rt_kprintf("gprs_recv_frame->length = %d \n",gprs_recv_frame->length);
 
   switch (gprs_recv_frame->cmd)
   {

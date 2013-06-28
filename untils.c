@@ -56,7 +56,7 @@ DEVICE_PARAMETERS_TYPEDEF device_parameters = {
   {
     {
       1,
-      "\x86\x6E\xEB\x14"
+      "\x86\x6E\xEB\x14" //866eeb14
     },
   },
   {
@@ -111,31 +111,68 @@ void sys_file(void)
 	DEVICE_PARAMETERS_TYPEDEF arg;
 	rt_uint8_t i;
 	
-	system_file_operate(&device_parameters,1);
+//	system_file_operate(&device_parameters,1);
 	
 	system_file_operate(&arg,0);
 
+	rt_kprintf("/********************************\nbelow is system cur config file content\n\n");
 	for(i =0; i< 10;i++)
 	{
-		rt_kprintf("arg.call_telephone[%d].flag = %d \n",i,arg.alarm_telephone[i].flag);
-		rt_kprintf("arg.call_telephone[%d].address =%s \n",i,arg.alarm_telephone[i].address);
+		rt_kprintf("arg.call_telephone[%d].flag    = %d \n",i,arg.alarm_telephone[i].flag);
+		rt_kprintf("arg.call_telephone[%d].address = %s \n",i,arg.alarm_telephone[i].address);
+		if(arg.alarm_telephone[i+1].address[0] == '\0' )
+		{
+			break;
+		}
 	}
 	for(i =0; i< 10;i++)
 	{
-		rt_kprintf("arg.call_telephone[%d].flag = %d \n",i,arg.call_telephone[i].flag);
-		rt_kprintf("arg.call_telephone[%d].address =%s \n",i,arg.call_telephone[i].address);
+		rt_kprintf("arg.call_telephone[%d].flag    = %d \n",i,arg.call_telephone[i].flag);
+		rt_kprintf("arg.call_telephone[%d].address = %s \n",i,arg.call_telephone[i].address);
+		if(arg.call_telephone[i+1].address[0] == '\0' )
+		{
+			break;
+		}
 	}
-	rt_kprintf("arg.tcp_domain.domain =%s \n",arg.tcp_domain.domain);
-	rt_kprintf("arg.tcp_domain.port = %d \n",arg.tcp_domain.port);
+	rt_kprintf("arg.tcp_domain.domain     = %s \n",arg.tcp_domain.domain);
+	rt_kprintf("arg.tcp_domain.port       = %d \n",arg.tcp_domain.port);
 	for(i =0; i< 10;i++)
 	{
-		rt_kprintf("arg.rfid_key[%d].flag = %d \n",i,arg.rfid_key[i].flag);
-		rt_kprintf("arg.rfid_key[%d].key = %s \n",i,arg.rfid_key[i].key);
+		rt_kprintf("arg.rfid_key[%d].flag   = %d \n",i,arg.rfid_key[i].flag);
+		rt_kprintf("arg.rfid_key[%d].key    = %x %x %x %x\n",i,arg.rfid_key[i].key[0],
+																												arg.rfid_key[i].key[1],
+																												arg.rfid_key[i].key[2],
+																												arg.rfid_key[i].key[3]);
+		if(arg.rfid_key[i+1].key[0] ==  '\0')
+		{
+			break;
+		}
 	}
-	rt_kprintf("arg.lock_gate_alarm_time = %d \n",arg.lock_gate_alarm_time);
-	rt_kprintf("arg.device_id = %s \n",arg.device_id);
-	rt_kprintf("arg.key0 = %s \n",arg.key0);
-	rt_kprintf("arg.key1 = %s \n",arg.key1);
+	rt_kprintf("arg.lock_gate_alarm_time  = %d \n",arg.lock_gate_alarm_time);
+	rt_kprintf("arg.device_id = %02x%02x%02x%02x%02x%02x \n",arg.device_id[0],
+																										arg.device_id[1],
+																										arg.device_id[2],
+																										arg.device_id[3],
+																										arg.device_id[4],
+																										arg.device_id[5]);
+																										
+	rt_kprintf("arg.key0 = %02x%02x%02x%02x%02x%02x%02x%02x \n",arg.key0[0],
+																										 arg.key0[1],
+																										 arg.key0[2],
+																										 arg.key0[3],
+																										 arg.key0[4],
+																										 arg.key0[5],
+																										 arg.key0[6],
+																										 arg.key0[7]);
+															
+	rt_kprintf("arg.key1 = %02x%02x%02x%02x%02x%02x%02x%02x\n\n",arg.key1[0],
+																											arg.key1[1],
+																											arg.key1[2],
+																											arg.key1[3],
+																											arg.key1[4],
+																											arg.key1[5],
+																											arg.key1[6],
+																											arg.key1[7]);
 }
 
 FINSH_FUNCTION_EXPORT(sys_file,--system file config);
