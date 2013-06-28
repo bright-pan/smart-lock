@@ -42,7 +42,7 @@ typedef enum
   ALARM_TYPE_BATTERY_REMAIN_20P,
   ALARM_TYPE_BATTERY_REMAIN_5P,
   ALARM_TYPE_BATTERY_SWITCH,
-  ALARM_TYPE_RFID_KEY_ERROR,// rfid key detect error alarm type
+  ALARM_TYPE_RFID_KEY_ERROR,// rfid key detect error alarm type 14
   ALARM_TYPE_RFID_KEY_SUCCESS,// rfid key detect success alarm type
   ALARM_TYPE_RFID_KEY_PLUGIN,// rfid key detect plugin alarm type
   ALARM_TYPE_RFID_FAULT,

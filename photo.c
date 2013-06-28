@@ -45,7 +45,6 @@ rt_sem_t		usart_data_sem = RT_NULL;		//photograph sem
 rt_sem_t		start_work_sem = RT_NULL;		//start camrea mms gprs flow
 rt_sem_t		photo_sem = RT_NULL;				//test use
 rt_mq_t			photo_start_mq = RT_NULL;		//start work mq
-//rt_mq_t			photo_ok_mq = RT_NULL;		//photo finish
 rt_mutex_t	pic_file_mutex = RT_NULL;		//picture file operate mutex
 rt_event_t	alarm_inform_event = RT_NULL;//
 
@@ -88,7 +87,10 @@ void test_run(void)
 *						  analyze arg
 * Output			: -1pointer error 0 time, return >1of data is arg pos
 *******************************************************************************/
-rt_int8_t com_recv_data_analyze(rt_device_t usart,rt_uint32_t wait_t,rt_uint32_t mem_size,rt_uint32_t arg_num,...)
+rt_int8_t com_recv_data_analyze(rt_device_t usart,
+																rt_uint32_t wait_t,
+																rt_uint32_t mem_size,
+																rt_uint32_t arg_num,...)
 {	
 	rt_uint8_t*      		buffer = RT_NULL;
 	rt_uint8_t*      		tmp_buffer = RT_NULL;
@@ -737,77 +739,92 @@ void photo_thread_entry(void *arg)
 
 void photo_thread_init(void)
 {
-	rt_thread_t	id;//threasd id
+	rt_thread_t	id = RT_NULL;
 
-	id = rt_thread_create("cm_task",photo_thread_entry,RT_NULL,1024*1,103,30);
-	if(RT_NULL == id )
-	{
-		rt_kprintf("graph thread create fail\n");
-		
-		return ;
-	}
-	rt_thread_startup(id);
-
-	usart_data_sem = rt_sem_create("cm_sem",0,RT_IPC_FLAG_FIFO);
+	/*camera com port recv data use sem*/
+	usart_data_sem = rt_sem_create("cmcom",
+																0,
+																RT_IPC_FLAG_FIFO);
 	if(RT_NULL == usart_data_sem)
 	{
-		rt_kprintf(" \"sxt\" sem create fail\n");
-
+		rt_kprintf(" \"cmcom\" sem create fail\n");
 		return ;
 	}
-	
-	photo_start_mq = rt_mq_create("cmsend",64,8,RT_IPC_FLAG_FIFO);
+
+	/*camera start work mq*/
+	photo_start_mq = rt_mq_create("cmwork",
+																64,
+																8,
+																RT_IPC_FLAG_FIFO);
 	if(RT_NULL == photo_start_mq)
 	{
-		rt_kprintf(" \"cmsend\" mq create fial\n");
+		rt_kprintf(" \"cmwork\" mq create fial\n\n");
+		return ;
+	}
 
-		return ;
-	}
-	id = rt_thread_create("cm_ir_c",camera_infrared_thread_enter,RT_NULL,256,108,100);
-	if(RT_NULL == id )
-	{
-		rt_kprintf("graph thread create fail\n");
-		
-		return ;
-	}
-	rt_thread_startup(id);
-		
-	cm_ir_sem = rt_sem_create("cmirsem",0,RT_IPC_FLAG_FIFO);
+	/*ir deal use sem */
+	cm_ir_sem = rt_sem_create("cmirdeal",0,RT_IPC_FLAG_FIFO);
 	if(RT_NULL == cm_ir_sem)
 	{
-		rt_kprintf(" \"cmirsem\" sem create fail\n");
-
+		rt_kprintf(" \"cmirdeal\" sem create fail\n\n");
 		return ;
 	}
+
+	/*picture file mutex*/
 	pic_file_mutex = rt_mutex_create("pic_file",RT_IPC_FLAG_FIFO);
 	if(RT_NULL == pic_file_mutex)
 	{
-		rt_kprintf(" \"pic_file\" sem create fail\n");
-
+		rt_kprintf(" \"pic_file\" sem create fail\n\n");
 		return ;
 	}
-	start_work_sem = rt_sem_create("start_w",1,RT_IPC_FLAG_FIFO);
+
+	/*camera start work sem */
+	start_work_sem = rt_sem_create("cmauth",1,RT_IPC_FLAG_FIFO);
 	if(RT_NULL == start_work_sem)
 	{
-		rt_kprintf(" \"start_w\" sem create fail\n");
-
+		rt_kprintf(" \"start_w\" sem create fail\n\n");
 		return ;
 	}
+	
+	/*enable work event creat*/
 	alarm_inform_event = rt_event_create("infosend",RT_IPC_FLAG_FIFO);
 	if(RT_NULL == alarm_inform_event)
 	{
-		rt_kprintf(" \"infosend\" sem create fail\n");
+		rt_kprintf(" \"infosend\" sem create fail\n\n");
+		return;
 	}
 	rt_event_send(alarm_inform_event,INFO_SEND_SMS | INFO_SEND_MMS);
-/*
-	photo_ok_mq = rt_mq_create("cmok",64,8,RT_IPC_FLAG_FIFO);
-	if(RT_NULL == photo_ok_mq)
-	{
-		rt_kprintf(" \"cmok\" mq create fial\n");
 
+	/*camera data deal thread*/
+	id = rt_thread_create("cm_task",
+												photo_thread_entry,
+												RT_NULL,
+												800,
+												103,
+												30);
+	if(RT_NULL == id )
+	{
+		rt_kprintf("graph thread create fail\n\n");
+		
 		return ;
 	}
-*/
+	rt_thread_startup(id);
+
+	/*ir deal thread */
+	id = rt_thread_create("cmirtask",
+												camera_infrared_thread_enter,
+												RT_NULL,
+												256,
+												108,
+												100);
+	if(RT_NULL == id )
+	{
+		rt_kprintf("graph thread create fail\n");
+		
+		return ;
+	}
+	rt_thread_startup(id);
+
 }
 
 
@@ -829,15 +846,21 @@ void camera_send_mail(ALARM_TYPEDEF alarm_type, time_t time)
 
 
 
-/*		camera infared detection  part*/
-#define CM_IR_TEST_TIME	55
+/*camera infared detection  part*/
+#define CM_IR_TEST_TIME						55	//leave ir check up num
 #define CM_IR_ALARM_TOUCH_PERIOD	1		//10min
-rt_sem_t cm_ir_sem = RT_NULL;
-static rt_timer_t cm_ir_timer = RT_NULL;
-rt_timer_t cm_alarm_timer = RT_NULL;
 
+rt_sem_t 		cm_ir_sem = RT_NULL;			//ir keep out 2s send sem
+/*ir of timer*/
+rt_timer_t 	cm_alarm_timer = RT_NULL;	
+static rt_timer_t cm_ir_timer = RT_NULL;
+/*timer count flag*/
 volatile rt_uint8_t cm_ir_time_value = 0;
 volatile rt_uint8_t cm_alarm_cnt_time_value = 0;
+
+
+
+
 
 void camera_alarm_time_interval(void *arg)
 {
@@ -845,7 +868,10 @@ void camera_alarm_time_interval(void *arg)
 	if(cm_alarm_cnt_time_value > CM_IR_ALARM_TOUCH_PERIOD)
 	{
 		rt_timer_stop(cm_alarm_timer);
-		rt_event_send(alarm_inform_event,INFO_SEND_MMS | INFO_SEND_SMS);//send alarm info event
+
+		/*send alarm info event*/
+		rt_event_send(alarm_inform_event,INFO_SEND_MMS | INFO_SEND_SMS);
+		
 		rt_kprintf("start camare loopg!!!!!!!!!!!!!!!!!!!!!\n\n");
 	}
 }
@@ -855,18 +881,22 @@ void camera_infrared_timer(void *arg)
 }
 void camera_infrared_thread_enter(void *arg)
 {
-	rt_device_t ir_dev;											//ir device
+	rt_device_t ir_dev;									//ir device
 	rt_uint8_t	ir_pin_dat;									
-	rt_uint32_t flag = 0;										//ir pin status real-time monitoring
+	rt_uint32_t flag = 0;								//ir pin status real-time monitoring
 	rt_uint8_t	leave_flag = 0;				
 	rt_err_t 		result = RT_NULL;
 	rt_uint32_t	recv_e;
 
-	cm_ir_timer = rt_timer_create("cm_ir_t",camera_infrared_timer,RT_NULL,100,\
-	RT_TIMER_FLAG_PERIODIC);
+	cm_ir_timer = rt_timer_create("cm_ir_t",
+																camera_infrared_timer,
+																RT_NULL,100,
+																RT_TIMER_FLAG_PERIODIC);
 
-	cm_alarm_timer = rt_timer_create("alam_t",camera_alarm_time_interval,RT_NULL,3000,\
-	RT_TIMER_FLAG_PERIODIC);
+	cm_alarm_timer = rt_timer_create("alam_t",
+																		camera_alarm_time_interval,
+																		RT_NULL,3000,
+																		RT_TIMER_FLAG_PERIODIC);
 
 	ir_dev = rt_device_find(DEVICE_NAME_CAMERA_IRDASENSOR);
 	
@@ -888,9 +918,13 @@ void camera_infrared_thread_enter(void *arg)
 					continue;
 				}
 			}
-*/
-			result = rt_event_recv(alarm_inform_event,INFO_SEND_MMS,
-					RT_EVENT_FLAG_AND|RT_EVENT_FLAG_CLEAR,RT_WAITING_NO,&recv_e);
+*/		/* recv work event*/
+			result = rt_event_recv(alarm_inform_event,
+														INFO_SEND_MMS,
+														RT_EVENT_FLAG_AND|RT_EVENT_FLAG_CLEAR,
+														RT_WAITING_NO,
+														&recv_e);
+														
 			if(result == -RT_ETIMEOUT)
 			{
 				continue;
