@@ -80,117 +80,38 @@ void gprs_mail_process_thread_entry(void *parameter)
   rt_uint32_t event;
   GPRS_RECV_FRAME_TYPEDEF *gprs_recv_frame = RT_NULL;
   /* malloc a buff for process mail */
-  GPRS_MAIL_TYPEDEF *gprs_mail_buf = (GPRS_MAIL_TYPEDEF *)rt_malloc(sizeof(GPRS_MAIL_TYPEDEF));
+  GPRS_MAIL_TYPEDEF gprs_mail_buf;
 
   create_k1();
   work_alarm_type_map_init();
   fault_alarm_type_map_init();
   /* initial msg queue */
-  gprs_mq = rt_mq_create("gprs", sizeof(GPRS_MAIL_TYPEDEF), \
-                         GPRS_MAIL_MAX_MSGS, \
+  gprs_mq = rt_mq_create("gprs", sizeof(GPRS_MAIL_TYPEDEF),
+                         GPRS_MAIL_MAX_MSGS,
                          RT_IPC_FLAG_FIFO);
   while (1)
   {
     /* process mail */
-    memset(gprs_mail_buf, 0, sizeof(GPRS_MAIL_TYPEDEF));
-    result = rt_mq_recv(gprs_mq, gprs_mail_buf, sizeof(GPRS_MAIL_TYPEDEF), RT_WAITING_NO);
+    memset(&gprs_mail_buf, 0, sizeof(GPRS_MAIL_TYPEDEF));
+    result = rt_mq_recv(gprs_mq, &gprs_mail_buf, sizeof(GPRS_MAIL_TYPEDEF), RT_WAITING_NO);
     /* mail receive ok */
     if (result == RT_EOK)
     {
-      rt_kprintf("receive gprs mail < time: %d alarm_type: %d >\n", gprs_mail_buf->time, gprs_mail_buf->alarm_type);
-      rt_mutex_take(mutex_gsm_mode, RT_WAITING_FOREVER);
-      result = rt_event_recv(event_gsm_mode_response, EVENT_GSM_MODE_SETUP, RT_EVENT_FLAG_AND, 100, &event);
-      if (result == RT_EOK)
-      {
-        if (!(gsm_mode_get() & EVENT_GSM_MODE_GPRS))
-        {
-          rt_kprintf("\ngsm mode requset for gprs mode\n");
-          rt_event_recv(event_gsm_mode_response, EVENT_GSM_MODE_GPRS, RT_EVENT_FLAG_AND | RT_EVENT_FLAG_CLEAR, RT_WAITING_NO, &event);
-          rt_event_send(event_gsm_mode_request, EVENT_GSM_MODE_GPRS);
-          rt_event_recv(event_gsm_mode_response, EVENT_GSM_MODE_GPRS, RT_EVENT_FLAG_AND | RT_EVENT_FLAG_CLEAR, RT_WAITING_FOREVER, &event);
-          if ((result == RT_EOK) && !(gsm_mode_get() & EVENT_GSM_MODE_GPRS))
-          {
-            rt_kprintf("\ngsm mode switch to gprs is error, and try resend!\n");
-            // clear gsm setup event, do gsm check or initial for test gsm problem.
-            rt_event_recv(event_gsm_mode_response, EVENT_GSM_MODE_SETUP, RT_EVENT_FLAG_AND|RT_EVENT_FLAG_CLEAR, RT_WAITING_NO, &event);
-            if (!(gsm_mode_get() & EVENT_GSM_MODE_CMD))
-            {
-              rt_kprintf("\ngsm mode requset for cmd mode\n");
-              rt_event_recv(event_gsm_mode_response, EVENT_GSM_MODE_CMD, RT_EVENT_FLAG_AND | RT_EVENT_FLAG_CLEAR, RT_WAITING_NO, &event);
-              rt_event_send(event_gsm_mode_request, EVENT_GSM_MODE_CMD);
-              result = rt_event_recv(event_gsm_mode_response, EVENT_GSM_MODE_CMD, RT_EVENT_FLAG_AND | RT_EVENT_FLAG_CLEAR, RT_WAITING_FOREVER, &event);
-              if ((result == RT_EOK) && !(gsm_mode_get() & EVENT_GSM_MODE_CMD))
-              {
-                rt_kprintf("\ngsm mode switch to cmd is error, and try resend!\n");
-              }
-            }
-            rt_event_send(event_gsm_mode_request, EVENT_GSM_MODE_CMD);
-            rt_mq_urgent(gprs_mq, gprs_mail_buf, sizeof(GPRS_MAIL_TYPEDEF));
-            rt_mutex_release(mutex_gsm_mode);
-            continue;
-          }
-        }
+      rt_kprintf("receive gprs mail < time: %d alarm_type: %d >\n", gprs_mail_buf.time, gprs_mail_buf.alarm_type);
         // send gprs data
-        rt_kprintf("\nsend gprs data!!!\n");
-        send_gprs_frame(gprs_mail_buf->alarm_type, gprs_mail_buf->time, gprs_mail_buf->order);
-      }
-      else// gsm is not setup
-      {
-        // resend gprs mail
-        rt_mq_urgent(gprs_mq, gprs_mail_buf, sizeof(GPRS_MAIL_TYPEDEF));
-      }
-      // exit mail process
-      rt_mutex_release(mutex_gsm_mode);
+      rt_kprintf("\nsend gprs data!!!\n");
+      send_gprs_frame(gprs_mail_buf.alarm_type, gprs_mail_buf.time, gprs_mail_buf.order);
     }
     else
     {
-      /* mail receive error */
-      rt_mutex_take(mutex_gsm_mode, RT_WAITING_FOREVER);
-      result = rt_event_recv(event_gsm_mode_response, EVENT_GSM_MODE_SETUP, RT_EVENT_FLAG_AND, 100, &event);
-      if (result == RT_EOK)
-      {
-        if (!(gsm_mode_get() & EVENT_GSM_MODE_GPRS))
-        {
-          rt_kprintf("\ngsm mode requset for gprs mode\n");
-          rt_event_recv(event_gsm_mode_response, EVENT_GSM_MODE_GPRS, RT_EVENT_FLAG_AND | RT_EVENT_FLAG_CLEAR, RT_WAITING_NO, &event);
-          rt_event_send(event_gsm_mode_request, EVENT_GSM_MODE_GPRS);
-          result = rt_event_recv(event_gsm_mode_response, EVENT_GSM_MODE_GPRS, RT_EVENT_FLAG_AND | RT_EVENT_FLAG_CLEAR, RT_WAITING_FOREVER, &event);
-          if ((result == RT_EOK) && !(gsm_mode_get() & EVENT_GSM_MODE_GPRS))
-          {
-            rt_kprintf("\ngsm mode switch to gprs is error\n");
-            // clear gsm setup event, do gsm check or initial for test gsm problem.
-            rt_event_recv(event_gsm_mode_response, EVENT_GSM_MODE_SETUP, RT_EVENT_FLAG_AND|RT_EVENT_FLAG_CLEAR, RT_WAITING_NO, &event);
-            if (!(gsm_mode_get() & EVENT_GSM_MODE_CMD))
-            {
-              rt_kprintf("\ngsm mode requset for cmd mode\n");
-              rt_event_recv(event_gsm_mode_response, EVENT_GSM_MODE_CMD, RT_EVENT_FLAG_AND | RT_EVENT_FLAG_CLEAR, RT_WAITING_NO, &event);
-              rt_event_send(event_gsm_mode_request, EVENT_GSM_MODE_CMD);
-              result = rt_event_recv(event_gsm_mode_response, EVENT_GSM_MODE_CMD, RT_EVENT_FLAG_AND | RT_EVENT_FLAG_CLEAR, RT_WAITING_FOREVER, &event);
-              if ((result == RT_EOK) && !(gsm_mode_get() & EVENT_GSM_MODE_CMD))
-              {
-                rt_kprintf("\ngsm mode switch to cmd is error, and try resend!\n");
-              }
-            }
-            rt_event_send(event_gsm_mode_request, EVENT_GSM_MODE_CMD);
-          }
-        }
-        else// gprs mode
-        {
-          gprs_recv_frame = (GPRS_RECV_FRAME_TYPEDEF *)rt_malloc(sizeof(GPRS_RECV_FRAME_TYPEDEF));
-          recv_gprs_frame(gprs_recv_frame);
-          rt_free(gprs_recv_frame);
-          rt_thread_delay(50);
-        }
-      }
-      else //gsm is not setup
-      {
-        rt_thread_delay(50);
-      }
-      // exit
-      rt_mutex_release(mutex_gsm_mode);
+      /* no mail receive
+      gprs_recv_frame = (GPRS_RECV_FRAME_TYPEDEF *)rt_malloc(sizeof(GPRS_RECV_FRAME_TYPEDEF));
+      recv_gprs_frame(gprs_recv_frame);
+      rt_free(gprs_recv_frame);
+      */
+      rt_thread_delay(50);
     }
   }
-  rt_free(gprs_mail_buf);
 }
 
 void gprs_heart_process_thread_entry(void *parameters)
@@ -200,22 +121,8 @@ void gprs_heart_process_thread_entry(void *parameters)
 
   while(1)
   {
-    rt_mutex_take(mutex_gsm_mode, RT_WAITING_FOREVER);
-    result = rt_event_recv(event_gsm_mode_response, EVENT_GSM_MODE_SETUP, RT_EVENT_FLAG_AND, 100, &event);
-    if (result == RT_EOK)
-    {
-      if (gsm_mode_get() & EVENT_GSM_MODE_GPRS)
-      {
-        //send heart
-        gprs_send_heart();
-      }
-    }
-    else //gsm is not setup
-    {
-      
-    }
-    // exit
-    rt_mutex_release(mutex_gsm_mode);
+    //send heart
+    send_gprs_frame(ALARM_TYPE_GPRS_HEART, 0, 0);
     rt_thread_delay(6000);
   }
 }
@@ -383,7 +290,12 @@ int8_t send_gprs_frame(ALARM_TYPEDEF alarm_type, time_t time, uint8_t order)
   uint8_t *process_buf_bk = RT_NULL;
   uint16_t process_length = 0;
   GPRS_SEND_FRAME_TYPEDEF *gprs_send_frame = RT_NULL;
+  GPRS_RECV_FRAME_TYPEDEF *gprs_recv_frame = RT_NULL;
   rt_device_t device = RT_NULL;
+  GSM_MAIL_TYPEDEF gsm_mail_buf;
+  int8_t result = -1;
+  int8_t send_result = -1;
+  uint16_t recv_counts = 0;
 
   device = rt_device_find(DEVICE_NAME_GSM_USART);
 
@@ -395,6 +307,9 @@ int8_t send_gprs_frame(ALARM_TYPEDEF alarm_type, time_t time, uint8_t order)
 
   gprs_send_frame = (GPRS_SEND_FRAME_TYPEDEF *)rt_malloc(sizeof(GPRS_SEND_FRAME_TYPEDEF));
   memset(gprs_send_frame, 0, sizeof(GPRS_SEND_FRAME_TYPEDEF));
+
+  gprs_recv_frame = (GPRS_RECV_FRAME_TYPEDEF *)rt_malloc(sizeof(GPRS_RECV_FRAME_TYPEDEF));
+  memset(gprs_recv_frame, 0, sizeof(GPRS_RECV_FRAME_TYPEDEF));
   // frame process
   switch (alarm_type)
   {
@@ -636,6 +551,9 @@ int8_t send_gprs_frame(ALARM_TYPEDEF alarm_type, time_t time, uint8_t order)
       gprs_send_frame->data.set_key0.result = 0;
       break;
     };
+    default : {
+      break;
+    };
   }
 
   // send process
@@ -692,7 +610,7 @@ int8_t send_gprs_frame(ALARM_TYPEDEF alarm_type, time_t time, uint8_t order)
       process_length += 1;
       
       memcpy(process_buf_bk, gprs_send_frame->data.work_alarm.time, 6);
-      process_length += 6;      
+      process_length += 6;
       break;
     };
     case ALARM_TYPE_LOCK_GATE: {
@@ -744,7 +662,7 @@ int8_t send_gprs_frame(ALARM_TYPEDEF alarm_type, time_t time, uint8_t order)
       process_length += 1;
       
       memcpy(process_buf_bk, gprs_send_frame->data.work_alarm.time, 6);
-      process_length += 6;      
+      process_length += 6;
       break;
     };
 
@@ -886,15 +804,56 @@ int8_t send_gprs_frame(ALARM_TYPEDEF alarm_type, time_t time, uint8_t order)
 
       break;
     };
+    default : {
+      break;
+    };
   }
 
   //send frame
   gsm_put_hex(process_buf, process_length);
-  rt_device_write(device, 0, process_buf, process_length);
+  //rt_device_write(device, 0, process_buf, process_length);
+
+  gsm_mail_buf.send_mode = GSM_MODE_GPRS;
+  gsm_mail_buf.result = &send_result;
+  gsm_mail_buf.result_sem = rt_sem_create("g_ret", 0, RT_IPC_FLAG_FIFO);
+  gsm_mail_buf.mail_data.gprs.request = process_buf;
+  gsm_mail_buf.mail_data.gprs.request_length = process_length;
+  gsm_mail_buf.mail_data.gprs.response = (uint8_t *)gprs_recv_frame;
+  gsm_mail_buf.mail_data.gprs.response_length = &recv_counts;
+
+  if (mq_gsm != NULL)
+  {
+    if (alarm_type == ALARM_TYPE_GPRS_AUTH)
+    {
+      result = rt_mq_urgent(mq_gsm, &gsm_mail_buf, sizeof(GSM_MAIL_TYPEDEF));
+    }
+    else
+    {
+      result = rt_mq_send(mq_gsm, &gsm_mail_buf, sizeof(GSM_MAIL_TYPEDEF));
+    }
+
+    if (result == -RT_EFULL)
+    {
+      rt_kprintf("mq_gsm is full!!!\n");
+      send_result = -1;
+    }
+    else
+    {
+      rt_sem_take(gsm_mail_buf.result_sem, RT_WAITING_FOREVER);
+      gsm_put_hex(gsm_mail_buf.mail_data.gprs.response, recv_counts);
+    }
+    rt_sem_delete(gsm_mail_buf.result_sem);
+  }
+  else
+  {
+    rt_kprintf("mq_gsm is RT_NULL!!!\n");
+    send_result = -1;
+  }
 
   rt_free(gprs_send_frame);
+  rt_free(gprs_recv_frame);
   rt_free(process_buf);
-  return 1;
+  return send_result;
 }
 
 void process_gprs_set_telephone(GPRS_SET_TELEPHONE *set_telephone)
@@ -1104,6 +1063,9 @@ int8_t recv_gprs_frame(GPRS_RECV_FRAME_TYPEDEF *recv_frame)
       {
         send_gprs_mail(ALARM_TYPE_GPRS_SET_KEY0_FAILURE, 0, gprs_recv_frame->order);
       }
+      break;
+    };
+    default : {
       break;
     };
   }

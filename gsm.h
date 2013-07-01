@@ -55,6 +55,7 @@ typedef enum
   AT_CMGS,
   ATO,
   PLUS3,
+  AT_CMGS_SUFFIX,
 }AT_COMMAND_INDEX_TYPEDEF;
 
 typedef enum
@@ -82,7 +83,7 @@ typedef struct
   uint8_t *request;
   uint8_t *response;
   uint16_t request_length;
-  uint16_t response_length;
+  uint16_t *response_length;
 }GSM_MAIL_GPRS;
 
 typedef struct
