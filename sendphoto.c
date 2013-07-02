@@ -9,7 +9,7 @@ static void send_photo_thread_enter(void *arg)
 	volatile int read_result = 1;
 	while(1)
 	{
-		rt_mq_recv(photo_ok_mq,&recv_mq,sizeof(recv_mq),RT_WAITING_FOREVER);
+//		rt_mq_recv(photo_ok_mq,&recv_mq,sizeof(recv_mq),RT_WAITING_FOREVER);
 		rt_kprintf("recv_mq.error %d\n",recv_mq.error);
 
 		file_id = open(recv_mq.name1,O_RDONLY,0);

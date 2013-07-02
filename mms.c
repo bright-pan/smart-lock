@@ -93,12 +93,12 @@ void mms_data_init(mms_dev_t mms)
 
 void mms_mail_process_thread_entry(void *parameter)
 {
-  rt_err_t result;
-  rt_uint32_t event;
-  struct mms_dev mms_send_struct;//mms send data struct 
-  rt_uint8_t i;//loop 	variable
-  extern rt_timer_t mms_recv_cmd_t;
-	
+  rt_err_t 						result;
+  rt_uint32_t 				event;
+  struct mms_dev 			mms_send_struct;//mms send data struct 
+  rt_uint8_t 					i;//loop 	variable
+  extern rt_timer_t 	mms_recv_cmd_t;
+  
   /* malloc a buff for process mail */
   MMS_MAIL_TYPEDEF *mms_mail_buf = (MMS_MAIL_TYPEDEF *)rt_malloc(sizeof(MMS_MAIL_TYPEDEF));
   /* initial msg queue */
@@ -172,6 +172,7 @@ void mms_mail_process_thread_entry(void *parameter)
           }
           mms_data_init(&mms_send_struct);		//init mms function
         }
+				rt_event_send(work_flow_ok,FLOW_OK_FLAG);
         if(i == MMS_RESEND_NUM)					//send fial
         {
           rt_kprintf("\nsend mms failure!!!\n");

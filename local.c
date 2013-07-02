@@ -24,6 +24,7 @@
 
 /* local msg queue for local alarm */
 rt_mq_t local_mq;
+GPRS_MAIL_USER gprs_mail_user;
 
 rt_timer_t lock_gate_timer = RT_NULL;
 rt_timer_t battery_switch_timer = RT_NULL;
@@ -150,8 +151,8 @@ static void rfid_key_detect_process(void)
 	      rt_device_read(device, 0, &rfid_key, 8);// clear rfid uart cache
 	      rt_device_read(device, 0, &rfid_key, 8);// clear rfid uart cache
 	      rt_device_write(device, 0, "\x50\x00\x06\xD4\x07\x01\x00\x00\x00\x04\x80", 11);
-	      //delay_us(100000);
-	      rt_thread_delay(10);
+	      delay_us(500000);
+	    //  rt_thread_delay(10);
 	      rfid_recv = rt_device_read(device, 0, &rfid_buf, 9);
 	      if (rfid_recv == 9)
 	      {
@@ -166,9 +167,11 @@ static void rfid_key_detect_process(void)
 	          if (device_parameters.rfid_key[rfid_key_index].flag && (*((uint32_t *)device_parameters.rfid_key[rfid_key_index].key) == *((uint32_t *)rfid_key)))
 	          {
 	            // success read rfid key
-	            gpio_pin_output(DEVICE_NAME_RFID_POWER, 0);
-	            lock_output(GATE_UNLOCK);//unlock
-	            send_gprs_mail(ALARM_TYPE_RFID_KEY_SUCCESS, 0, 0);
+	            strncpy((char*)gprs_mail_user.key,(const char*)rfid_key,4);				//save rfid 
+	            gpio_pin_output(DEVICE_NAME_RFID_POWER, 0);												//close RFIO power
+	            lock_output(GATE_UNLOCK);																					//unlock
+	            send_gprs_mail(ALARM_TYPE_RFID_KEY_SUCCESS, 0, 0,&gprs_mail_user);//lock open 
+	            rt_event_send(alarm_inform_event,INFO_SEND_MMS | INFO_SEND_SMS);//send alarm info event
 	            return;
 	          }
 	          rfid_key_index--;
@@ -188,12 +191,12 @@ static void rfid_key_detect_process(void)
 	      {
 	        // rfid fault
 	        send_sms_mail(ALARM_TYPE_RFID_FAULT, 0);
-	        send_gprs_mail(ALARM_TYPE_RFID_FAULT, 0, 0);
+	        send_gprs_mail(ALARM_TYPE_RFID_FAULT, 0, 0,RT_NULL);
 	        return;
 	      }
 	      // send rfid key error mail
 	      send_sms_mail(ALARM_TYPE_RFID_KEY_ERROR, 0);
-	      send_gprs_mail(ALARM_TYPE_RFID_KEY_ERROR, 0, 0);
+	      send_gprs_mail(ALARM_TYPE_RFID_KEY_ERROR, 0, 0,RT_NULL);
 	      voice_output(3);		
 	      camera_send_mail(ALARM_TYPE_RFID_KEY_ERROR,0);//camera photo 
 	    }
@@ -226,7 +229,7 @@ static void rfid_key_detect_timeout(void *parameters)
     if (data == 1) // rfid key is plugin
     {
       send_sms_mail(ALARM_TYPE_RFID_KEY_PLUGIN, 0);
-      send_gprs_mail(ALARM_TYPE_RFID_KEY_PLUGIN, 0, 0);
+      send_gprs_mail(ALARM_TYPE_RFID_KEY_PLUGIN, 0, 0,RT_NULL);
     }
   }
   rt_timer_stop(rfid_key_detect_timer);
@@ -245,7 +248,7 @@ static void battery_switch_process(void)
       battery_switch_timer = rt_timer_create("tr_bs",
                                              battery_switch_timeout,
                                              RT_NULL,
-                                             6000,
+                                             100,
                                              RT_TIMER_FLAG_PERIODIC);
       battery_switch_timeout_counts = 20;
       rt_timer_start(battery_switch_timer);
@@ -258,7 +261,7 @@ static void battery_switch_process(void)
   }
   else
   {
-
+		rt_kprintf("power battery pin is H\n\n");
   }
 }
 
@@ -294,7 +297,7 @@ static void battery_switch_timeout(void *parameters)
       battery_switch_timeout_counts = 0;
       //send mail
       send_sms_mail(ALARM_TYPE_BATTERY_WORKING_20M, 0);
-      send_gprs_mail(ALARM_TYPE_BATTERY_WORKING_20M, 0, 0);
+      send_gprs_mail(ALARM_TYPE_BATTERY_WORKING_20M, 0, 0,RT_NULL);
     }
   }
 }
@@ -313,15 +316,15 @@ static void lock_gate_process(void)
   else
   {	
   }
-  if (device_parameters.lock_gate_alarm_time < 0 || device_parameters.lock_gate_alarm_time > 99)
-    {
-      lock_gate_timeout_counts = 30;
-    }
-    else
-    {
-      lock_gate_timeout_counts = device_parameters.lock_gate_alarm_time;
-    }
-    rt_timer_start(lock_gate_timer);
+  if(device_parameters.lock_gate_alarm_time < 0 || device_parameters.lock_gate_alarm_time > 99)
+	{
+	  lock_gate_timeout_counts = 30;
+	}
+	else
+	{
+	  lock_gate_timeout_counts = device_parameters.lock_gate_alarm_time;
+	}
+	rt_timer_start(lock_gate_timer);
 }
 
 static void lock_gate_timeout(void *parameters)
@@ -359,7 +362,7 @@ static void lock_gate_timeout(void *parameters)
       lock_gate_timeout_counts = 0;
       //send mail
       send_sms_mail(ALARM_TYPE_LOCK_GATE, 0);
-      send_gprs_mail(ALARM_TYPE_LOCK_GATE, 0, 0);
+      send_gprs_mail(ALARM_TYPE_LOCK_GATE, 0, 0,RT_NULL);
     }
   }
 }

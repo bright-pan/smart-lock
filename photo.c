@@ -23,6 +23,8 @@
 #include "mms.h"
 #include "stdarg.h"
 #include "sms.h"
+#include "gprs.h"
+
 
 
 
@@ -42,9 +44,9 @@ rt_uint8_t get_photo_fbuf_cmd[16] = {0x56,0x00,0x32,0x0C,0x00,0x0a,0x00,0x00,0x0
 rt_sem_t		usart_data_sem = RT_NULL;		//photograph sem
 rt_sem_t		photo_sem = RT_NULL;				//test use
 rt_mq_t			photo_start_mq = RT_NULL;		//start work mq
-//rt_mq_t			photo_ok_mq = RT_NULL;			//photo finish
-rt_mutex_t	pic_file_mutex = RT_NULL;
-
+rt_mutex_t	pic_file_mutex = RT_NULL;		//picture file operate mutex
+rt_event_t	alarm_inform_event = RT_NULL;//
+rt_event_t	work_flow_ok = RT_NULL;			//one work flow
 
 
 
@@ -84,16 +86,19 @@ void test_run(void)
 *						  analyze arg
 * Output			: -1pointer error 0 time, return >1of data is arg pos
 *******************************************************************************/
-rt_int8_t com_recv_data_analyze(rt_device_t usart,rt_uint32_t wait_t,rt_uint32_t mem_size,rt_uint32_t arg_num,...)
+rt_int8_t com_recv_data_analyze(rt_device_t usart,
+																rt_uint32_t wait_t,
+																rt_uint32_t mem_size,
+																rt_uint32_t arg_num,...)
 {	
-	rt_uint8_t*      buffer = RT_NULL;
-	rt_uint8_t*      tmp_buffer = RT_NULL;
-	char*            analyze_result = RT_NULL;
-	volatile rt_size_t        size = 0;
-	va_list          ap;
-	const char*      ap_str = RT_NULL;
-	rt_uint8_t       i = 0;
-	rt_bool_t        jmp_flag = 0;
+	rt_uint8_t*      		buffer = RT_NULL;
+	rt_uint8_t*      		tmp_buffer = RT_NULL;
+	char*            		analyze_result = RT_NULL;
+	volatile rt_size_t  size = 0;
+	va_list          		ap;
+	const char*      		ap_str = RT_NULL;
+	rt_uint8_t       		i = 0;
+	rt_bool_t        		jmp_flag = 0;
 	
 	buffer = rt_malloc(sizeof(rt_uint8_t)*mem_size);
 	
@@ -309,8 +314,8 @@ void photo_get_size(camera_dev_t camera,rt_uint8_t frame_flag)
 		length = rt_device_read(camera->device,0,camera->data,CM_BUFFER_LEN);
 		
 		/*    calculate receive size	*/
-		camera->size = (camera->data[5] << 24) |(camera->data[6] << 16) |\
-		(camera->data[7] << 8) |(camera->data[8]); 
+		camera->size = ((*(camera->data+5)) << 24) |((*(camera->data+6))  << 16) |\
+		((*(camera->data+7))  << 8) |((*(camera->data+8)) ); 
 		
 		max_cnt++;
 		if(max_cnt>10)
@@ -324,8 +329,8 @@ void photo_get_size(camera_dev_t camera,rt_uint8_t frame_flag)
 	}
 	while((camera->size >60000) ||(camera->size < 0));
 	/*   calculate receive size		*/
-	camera->size = (camera->data[5] << 24) |(camera->data[6] << 16) \
-	|(camera->data[7] << 8) |(camera->data[8]); 
+	//camera->size = (camera->data[5] << 24) |(camera->data[6] << 16) \
+	//|(camera->data[7] << 8) |(camera->data[8]); 
 	camera->page = camera->size / CM_BUFFER_LEN;
 	camera->surplus = camera->size % CM_BUFFER_LEN;
 	length = rt_device_read(camera->device,0,camera->data,CM_BUFFER_LEN);
@@ -587,24 +592,17 @@ void photo_deal(camera_dev_t camera,cm_recv_mq_t recv_mq)
 		photo_create_file_one(camera,recv_mq->name2);	
 	}
 	/* camera woker finish send Message Queuing */
-/*	
-	send_mq.error = camera->error;
-	send_mq.name1 = recv_mq->name1;
-	send_mq.name2 = recv_mq->name2;
-	rt_mq_send(photo_ok_mq,&send_mq,sizeof(send_mq));//·¢ËÍÓÊÏä
-*/
 	mms_mail_buf.alarm_type = recv_mq->alarm_type;
 	mms_mail_buf.time = recv_mq->date;
 	/*  Receive timeout make no difference */
 	if((CM_RUN_DEAL_OK == camera->error)||(CM_RECV_OUT_TIME & camera->error))
 	{
-//		photo_change_pic_filename(recv_mq);
-		
-		rt_mq_send(mms_mq, &mms_mail_buf, sizeof(MMS_MAIL_TYPEDEF));
+	rt_mq_send(mms_mq, &mms_mail_buf, sizeof(MMS_MAIL_TYPEDEF));
 	}
 	else
 	{
 		send_sms_mail(ALARM_TYPE_CAMERA_FAULT,0);
+		send_gprs_mail(ALARM_TYPE_CAMERA_FAULT, 0, 0,RT_NULL);
 	}
 		
 }
@@ -636,15 +634,15 @@ void camera_module_self_test(camera_dev_t camera)
 	rt_uint8_t i = 0;
 	rt_uint8_t error_num = 0;
 	const char result[6] = {0x76,0x00,0x36,0x00,0x00,'\0'};
-	
+
 	camera_power_control(camera,1);	
-/*
-  if(com_recv_data_analyze(camera->device,200,300,1,"User-defined") != 1)
+	/*
+	if(com_recv_data_analyze(camera->device,200,300,1,"User-defined") != 1)
 	{
 		rt_kprintf("camrea fun problem\n");
 		send_sms_mail(ALARM_TYPE_CAMERA_FAULT,0);
 	}
-*/
+	*/
 	com_recv_data_analyze(camera->device,200,300,1,"@");
 	for(i = 0; i < 3; i++)
 	{
@@ -661,15 +659,32 @@ void camera_module_self_test(camera_dev_t camera)
 	camera_power_control(camera,0); 
 }
 
+rt_err_t work_flow_status(void)
+{
+	rt_err_t result = RT_EOK;
+	rt_uint32_t	event;
 
+	result = rt_event_recv(work_flow_ok,
+												 FLOW_OK_FLAG,
+												 RT_EVENT_FLAG_AND|RT_EVENT_FLAG_CLEAR,
+												 RT_WAITING_NO,
+												 &event);
+	if(RT_EOK == result)
+	{
+		return result;
+	}
+	return result;
+}
 void photo_thread_entry(void *arg)
 {
 	struct camera_dev photo;
 	struct cm_recv_mq recv_mq;
 	rt_err_t	result;
 	
-	pic_timer = rt_timer_create("cm_time",pic_timer_test,RT_NULL,10,RT_TIMER_FLAG_PERIODIC);
-	
+	pic_timer = rt_timer_create("cm_time",
+															pic_timer_test,RT_NULL,
+															10,
+															RT_TIMER_FLAG_PERIODIC);
 	photo_struct_init(&photo);
 
 	camera_power_control(&photo,1);	
@@ -677,12 +692,21 @@ void photo_thread_entry(void *arg)
 	{
 		result =  rt_mq_recv(photo_start_mq,&recv_mq,sizeof(recv_mq),24*36000);
 
+		if(work_flow_status() == -RT_ETIMEOUT)
+		{
+#ifdef	CMAERA_DEBUG_INFO_PRINTF
+			rt_kprintf("one work flow not finsh\n\n");
+#endif
+			continue;
+		}
 		if(RT_EOK == result)								//in working order
 		{
 			camera_power_control(&photo,1); 	//open camera power
 			
 			rt_thread_delay(1);
 
+			photo.data = (rt_uint8_t*)rt_malloc(CM_BUFFER_LEN);
+			rt_memset(photo.data,0,CM_BUFFER_LEN);
 			photo_reset(&photo);
 
 			/*start camera job */
@@ -717,70 +741,100 @@ void photo_thread_entry(void *arg)
 			
 			rt_kprintf("camera close power!!!\n");
 		}
+		rt_free(photo.data);
 	}
 }
 
 
 void photo_thread_init(void)
 {
-	rt_thread_t	id;//threasd id
+	rt_thread_t	id = RT_NULL;
 
-	id = rt_thread_create("cm_task",photo_thread_entry,RT_NULL,1024*4,103,30);
-	if(RT_NULL == id )
-	{
-		rt_kprintf("graph thread create fail\n");
-		
-		return ;
-	}
-	rt_thread_startup(id);
-
-	usart_data_sem = rt_sem_create("cm_sem",0,RT_IPC_FLAG_FIFO);
+	/*camera com port recv data use sem*/
+	usart_data_sem = rt_sem_create("cmcom",
+																0,
+																RT_IPC_FLAG_FIFO);
 	if(RT_NULL == usart_data_sem)
 	{
-		rt_kprintf(" \"sxt\" sem create fail\n");
-
+		rt_kprintf(" \"cmcom\" sem create fail\n");
 		return ;
 	}
-	
-	photo_start_mq = rt_mq_create("cmsend",64,8,RT_IPC_FLAG_FIFO);
+
+	/*camera start work mq*/
+	photo_start_mq = rt_mq_create("cmwork",
+																64,
+																8,
+																RT_IPC_FLAG_FIFO);
 	if(RT_NULL == photo_start_mq)
 	{
-		rt_kprintf(" \"cmsend\" mq create fial\n");
+		rt_kprintf(" \"cmwork\" mq create fial\n\n");
+		return ;
+	}
 
-		return ;
-	}
-	id = rt_thread_create("cm_ir_c",camera_infrared_thread_enter,RT_NULL,256,108,100);
-	if(RT_NULL == id )
-	{
-		rt_kprintf("graph thread create fail\n");
-		
-		return ;
-	}
-	rt_thread_startup(id);
-		
-	cm_ir_sem = rt_sem_create("cmirsem",0,RT_IPC_FLAG_FIFO);
+	/*ir deal use sem */
+	cm_ir_sem = rt_sem_create("cmirdeal",0,RT_IPC_FLAG_FIFO);
 	if(RT_NULL == cm_ir_sem)
 	{
-		rt_kprintf(" \"cmirsem\" sem create fail\n");
-
+		rt_kprintf(" \"cmirdeal\" sem create fail\n\n");
 		return ;
 	}
+
+	/*picture file mutex*/
 	pic_file_mutex = rt_mutex_create("pic_file",RT_IPC_FLAG_FIFO);
 	if(RT_NULL == pic_file_mutex)
 	{
-		rt_kprintf(" \"pic_file\" sem create fail\n");
-
+		rt_kprintf(" \"pic_file\" sem create fail\n\n");
 		return ;
 	}
-/*
-	photo_ok_mq = rt_mq_create("cmok",64,8,RT_IPC_FLAG_FIFO);
-	if(RT_NULL == photo_ok_mq)
+
+	/*camera start work flow event */
+	work_flow_ok  = rt_event_create("workflow",RT_IPC_FLAG_FIFO);
+	if(RT_NULL == work_flow_ok)
 	{
-		rt_kprintf(" \"cmok\" mq create fial\n");
-
+		rt_kprintf(" \"workflow\" sem create fail\n\n");
 		return ;
 	}
-*/
+	rt_event_send(work_flow_ok,FLOW_OK_FLAG);
+	
+	/*enable work event creat*/
+	alarm_inform_event = rt_event_create("infosend",RT_IPC_FLAG_FIFO);
+	if(RT_NULL == alarm_inform_event)
+	{
+		rt_kprintf(" \"infosend\" sem create fail\n\n");
+		return;
+	}
+	rt_event_send(alarm_inform_event,INFO_SEND_SMS | INFO_SEND_MMS);
+
+	/*camera data deal thread*/
+	id = rt_thread_create("cm_task",
+												photo_thread_entry,
+												RT_NULL,
+												800,
+												103,
+												30);
+	if(RT_NULL == id )
+	{
+		rt_kprintf("graph thread create fail\n\n");
+		
+		return ;
+	}
+	rt_thread_startup(id);
+
+	/*ir deal thread */
+	id = rt_thread_create("cmirtask",
+												camera_infrared_thread_enter,
+												RT_NULL,
+												256,
+												108,
+												100);
+	if(RT_NULL == id )
+	{
+		rt_kprintf("graph thread create fail\n");
+		
+		return ;
+	}
+	rt_thread_startup(id);
+
 }
 
 
@@ -802,20 +856,34 @@ void camera_send_mail(ALARM_TYPEDEF alarm_type, time_t time)
 
 
 
-/*		camera infared detection  part*/
-#define CM_IR_TEST_TIME	55
-#define CM_IR_ALARM_TOUCH_PERIOD	1
-rt_sem_t cm_ir_sem = RT_NULL;
-static rt_timer_t cm_ir_timer = RT_NULL;
-static rt_timer_t cm_alarm_timer = RT_NULL;
+/*camera infared detection  part*/
+#define CM_IR_TEST_TIME						55	//leave ir check up num
+#define CM_IR_ALARM_TOUCH_PERIOD	1		//10min
 
+rt_sem_t 		cm_ir_sem = RT_NULL;			//ir keep out 2s send sem
+/*ir of timer*/
+rt_timer_t 	cm_alarm_timer = RT_NULL;	
+static rt_timer_t cm_ir_timer = RT_NULL;
+/*timer count flag*/
 volatile rt_uint8_t cm_ir_time_value = 0;
 volatile rt_uint8_t cm_alarm_cnt_time_value = 0;
+
+
+
+
 
 void camera_alarm_time_interval(void *arg)
 {
 	cm_alarm_cnt_time_value++;
-	rt_kprintf("%d\n",cm_alarm_cnt_time_value);
+	if(cm_alarm_cnt_time_value > CM_IR_ALARM_TOUCH_PERIOD)
+	{
+		rt_timer_stop(cm_alarm_timer);
+
+		/*send alarm info event*/
+		rt_event_send(alarm_inform_event,INFO_SEND_MMS | INFO_SEND_SMS);
+		
+		rt_kprintf("start camare loopg!!!!!!!!!!!!!!!!!!!!!\n\n");
+	}
 }
 void camera_infrared_timer(void *arg)
 {
@@ -823,25 +891,31 @@ void camera_infrared_timer(void *arg)
 }
 void camera_infrared_thread_enter(void *arg)
 {
-	rt_device_t ir_dev;											//ir device
-	rt_uint8_t	ir_pin_dat;
-	rt_uint32_t flag = 0;										//ir pin status real-time monitoring
+	rt_device_t ir_dev;									//ir device
+	rt_uint8_t	ir_pin_dat;									
+	rt_uint32_t flag = 0;								//ir pin status real-time monitoring
 	rt_uint8_t	leave_flag = 0;				
 	rt_err_t 		result = RT_NULL;
+	rt_uint32_t	recv_e;
 
-	cm_ir_timer = rt_timer_create("cm_ir_t",camera_infrared_timer,RT_NULL,100,\
-	RT_TIMER_FLAG_PERIODIC);
+	cm_ir_timer = rt_timer_create("cm_ir_t",
+																camera_infrared_timer,
+																RT_NULL,100,
+																RT_TIMER_FLAG_PERIODIC);
 
-	cm_alarm_timer = rt_timer_create("cm_ir_t",camera_alarm_time_interval,RT_NULL,3000,\
-	RT_TIMER_FLAG_PERIODIC);
+	cm_alarm_timer = rt_timer_create("alam_t",
+																		camera_alarm_time_interval,
+																		RT_NULL,3000,
+																		RT_TIMER_FLAG_PERIODIC);
 
 	ir_dev = rt_device_find(DEVICE_NAME_CAMERA_IRDASENSOR);
+	
 	while(1)
 	{
 		result = rt_sem_take(cm_ir_sem,200);//ir alarm touch off
 		if(RT_EOK == result)
 		{	
-			if(2 == leave_flag) 	//touch off period not arrive
+/*			if(2 == leave_flag) 	//touch off period not arrive
 			{
 				if(cm_alarm_cnt_time_value > CM_IR_ALARM_TOUCH_PERIOD)
 				{
@@ -850,9 +924,22 @@ void camera_infrared_thread_enter(void *arg)
 				}
 				if(2 == leave_flag)
 				{
+					rt_kprintf("@@@not is photo time\n\n");
 					continue;
 				}
 			}
+*/		/* recv work event*/
+			result = rt_event_recv(alarm_inform_event,
+														INFO_SEND_MMS,
+														RT_EVENT_FLAG_AND|RT_EVENT_FLAG_CLEAR,
+														RT_WAITING_NO,
+														&recv_e);
+														
+			if(result == -RT_ETIMEOUT)
+			{
+				continue;
+			}
+					
 			rt_timer_start(cm_ir_timer);
 			if(ir_dev != RT_NULL)
 			{
@@ -885,6 +972,11 @@ void camera_infrared_thread_enter(void *arg)
 								rt_timer_start(cm_alarm_timer);//start alarm cnt timer
 								camera_send_mail(ALARM_TYPE_CAMERA_IRDASENSOR,0);//send sem camera 
 							}
+							else
+							{
+								rt_event_send(alarm_inform_event,INFO_SEND_MMS);//send alarm info event
+							}
+							rt_timer_stop(cm_ir_timer);
 							
 							break;
 						}

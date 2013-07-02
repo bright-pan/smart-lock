@@ -99,11 +99,11 @@
           <SimDllName>SARMCM3.DLL</SimDllName>
           <SimDllArguments></SimDllArguments>
           <SimDlgDll>DARMSTM.DLL</SimDlgDll>
-          <SimDlgDllArguments>-pSTM32F103ZE</SimDlgDllArguments>
+          <SimDlgDllArguments>-pSTM32F103VE</SimDlgDllArguments>
           <TargetDllName>SARMCM3.DLL</TargetDllName>
           <TargetDllArguments></TargetDllArguments>
           <TargetDlgDll>TARMSTM.DLL</TargetDlgDll>
-          <TargetDlgDllArguments>-pSTM32F103ZE</TargetDlgDllArguments>
+          <TargetDlgDllArguments>-pSTM32F103VE</TargetDlgDllArguments>
         </DllOption>
         <DebugOption>
           <OPTHX>
@@ -464,6 +464,21 @@
               <FileName>battery.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\battery.c</FilePath>
+            </File>
+            <File>
+              <FileName>des.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\des.c</FilePath>
+            </File>
+            <File>
+              <FileName>voiceapp.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\voiceapp.c</FilePath>
+            </File>
+            <File>
+              <FileName>gprs_pic.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\gprs_pic.c</FilePath>
             </File>
           </Files>
         </Group>

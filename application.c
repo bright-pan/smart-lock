@@ -141,21 +141,21 @@ void rt_init_thread_entry(void* parameter)
     extern void filesystem_test(void);
     extern void send_photo_thread_init(void);
     extern void rt_mms_thread_init(void);
-		
+		extern void voice_thread_init(void);
 		
     //		extern void picture_thread_init(void);
 
     //		picture_thread_init();
     //		send_photo_thread_init();
     			photo_thread_init();
+    			voice_thread_init();
     //		filesystem_test();
     //		rt_mms_thread_init();
   }
 #ifdef	USE_WILDFIRE_TEST
   rt_kprintf("User Wild Fire Hardware Piatform TESE\n");
 #endif
-	/* re-init device driver */
-	rt_device_init_all();
+	system_file_operate(&device_parameters,0);
 
 }
 

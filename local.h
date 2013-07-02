@@ -25,6 +25,12 @@ typedef struct
   ALARM_TYPEDEF alarm_type;
 }LOCAL_MAIL_TYPEDEF;
 
+typedef struct 
+{
+	rt_uint8_t key[4];
+}GPRS_MAIL_USER;
+
+extern GPRS_MAIL_USER gprs_mail_user;
 extern rt_mq_t local_mq;
 extern rt_timer_t lock_gate_timer;
 extern rt_timer_t battery_switch_timer;

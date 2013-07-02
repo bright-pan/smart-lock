@@ -30,13 +30,21 @@ typedef struct
   time_t time;
   ALARM_TYPEDEF alarm_type;
   uint8_t order;
+  void* user;
 }GPRS_MAIL_TYPEDEF;
 
 extern rt_mq_t gprs_mq;
 
 void gprs_mail_process_thread_entry(void *parameter);
 void gprs_heart_process_thread_entry(void *parameters);
-void send_gprs_mail(ALARM_TYPEDEF alarm_type, time_t time, uint8_t order);
+void send_gprs_mail(ALARM_TYPEDEF alarm_type, time_t time, uint8_t order,void *user);
+
+typedef struct 
+{
+	uint8_t status;//batter status
+	uint8_t dump_energy;
+	uint8_t time[6];
+}GPRS_POWER_ALARM;
 
 typedef struct {
 
@@ -141,7 +149,6 @@ typedef struct
   uint8_t result;
 
 }GPRS_SEND_SET_KEY0;
-
 typedef union
 {
 
@@ -159,6 +166,7 @@ typedef union
   GPRS_SEND_SET_USER_PARAMETERS set_user_parameters;
   GPRS_SEND_SET_TIME set_time;
   GPRS_SEND_SET_KEY0 set_key0;
+  GPRS_POWER_ALARM	battery;
 
 }GPRS_SEND_DATA;
 
@@ -247,6 +255,6 @@ typedef struct
 
 }GPRS_RECV_FRAME_TYPEDEF;
 
-int8_t send_gprs_frame(ALARM_TYPEDEF alarm_type, time_t time, uint8_t order);
+int8_t send_gprs_frame(ALARM_TYPEDEF alarm_type, time_t time, uint8_t order, void* user);
 int8_t recv_gprs_frame(GPRS_RECV_FRAME_TYPEDEF *gprs_recv_frame, uint16_t recv_counts);
 #endif

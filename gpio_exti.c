@@ -291,17 +291,17 @@ void rt_hw_camera_photosensor_register(void)
   rt_hw_gpio_register(gpio_device, gpio_user_data->name, (RT_DEVICE_FLAG_RDWR | RT_DEVICE_FLAG_INT_RX), gpio_user_data);
   rt_device_set_rx_indicate((rt_device_t)gpio_device, gpio_user_data->gpio_exti_rx_indicate);
 }
-#define CM_IR_SAMPLE_TIME               1
+#define CM_IR_SAMPLE_TIME               0
 /* camera_irdasensor device pb0 */
 rt_err_t camera_irdasensor_rx_ind(rt_device_t dev, rt_size_t size)
 {
-  gpio_device *gpio = RT_NULL;
+  //gpio_device *gpio = RT_NULL;
   time_t time;
   static time_t time_old = 0;
   extern rt_sem_t cm_ir_sem;
 
   RT_ASSERT(dev != RT_NULL);
-  gpio = (gpio_device *)dev;
+  //gpio = (gpio_device *)dev;
   /* produce mail */
   rt_device_control(rtc_device, RT_DEVICE_CTRL_RTC_GET_TIME, &time);
   
@@ -313,13 +313,13 @@ rt_err_t camera_irdasensor_rx_ind(rt_device_t dev, rt_size_t size)
   else
   {
     rt_kprintf("time_old = %d time = %d\n",time_old,time);
-  //  time_old = time;
+  	//time_old = time;
     return RT_EOK;
   }
   /* send mail ir deal thread*/
 	rt_sem_release(cm_ir_sem);
  
-//  send_alarm_mail(ALARM_TYPE_CAMERA_IRDASENSOR, ALARM_PROCESS_FLAG_SMS | ALARM_PROCESS_FLAG_GPRS | ALARM_PROCESS_FLAG_LOCAL, gpio->pin_value, time);
+	//send_alarm_mail(ALARM_TYPE_CAMERA_IRDASENSOR, ALARM_PROCESS_FLAG_SMS | ALARM_PROCESS_FLAG_GPRS | ALARM_PROCESS_FLAG_LOCAL, gpio->pin_value, time);
 
   return RT_EOK;
 }
@@ -511,7 +511,7 @@ struct gpio_exti_user_data lock_shell_user_data =
   DEVICE_NAME_LOCK_SHELL,
   GPIOD,
   GPIO_Pin_11,
-  GPIO_Mode_IPD,
+  GPIO_Mode_IN_FLOATING,
   GPIO_Speed_50MHz,
   RCC_APB2Periph_GPIOD |RCC_APB2Periph_AFIO,
   GPIO_PortSourceGPIOD,

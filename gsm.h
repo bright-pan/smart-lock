@@ -143,6 +143,9 @@ void gsm_process_thread_entry(void *parameters);
 
 rt_uint32_t gsm_mode_get(void);
 void gsm_mode_set(rt_uint32_t mode);
+void gsm_put_char(const uint8_t *str, uint16_t length);
+void gsm_put_hex(const uint8_t *str, uint16_t length);
+
 
 extern char smsc[20];
 

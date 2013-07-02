@@ -27,7 +27,7 @@
 
 
 
-#define CMAERA_DEBUG_INFO_PRINTF				//printf debug information
+//#define CMAERA_DEBUG_INFO_PRINTF				//printf debug information
 
 
 
@@ -43,8 +43,15 @@
 #define CM_RECV_OUT_TIME							0X04
 #define CM_DEV_INIT_ERROR							0X08
 
+/* send info event flag */
+#define INFO_SEND_MMS		(0X01<<0)
+#define INFO_SEND_SMS		(0X01<<1)
 
+/* work flow event flag */
+#define FLOW_OK_FLAG		(0X01<<0)
 
+extern rt_event_t	alarm_inform_event;
+extern rt_timer_t cm_alarm_timer;
 
 
 /*--------------Camera Data Type ------------*/
@@ -63,7 +70,7 @@ struct camera_dev
 	rt_base_t		size;
 	rt_uint32_t	time;
 	rt_uint8_t	error;
-	rt_uint8_t	data[CM_BUFFER_LEN];
+	rt_uint8_t	*data;
 };
 typedef struct camera_dev*	camera_dev_t;
 
@@ -92,7 +99,8 @@ typedef struct cm_send_mq cm_send_mq_t;
 
 
 //extern rt_mq_t			photo_ok_mq;			//photo finish
-extern rt_sem_t cm_ir_sem;
+extern rt_sem_t 	cm_ir_sem;
+extern rt_event_t	work_flow_ok;			//one work flow
 
 void photo_thread_init(void);
 void mq(rt_uint32_t time);//(rt_uint8_t time,rt_uint8_t *file_name);
