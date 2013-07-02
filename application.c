@@ -179,7 +179,7 @@ int rt_application_init()
   rt_thread_t gprs_heart_process_thread;
   rt_thread_t battery_check_process_thread;
 
-  /* alarm mail process thread */
+  /* gsm process thread */
   gsm_process_thread = rt_thread_create("gsm",
                                         gsm_process_thread_entry, RT_NULL,
                                         2048, 100, 20);
@@ -214,7 +214,7 @@ int rt_application_init()
     rt_thread_startup(sms_mail_process_thread);
   }
   
-  /* mms mail process thread */
+  /* mms mail process thread
   mms_mail_process_thread = rt_thread_create("mms",
                                              mms_mail_process_thread_entry, RT_NULL,
                                              1024, 107, 20);
@@ -264,7 +264,7 @@ int rt_application_init()
 
   if (init_thread != RT_NULL)
   {
-		rt_thread_startup(init_thread);
+    rt_thread_startup(init_thread);
   }
     
   /* get rtc clock */

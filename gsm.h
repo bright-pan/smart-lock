@@ -51,35 +51,89 @@ typedef enum
   AT_CIFSR,
   AT_CIPSHUT,
   AT_CIPSTATUS,
+  AT_CIPSTART,
+  AT_CMGS,
   ATO,
   PLUS3,
-}AT_INDEX_TYPEDEF;
+  AT_CMGS_SUFFIX,
+}AT_COMMAND_INDEX_TYPEDEF;
 
 typedef enum
 {
+
   EVENT_GSM_MODE_GPRS = 0x01,// AT
   EVENT_GSM_MODE_CMD = 0x02,
   EVENT_GSM_MODE_GPRS_CMD = 0x04,
   EVENT_GSM_MODE_SETUP = 0x08,
+
 }EVENT_GSM_MODE_TYPEDEF;
 
 
-typedef struct
-{
-  AT_INDEX_TYPEDEF at_index;
-}GSM_SEND_MAIL_TYPEDEF;
+typedef enum {
+
+  GSM_MODE_CMD,
+  GSM_MODE_GPRS,
+
+}GSM_MODE_TYPEDEF;
+
+rt_mq_t mq_gsm;
 
 typedef struct
 {
-  AT_INDEX_TYPEDEF at_index;
-  char *at_response;
-}GSM_RECV_MAIL_TYPEDEF;
+  uint8_t *request;
+  uint8_t *response;
+  uint16_t request_length;
+  uint16_t *response_length;
+  uint8_t has_response;
+}GSM_MAIL_GPRS;
+
+typedef struct
+{
+  uint16_t length;
+  uint8_t *buf;
+}GSM_MAIL_CMD_CMGS;
+
+typedef union
+{
+  GSM_MAIL_CMD_CMGS cmgs;
+}GSM_MAIL_CMD_DATA;
+
+typedef struct
+{
+  AT_COMMAND_INDEX_TYPEDEF index;
+  uint16_t delay;
+  GSM_MAIL_CMD_DATA cmd_data;
+}GSM_MAIL_CMD;
+
+typedef union
+{
+  GSM_MAIL_CMD cmd;
+  GSM_MAIL_GPRS gprs;
+}GSM_MAIL_DATA;
+
+typedef struct{
+
+  GSM_MODE_TYPEDEF send_mode;
+  GSM_MAIL_DATA mail_data;
+  int8_t *result;
+  rt_sem_t result_sem;
+
+}GSM_MAIL_TYPEDEF;
+
 
 typedef enum {
-  AT_OK,
-  AT_ERROR,
+
   AT_NO_RESPONSE,
-}ATCommandStatus;
+  AT_RESPONSE_OK,
+  AT_RESPONSE_ERROR,
+  AT_RESPONSE_NO_CARRIER,
+  AT_RESPONSE_TCP_CLOSED,
+  AT_RESPONSE_CONNECT_OK,
+  AT_RESPONSE_PDP_DEACT,
+
+}AT_RESPONSE_TYPEDEF;
+
+//typedef struct GSM_MAIL_TYPEDEF
 
 GsmStatus gsm_reset(void);
 GsmStatus gsm_setup(FunctionalState state);
@@ -89,8 +143,8 @@ void gsm_process_thread_entry(void *parameters);
 
 rt_uint32_t gsm_mode_get(void);
 void gsm_mode_set(rt_uint32_t mode);
-void gsm_put_char(const char *str, uint16_t length);
-void gsm_put_hex(const char *str, uint16_t length);
+void gsm_put_char(const uint8_t *str, uint16_t length);
+void gsm_put_hex(const uint8_t *str, uint16_t length);
 
 
 extern char smsc[20];

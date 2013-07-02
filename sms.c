@@ -234,9 +234,9 @@ static void sms_data_init(SMS_DATA_TYPEDEF sms_data[])
 uint16_t *sms_time_ucs(const struct tm *tm_time,
                        const uint16_t *prefix, uint8_t prefix_length,
                        const uint16_t *suffix, uint8_t suffix_length,
-                       uint8_t *length)
+                       uint16_t *time_ucs,
+                       uint16_t *length)
 {
-  uint16_t *time_ucs = (uint16_t *)rt_malloc(256);
   uint16_t year;
   uint16_t *time_ucs_bk = time_ucs;
   
@@ -290,19 +290,18 @@ uint16_t *sms_time_ucs(const struct tm *tm_time,
 void sms_mail_process_thread_entry(void *parameter)
 {
   rt_err_t result;
-  rt_uint32_t event;
   struct tm tm_time;
-  uint16_t *time_ucs, *sms_ucs, *sms_ucs_bk;
-  const uint16_t *temp_ucs;
-  uint8_t time_ucs_length, sms_ucs_length, temp_ucs_length;
   int8_t resend_counts = 0;
   int8_t alarm_telephone_counts = 0;
+  //uint16_t ucs_buf[256];
+  uint16_t *sms_ucs, *sms_ucs_bk, sms_ucs_length;
+  const uint16_t *temp_ucs;
+  uint16_t temp_ucs_length;
+  SMS_MAIL_TYPEDEF sms_mail_buf;
 
-  /* malloc a buff for process mail */
-  SMS_MAIL_TYPEDEF *sms_mail_buf = (SMS_MAIL_TYPEDEF *)rt_malloc(sizeof(SMS_MAIL_TYPEDEF));
   /* initial msg queue */
-  sms_mq = rt_mq_create("sms", sizeof(SMS_MAIL_TYPEDEF), \
-                        SMS_MAIL_MAX_MSGS, \
+  sms_mq = rt_mq_create("sms", sizeof(SMS_MAIL_TYPEDEF),
+                        SMS_MAIL_MAX_MSGS,
                         RT_IPC_FLAG_FIFO);
 
   sms_data_init(sms_data);
@@ -310,142 +309,73 @@ void sms_mail_process_thread_entry(void *parameter)
   while (1)
   {
     /* process mail */
-    memset(sms_mail_buf, 0, sizeof(SMS_MAIL_TYPEDEF));
-    result = rt_mq_recv(sms_mq, sms_mail_buf, \
-                        sizeof(SMS_MAIL_TYPEDEF), \
+    memset(&sms_mail_buf, 0, sizeof(SMS_MAIL_TYPEDEF));
+    result = rt_mq_recv(sms_mq, &sms_mail_buf,
+                        sizeof(SMS_MAIL_TYPEDEF),
                         100);
     if (result == RT_EOK)
     {
-      rt_kprintf("\nreceive sms mail < time: %d alarm_type: %d >\n", sms_mail_buf->time, sms_mail_buf->alarm_type);
+      rt_kprintf("\nreceive sms mail < time: %d alarm_type: %d >\n", sms_mail_buf.time, sms_mail_buf.alarm_type);
 
       // sms content process
-      sms_ucs = (uint16_t *)rt_malloc(256);
-      sms_ucs_bk = sms_ucs;
+      //memset(ucs_buf, 0, 512);
       sms_ucs_length = 0;
+      sms_ucs = (uint16_t *)rt_malloc(sizeof(uint16_t) * 256);
+      sms_ucs_bk = sms_ucs;
 
-      temp_ucs = sms_data[sms_mail_buf->alarm_type].data;
-      temp_ucs_length = sms_data[sms_mail_buf->alarm_type].length;
+      temp_ucs = sms_data[sms_mail_buf.alarm_type].data;
+      temp_ucs_length = sms_data[sms_mail_buf.alarm_type].length;
       sms_ucs_length += temp_ucs_length;
+
       while (temp_ucs_length-- > 0)
       {
         *sms_ucs_bk++ = *temp_ucs++;
       }
-
       // sms time process
-      tm_time = *localtime(&(sms_mail_buf->time));
+      tm_time = *localtime(&(sms_mail_buf.time));
       tm_time.tm_year += 1900;
       tm_time.tm_mon += 1;
-      time_ucs_length = 0;
-      time_ucs = sms_time_ucs(&tm_time,
-                              sms_content_time_prefix, sizeof(sms_content_time_prefix)/sizeof(uint16_t),
-                              sms_content_time_suffix, sizeof(sms_content_time_suffix)/sizeof(uint16_t),
-                              &time_ucs_length);
-      temp_ucs = time_ucs;
-      sms_ucs_length += time_ucs_length;
-      while (time_ucs_length-- > 0)
-      {
-        *sms_ucs_bk++ = *temp_ucs++;
-      }
-      rt_free(time_ucs);
+      sms_time_ucs(&tm_time,
+                   sms_content_time_prefix, sizeof(sms_content_time_prefix)/sizeof(uint16_t),
+                   sms_content_time_suffix, sizeof(sms_content_time_suffix)/sizeof(uint16_t),
+                   sms_ucs_bk,
+                   &sms_ucs_length);
+      // send sms
+      rt_kprintf("\nsend sms!!!\n");
 
-      rt_mutex_take(mutex_gsm_mode, RT_WAITING_FOREVER);
-      result = rt_event_recv(event_gsm_mode_response, EVENT_GSM_MODE_SETUP, RT_EVENT_FLAG_AND, RT_WAITING_FOREVER, &event);
-      if (result == RT_EOK)
+      alarm_telephone_counts = TELEPHONE_NUMBERS - 1;
+      while (alarm_telephone_counts >= 0)
       {
-        if (gsm_mode_get() & EVENT_GSM_MODE_GPRS)
+        if (device_parameters.alarm_telephone[alarm_telephone_counts].flag)
         {
-          rt_kprintf("\ngsm mode requset for gprs_cmd mode\n");
-          rt_event_recv(event_gsm_mode_response, EVENT_GSM_MODE_GPRS_CMD, RT_EVENT_FLAG_AND | RT_EVENT_FLAG_CLEAR, RT_WAITING_NO, &event);
-          rt_event_send(event_gsm_mode_request, EVENT_GSM_MODE_GPRS_CMD);
-          result = rt_event_recv(event_gsm_mode_response, EVENT_GSM_MODE_GPRS_CMD, RT_EVENT_FLAG_AND | RT_EVENT_FLAG_CLEAR, RT_WAITING_FOREVER, &event);
-          if ((result == RT_EOK) && !(gsm_mode_get() & EVENT_GSM_MODE_GPRS_CMD))
+          rt_kprintf((char *)(device_parameters.alarm_telephone[alarm_telephone_counts].address));
+          resend_counts = 0;
+          while (resend_counts < 5)
           {
-            rt_kprintf("\ngsm mode gprs switch to gprs_cmd is error, and try resend|\n");
-            // clear gsm setup event, do gsm check or initial for test gsm problem.
-            rt_event_recv(event_gsm_mode_response, EVENT_GSM_MODE_SETUP, RT_EVENT_FLAG_AND|RT_EVENT_FLAG_CLEAR, RT_WAITING_NO, &event);
-            if (!(gsm_mode_get() & EVENT_GSM_MODE_CMD))
+            if (sms_pdu_ucs_send(device_parameters.alarm_telephone[alarm_telephone_counts].address, smsc, sms_ucs, sms_ucs_length))
             {
-              rt_kprintf("\ngsm mode requset for cmd mode\n");
-              rt_event_recv(event_gsm_mode_response, EVENT_GSM_MODE_CMD, RT_EVENT_FLAG_AND | RT_EVENT_FLAG_CLEAR, RT_WAITING_NO, &event);
-              rt_event_send(event_gsm_mode_request, EVENT_GSM_MODE_CMD);
-              result = rt_event_recv(event_gsm_mode_response, EVENT_GSM_MODE_CMD, RT_EVENT_FLAG_AND | RT_EVENT_FLAG_CLEAR, RT_WAITING_FOREVER, &event);
-              if ((result == RT_EOK) && !(gsm_mode_get() & EVENT_GSM_MODE_CMD))
-              {
-                rt_kprintf("\ngsm mode switch to cmd is error, and try resend|\n");
-              }
-            }
-            rt_event_send(event_gsm_mode_request, EVENT_GSM_MODE_CMD);
-            rt_mq_urgent(sms_mq, sms_mail_buf, sizeof(SMS_MAIL_TYPEDEF));
-            rt_free(sms_ucs);
-            rt_mutex_release(mutex_gsm_mode);
-            continue;
-          }
-        }
-        // send sms
-        rt_kprintf("\nsend sms!!!\n");
-        alarm_telephone_counts = TELEPHONE_NUMBERS - 1;
-        while (alarm_telephone_counts >= 0)
-        {
-          if (device_parameters.alarm_telephone[alarm_telephone_counts].flag)
-          {
-            rt_kprintf((char *)(device_parameters.alarm_telephone[alarm_telephone_counts].address));
-            resend_counts = 5;
-            while (resend_counts > 0)
-            {
-   //           if (!sms_pdu_ucs_send(device_parameters.alarm_telephone[alarm_telephone_counts].address, smsc, sms_ucs, sms_ucs_length))
-              {
-                break;
-              }
-              resend_counts--;
-            }
-            rt_kprintf("\nresend counts :%d\n", resend_counts);
-            if (!resend_counts)
-            {
-              rt_kprintf("\nsend sms failure!!!\n");
-              // send failure
-              rt_event_recv(event_gsm_mode_response, EVENT_GSM_MODE_SETUP, RT_EVENT_FLAG_AND|RT_EVENT_FLAG_CLEAR, RT_WAITING_FOREVER , &event);
-              if (!(gsm_mode_get() & EVENT_GSM_MODE_CMD))
-              {
-              	rt_kprintf("\ngsm mode requset for cmd mode\n");
-                rt_event_recv(event_gsm_mode_response, EVENT_GSM_MODE_CMD, RT_EVENT_FLAG_AND | RT_EVENT_FLAG_CLEAR, RT_WAITING_NO, &event);
-                rt_event_send(event_gsm_mode_request, EVENT_GSM_MODE_CMD);
-                result = rt_event_recv(event_gsm_mode_response, EVENT_GSM_MODE_CMD, RT_EVENT_FLAG_AND | RT_EVENT_FLAG_CLEAR, RT_WAITING_FOREVER, &event);
-                if ((result == RT_EOK) && !(gsm_mode_get() & EVENT_GSM_MODE_CMD))
-                {
-                  rt_kprintf("\ngsm mode switch to cmd is error, and try resend|\n");
-                }
-              }
-              rt_event_send(event_gsm_mode_request, EVENT_GSM_MODE_CMD);
-              rt_mq_urgent(sms_mq, sms_mail_buf, sizeof(SMS_MAIL_TYPEDEF));
               break;
             }
+            resend_counts++;
           }
-          alarm_telephone_counts--;
+          rt_kprintf("\nresend counts :%d\n", resend_counts);
+          if (resend_counts >= 5)
+          {
+            rt_kprintf("\nsend sms failure!!!\n");
+            // send failure
+          }
         }
+        alarm_telephone_counts--;
       }
-      else // gsm is not setup
-      {
-        rt_mq_urgent(sms_mq, sms_mail_buf, sizeof(SMS_MAIL_TYPEDEF));
-      }
-      // exit mail process
+      //      sms("8613544033975","",0);
       rt_free(sms_ucs);
-      rt_mutex_release(mutex_gsm_mode);
     }
     else
     {
       /* mail receive error */
+      //rt_kprintf("\nno sms mail \n");
     }
-    /*
-    result = rt_event_recv(event_gsm_mode_response, EVENT_GSM_MODE_SETUP, RT_EVENT_FLAG_AND, RT_WAITING_FOREVER , &event);
-    if (result == RT_EOK)
-    {
-    }
-    else
-    {
-    }
-    */
   }
-  rt_free(sms_mail_buf);
 }
 
 static const uint8_t HEX_CHAR_MAP[16] = {
@@ -474,28 +404,24 @@ static void sms_pdu_phone_address_init(uint8_t *octet, const char *phone_address
 {
   int8_t length = strlen(phone_address);
   int8_t temp = 0;
-  char *buf = NULL;
+  char buf[20];
   char *buf_bk = NULL;
-  
+
   temp = (length & 0x01) ? (length + 1) : length;
-  buf = (char *)rt_malloc(temp);
   buf_bk = buf;
   memcpy(buf, phone_address, length);
   
   temp >>= 1;
-  //*octet_length = temp; // octect length
 
   while (temp-- > 0)
   {
-    *octet = (*buf++ - '0') & 0x0f;
-    *octet++ |= ((*buf++ - '0') << 4) & 0xf0;
+    *octet = (*buf_bk++ - '0') & 0x0f;
+    *octet++ |= ((*buf_bk++ - '0') << 4) & 0xf0;
   }
   if (length & 0x01)
   {
     *--octet |= 0xf0;
   }
-
-  rt_free(buf_bk);
 }
 
 static void sms_pdu_head_init(char *smsc_address, char *dest_address, SMS_SEND_PDU_FRAME *pdu, uint8_t tp_udl)
@@ -519,7 +445,7 @@ static void sms_pdu_head_init(char *smsc_address, char *dest_address, SMS_SEND_P
   
 }
 
-static void hex_to_string(char *string, uint8_t *hex, uint8_t hex_length)
+static void hex_to_string(uint8_t *string, uint8_t *hex, uint8_t hex_length)
 {
   while (hex_length-- > 0)
   {
@@ -530,12 +456,15 @@ static void hex_to_string(char *string, uint8_t *hex, uint8_t hex_length)
 
 int8_t sms_pdu_ucs_send(char *dest_address, char *smsc_address, uint16_t *content, uint8_t length)
 {
-  SMS_SEND_PDU_FRAME *send_pdu_frame;
+  SMS_SEND_PDU_FRAME send_pdu_frame;
+  GSM_MAIL_TYPEDEF gsm_mail_buf;
   uint8_t *pdu_data;
-  char *send_pdu_string;
-  char *at_temp, *process_buf;
-  uint8_t sms_pdu_length;
+  uint8_t *send_pdu_string;
+  //  char *at_temp, *process_buf;
+  uint16_t sms_pdu_length;
   rt_device_t device;
+  int8_t send_result = AT_RESPONSE_ERROR;
+  rt_err_t result;
 
   device = rt_device_find(DEVICE_NAME_GSM_USART);
   if (device == RT_NULL)
@@ -548,22 +477,17 @@ int8_t sms_pdu_ucs_send(char *dest_address, char *smsc_address, uint16_t *conten
     length = 70;
   }
 
-  send_pdu_frame = (SMS_SEND_PDU_FRAME *)rt_malloc(sizeof(SMS_SEND_PDU_FRAME));
-  memset(send_pdu_frame, 0, sizeof(SMS_SEND_PDU_FRAME));
+  //  send_pdu_frame = (SMS_SEND_PDU_FRAME *)rt_malloc(sizeof(SMS_SEND_PDU_FRAME));
+  memset(&send_pdu_frame, 0, sizeof(SMS_SEND_PDU_FRAME));
   
-  pdu_data = send_pdu_frame->TPDU.TP_UD;
+  pdu_data = send_pdu_frame.TPDU.TP_UD;
 
-  send_pdu_string = (char *)rt_malloc(512);
+  send_pdu_string = (uint8_t *)rt_malloc(512);
   memset(send_pdu_string, '\0', 512);
 
-  at_temp = (char *)rt_malloc(512);
-  memset(at_temp, '\0', 512);
-  process_buf = (char *)rt_malloc(512);
-  memset(process_buf, '\0', 512);
+  sms_pdu_head_init(smsc_address, dest_address, &send_pdu_frame, length << 1);
 
-  sms_pdu_head_init(smsc_address, dest_address, send_pdu_frame, length << 1);
-
-  sms_pdu_length = send_pdu_frame->TPDU.TP_UDL + sizeof(send_pdu_frame->SMSC) + sizeof(send_pdu_frame->TPDU) - sizeof(send_pdu_frame->TPDU.TP_UD);
+  sms_pdu_length = send_pdu_frame.TPDU.TP_UDL + sizeof(send_pdu_frame.SMSC) + sizeof(send_pdu_frame.TPDU) - sizeof(send_pdu_frame.TPDU.TP_UD);
   
   while (length-- > 0)
   {
@@ -571,82 +495,47 @@ int8_t sms_pdu_ucs_send(char *dest_address, char *smsc_address, uint16_t *conten
     *pdu_data++ = (uint8_t)(0x00ff & *content++);
   }
 
-  hex_to_string(send_pdu_string, (uint8_t *)send_pdu_frame, sms_pdu_length);
-  /*
-  rt_device_write(device, 0, "AT+CMGF=0\r", strlen("AT+CMGF=0\r"));
-  rt_thread_delay(50);
-  rt_device_read(device, 0, process_buf, 512);
+  hex_to_string(send_pdu_string, (uint8_t *)&send_pdu_frame, sms_pdu_length);
+  gsm_mail_buf.send_mode = GSM_MODE_CMD;
+  gsm_mail_buf.result = &send_result;
+  gsm_mail_buf.result_sem = rt_sem_create("s_ret", 0, RT_IPC_FLAG_FIFO);
+  gsm_mail_buf.mail_data.cmd.index = AT_CMGS;
+  gsm_mail_buf.mail_data.cmd.delay = 50;
+  gsm_mail_buf.mail_data.cmd.cmd_data.cmgs.length = send_pdu_frame.TPDU.TP_UDL + sizeof(send_pdu_frame.TPDU) - sizeof(send_pdu_frame.TPDU.TP_UD);
+  gsm_mail_buf.mail_data.cmd.cmd_data.cmgs.buf = send_pdu_string;
 
-  gsm_put_char(process_buf, strlen(process_buf));
-  if (sscanf(process_buf, "%*[^\r]\r\r%[^\r]\r\n", at_temp) == 1)
+  if (mq_gsm != NULL)
   {
-    gsm_put_char(at_temp, strlen(at_temp));
-    //success send
+    result = rt_mq_send(mq_gsm, &gsm_mail_buf, sizeof(GSM_MAIL_TYPEDEF));
+    if (result == -RT_EFULL)
+    {
+      rt_kprintf("sms_mq is full!!!\n");
+      send_result = AT_RESPONSE_ERROR;
+    }
+    else
+    {
+      rt_sem_take(gsm_mail_buf.result_sem, RT_WAITING_FOREVER);
+    }
+    rt_sem_delete(gsm_mail_buf.result_sem);
   }
   else
   {
-    gsm_put_char("AT+CMFG=0 is error\n", strlen("AT+CMFG=0 is error\n"));
-    //error send
-    //goto send_error;
+    rt_kprintf("sms_mq is RT_NULL!!!\n");
+    send_result = AT_RESPONSE_ERROR;
   }
-  */
 
-
-  memset(at_temp, '\0', 512);
-  memset(process_buf, '\0', 512);
-  rt_sprintf(at_temp,"AT+CMGS=%d\x0D",
-           send_pdu_frame->TPDU.TP_UDL + (sizeof(send_pdu_frame->TPDU) - sizeof(send_pdu_frame->TPDU.TP_UD)));
-  rt_device_write(device, 0, at_temp, strlen(at_temp));
-  rt_thread_delay(50);
-  rt_device_read(device, 0,  process_buf, 50);
-
-  gsm_put_char(process_buf, strlen(process_buf));
-  if (sscanf(process_buf, "%*[^>]%[>]", at_temp) == 1)
+  if (send_result == AT_RESPONSE_OK)
   {
-    gsm_put_char(at_temp, strlen(at_temp));
-    //success send
+    send_result = 1;
   }
   else
   {
-    //error send
-    gsm_put_char("AT+CMGS is error\n", strlen("AT+CMGS is error\n"));
-    //goto send_error;
+    send_result = 0;
   }
 
-  memset(at_temp, '\0', 512);
-  memset(process_buf, '\0', 512);
-  rt_device_write(device, 0, send_pdu_string, strlen(send_pdu_string));
-  rt_device_write(device, 0, "\x1A", 1);
-  rt_thread_delay(600);
-  rt_device_read(device, 0, process_buf, 512);
-
-  gsm_put_char(process_buf, strlen(process_buf));
-  if (sscanf(process_buf, "%*[^:]:%*[^\r]\r\n%[^\r]", at_temp) == 1)
-  {
-    gsm_put_char(at_temp, strlen(at_temp));
-    //success send
-    
-  }
-  else
-  {
-    gsm_put_char("SEND SMS is error\n", strlen("SEND SMS is error\n"));
-    //error send
-    goto send_error;
-  }
-
-  rt_free(send_pdu_frame);
   rt_free(send_pdu_string);
-  rt_free(at_temp);
-  rt_free(process_buf);
-  return 0;
-
-send_error:
-  rt_free(send_pdu_frame);
-  rt_free(send_pdu_string);
-  rt_free(at_temp);
-  rt_free(process_buf);
-  return -1;
-
+  //rt_free(gsm_mail_buf);
+  return send_result;
 }
 
 void send_sms_mail(ALARM_TYPEDEF alarm_type, time_t time)
@@ -683,7 +572,9 @@ void send_sms_mail(ALARM_TYPEDEF alarm_type, time_t time)
 
 static char temp[100];
 
-uint16_t default_data[] = {0x5DE5,0x4F5C,0x6109,0x5FEB,0xFF01};
+uint16_t default_data[] = {0x667A,0x80FD,0x9501,0x6B63,0x88AB,
+                           0x66B4,0x529B,0x5F00,0x542F,0xFF0C,
+                           0x8BF7,0x6CE8,0x610F,0x5B89,0x5168};
 
 void sms(char *address, short *data, char length)
 {
@@ -694,7 +585,7 @@ void sms(char *address, short *data, char length)
   {
     if (length == 0)
     {
-      sms_pdu_ucs_send(address,smsc,default_data, 5);
+      sms_pdu_ucs_send(address,smsc,default_data, 15);
     }
     else
     {
@@ -707,4 +598,5 @@ void sms(char *address, short *data, char length)
   }
 }
 FINSH_FUNCTION_EXPORT(sms, sms[address data length])
+FINSH_FUNCTION_EXPORT(send_sms_mail, sms[address data length])
 #endif
