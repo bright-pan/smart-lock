@@ -56,8 +56,6 @@ void fault_alarm_type_map_init(void)
   fault_alarm_type_map[ALARM_TYPE_MOTOR_FAULT] = FAULT_ALARM_MOTOR_FAULT;
 }
 
-int8_t recv_gprs_frame(GPRS_RECV_FRAME_TYPEDEF *recv_frame);
-
 void create_k1(void)
 {
   uint8_t index = 0;
@@ -77,10 +75,9 @@ void create_k1(void)
 void gprs_mail_process_thread_entry(void *parameter)
 {
   rt_err_t result;
-  rt_uint32_t event;
-  GPRS_RECV_FRAME_TYPEDEF *gprs_recv_frame = RT_NULL;
   /* malloc a buff for process mail */
   GPRS_MAIL_TYPEDEF gprs_mail_buf;
+  uint8_t error_counts = 0;
 
   create_k1();
   work_alarm_type_map_init();
@@ -93,37 +90,37 @@ void gprs_mail_process_thread_entry(void *parameter)
   {
     /* process mail */
     memset(&gprs_mail_buf, 0, sizeof(GPRS_MAIL_TYPEDEF));
-    result = rt_mq_recv(gprs_mq, &gprs_mail_buf, sizeof(GPRS_MAIL_TYPEDEF), RT_WAITING_NO);
+    result = rt_mq_recv(gprs_mq, &gprs_mail_buf, sizeof(GPRS_MAIL_TYPEDEF), 100);
     /* mail receive ok */
     if (result == RT_EOK)
     {
       rt_kprintf("receive gprs mail < time: %d alarm_type: %d >\n", gprs_mail_buf.time, gprs_mail_buf.alarm_type);
-        // send gprs data
-      rt_kprintf("\nsend gprs data!!!\n");
-      send_gprs_frame(gprs_mail_buf.alarm_type, gprs_mail_buf.time, gprs_mail_buf.order);
-    }
-    else
-    {
-      /* no mail receive
-      gprs_recv_frame = (GPRS_RECV_FRAME_TYPEDEF *)rt_malloc(sizeof(GPRS_RECV_FRAME_TYPEDEF));
-      recv_gprs_frame(gprs_recv_frame);
-      rt_free(gprs_recv_frame);
-      */
-      rt_thread_delay(50);
+      // send gprs data
+      if (send_gprs_frame(gprs_mail_buf.alarm_type, gprs_mail_buf.time, gprs_mail_buf.order) == 1)
+      {
+        rt_kprintf("\nsend gprs data success!!!\n");
+        error_counts = 0;
+      }
+      else
+      {
+        rt_kprintf("\nsend gprs data failure!!!\n");
+        error_counts++;
+        if (error_counts > 10)
+        {
+          gsm_setup(DISABLE);
+          error_counts = 0;
+        }
+      }
     }
   }
 }
 
 void gprs_heart_process_thread_entry(void *parameters)
 {
-  rt_err_t result;
-  rt_uint32_t event;
-
   while(1)
   {
-    //send heart
-    send_gprs_frame(ALARM_TYPE_GPRS_HEART, 0, 0);
     rt_thread_delay(6000);
+    send_gprs_mail(ALARM_TYPE_GPRS_HEART, 0, 0);
   }
 }
 
@@ -283,9 +280,60 @@ void process_gprs_list_user_parameters(GPRS_SEND_LIST_USER_PARAMETERS *list_user
   *length += 1;
 }
 
+int8_t send_gprs_auth_frame(void)
+{
+  uint8_t *process_buf = RT_NULL;
+  uint8_t *process_buf_bk = RT_NULL;
+  uint16_t process_length = 0;
+  GPRS_SEND_FRAME_TYPEDEF *gprs_send_frame = RT_NULL;
+  rt_device_t device = RT_NULL;
+  int8_t send_result = -1;
+
+  device = rt_device_find(DEVICE_NAME_GSM_USART);
+
+  if (device == RT_NULL)
+  {
+    rt_kprintf("device %s is not exist!\n", DEVICE_NAME_GSM_USART);
+    return -1;
+  }
+
+  gprs_send_frame = (GPRS_SEND_FRAME_TYPEDEF *)rt_malloc(sizeof(GPRS_SEND_FRAME_TYPEDEF));
+  memset(gprs_send_frame, 0, sizeof(GPRS_SEND_FRAME_TYPEDEF));
+  // frame process
+  gprs_send_frame->length = 0x16;
+  gprs_send_frame->cmd = 0x11;
+  gprs_send_frame->order = 0;
+
+  auth_process(&(gprs_send_frame->data.auth));
+  // send process
+  process_buf = (uint8_t *)rt_malloc(sizeof(GPRS_SEND_FRAME_TYPEDEF));
+  memset(process_buf, 0, sizeof(GPRS_SEND_FRAME_TYPEDEF));
+  process_buf_bk = process_buf;
+  process_length = 0;
+  
+  *process_buf_bk++ = (uint8_t)((gprs_send_frame->length) >> 8 & 0xff);
+  *process_buf_bk++ = (uint8_t)(gprs_send_frame->length & 0xff);
+  process_length += 2;
+
+  *process_buf_bk++ = gprs_send_frame->cmd;
+  process_length += 1;
+
+  *process_buf_bk++ = gprs_send_frame->order;
+  process_length += 1;
+  memcpy(process_buf_bk, gprs_send_frame->data.auth.device_id, 6);
+  memcpy(process_buf_bk+6, gprs_send_frame->data.auth.enc_data, 16);
+  process_length += 22;
+  //send frame
+  gsm_put_hex(process_buf, process_length);
+  rt_device_write(device, 0, process_buf, process_length);
+
+  rt_free(gprs_send_frame);
+  rt_free(process_buf);
+  return send_result;
+}
+
 int8_t send_gprs_frame(ALARM_TYPEDEF alarm_type, time_t time, uint8_t order)
 {
-
   uint8_t *process_buf = RT_NULL;
   uint8_t *process_buf_bk = RT_NULL;
   uint16_t process_length = 0;
@@ -308,8 +356,7 @@ int8_t send_gprs_frame(ALARM_TYPEDEF alarm_type, time_t time, uint8_t order)
   gprs_send_frame = (GPRS_SEND_FRAME_TYPEDEF *)rt_malloc(sizeof(GPRS_SEND_FRAME_TYPEDEF));
   memset(gprs_send_frame, 0, sizeof(GPRS_SEND_FRAME_TYPEDEF));
 
-  gprs_recv_frame = (GPRS_RECV_FRAME_TYPEDEF *)rt_malloc(sizeof(GPRS_RECV_FRAME_TYPEDEF));
-  memset(gprs_recv_frame, 0, sizeof(GPRS_RECV_FRAME_TYPEDEF));
+  gsm_mail_buf.mail_data.gprs.has_response = 1;
   // frame process
   switch (alarm_type)
   {
@@ -321,6 +368,7 @@ int8_t send_gprs_frame(ALARM_TYPEDEF alarm_type, time_t time, uint8_t order)
 
       auth_process(&(gprs_send_frame->data.auth));
 
+      gsm_mail_buf.mail_data.gprs.has_response = 0;
       break;
     };
     case ALARM_TYPE_GPRS_HEART : {
@@ -330,7 +378,6 @@ int8_t send_gprs_frame(ALARM_TYPEDEF alarm_type, time_t time, uint8_t order)
       gprs_send_frame->order = gprs_order++;
 
       gprs_send_frame->data.heart.type = 0x02;
-
       break;
     };
     case ALARM_TYPE_CAMERA_IRDASENSOR: {
@@ -440,6 +487,7 @@ int8_t send_gprs_frame(ALARM_TYPEDEF alarm_type, time_t time, uint8_t order)
       gprs_send_frame->order = order;
 
       process_gprs_list_telephone(&(gprs_send_frame->data.list_telephone), &(gprs_send_frame->length));
+      gsm_mail_buf.mail_data.gprs.has_response = 0;
       break;
     };
     case ALARM_TYPE_GPRS_SET_TELEPHONE_SUCCESS: {
@@ -449,6 +497,7 @@ int8_t send_gprs_frame(ALARM_TYPEDEF alarm_type, time_t time, uint8_t order)
       gprs_send_frame->order = order;
 
       gprs_send_frame->data.set_telephone.result = 1;
+      gsm_mail_buf.mail_data.gprs.has_response = 0;
       break;
     };
     case ALARM_TYPE_GPRS_SET_TELEPHONE_FAILURE: {
@@ -458,6 +507,7 @@ int8_t send_gprs_frame(ALARM_TYPEDEF alarm_type, time_t time, uint8_t order)
       gprs_send_frame->order = order;
 
       gprs_send_frame->data.set_telephone.result = 0;
+      gsm_mail_buf.mail_data.gprs.has_response = 0;
       break;
     };
 
@@ -468,6 +518,7 @@ int8_t send_gprs_frame(ALARM_TYPEDEF alarm_type, time_t time, uint8_t order)
       gprs_send_frame->order = order;
 
       process_gprs_list_rfid_key(&(gprs_send_frame->data.list_rfid_key), &(gprs_send_frame->length));
+      gsm_mail_buf.mail_data.gprs.has_response = 0;
       break;
     };
     case ALARM_TYPE_GPRS_SET_RFID_KEY_SUCCESS: {
@@ -477,6 +528,7 @@ int8_t send_gprs_frame(ALARM_TYPEDEF alarm_type, time_t time, uint8_t order)
       gprs_send_frame->order = order;
 
       gprs_send_frame->data.set_rfid_key.result = 1;
+      gsm_mail_buf.mail_data.gprs.has_response = 0;
       break;
     };
     case ALARM_TYPE_GPRS_SET_RFID_KEY_FAILURE: {
@@ -486,6 +538,7 @@ int8_t send_gprs_frame(ALARM_TYPEDEF alarm_type, time_t time, uint8_t order)
       gprs_send_frame->order = order;
 
       gprs_send_frame->data.set_rfid_key.result = 0;
+      gsm_mail_buf.mail_data.gprs.has_response = 0;
       break;
     };
     case ALARM_TYPE_GPRS_LIST_USER_PARAMETERS: {
@@ -495,6 +548,7 @@ int8_t send_gprs_frame(ALARM_TYPEDEF alarm_type, time_t time, uint8_t order)
       gprs_send_frame->order = order;
 
       process_gprs_list_user_parameters(&(gprs_send_frame->data.list_user_parameters), &(gprs_send_frame->length));
+      gsm_mail_buf.mail_data.gprs.has_response = 0;
       break;
     };
     case ALARM_TYPE_GPRS_SET_USER_PARAMETERS_SUCCESS: {
@@ -504,6 +558,7 @@ int8_t send_gprs_frame(ALARM_TYPEDEF alarm_type, time_t time, uint8_t order)
       gprs_send_frame->order = order;
 
       gprs_send_frame->data.set_user_parameters.result = 1;
+      gsm_mail_buf.mail_data.gprs.has_response = 0;
       break;
     };
     case ALARM_TYPE_GPRS_SET_USER_PARAMETERS_FAILURE: {
@@ -513,6 +568,7 @@ int8_t send_gprs_frame(ALARM_TYPEDEF alarm_type, time_t time, uint8_t order)
       gprs_send_frame->order = order;
 
       gprs_send_frame->data.set_user_parameters.result = 0;
+      gsm_mail_buf.mail_data.gprs.has_response = 0;
       break;
     };
     case ALARM_TYPE_GPRS_SET_TIME_SUCCESS: {
@@ -522,6 +578,7 @@ int8_t send_gprs_frame(ALARM_TYPEDEF alarm_type, time_t time, uint8_t order)
       gprs_send_frame->order = order;
 
       gprs_send_frame->data.set_time.result = 1;
+      gsm_mail_buf.mail_data.gprs.has_response = 0;
       break;
     };
     case ALARM_TYPE_GPRS_SET_TIME_FAILURE: {
@@ -531,6 +588,7 @@ int8_t send_gprs_frame(ALARM_TYPEDEF alarm_type, time_t time, uint8_t order)
       gprs_send_frame->order = order;
 
       gprs_send_frame->data.set_time.result = 0;
+      gsm_mail_buf.mail_data.gprs.has_response = 0;
       break;
     };
     case ALARM_TYPE_GPRS_SET_KEY0_SUCCESS: {
@@ -549,6 +607,7 @@ int8_t send_gprs_frame(ALARM_TYPEDEF alarm_type, time_t time, uint8_t order)
       gprs_send_frame->order = order;
 
       gprs_send_frame->data.set_key0.result = 0;
+      gsm_mail_buf.mail_data.gprs.has_response = 0;
       break;
     };
     default : {
@@ -818,8 +877,16 @@ int8_t send_gprs_frame(ALARM_TYPEDEF alarm_type, time_t time, uint8_t order)
   gsm_mail_buf.result_sem = rt_sem_create("g_ret", 0, RT_IPC_FLAG_FIFO);
   gsm_mail_buf.mail_data.gprs.request = process_buf;
   gsm_mail_buf.mail_data.gprs.request_length = process_length;
-  gsm_mail_buf.mail_data.gprs.response = (uint8_t *)gprs_recv_frame;
-  gsm_mail_buf.mail_data.gprs.response_length = &recv_counts;
+
+
+  if (gsm_mail_buf.mail_data.gprs.has_response == 1)
+  {
+    gprs_recv_frame = (GPRS_RECV_FRAME_TYPEDEF *)rt_malloc(sizeof(GPRS_RECV_FRAME_TYPEDEF));
+    memset(gprs_recv_frame, 0, sizeof(GPRS_RECV_FRAME_TYPEDEF));
+
+    gsm_mail_buf.mail_data.gprs.response = (uint8_t *)gprs_recv_frame;
+    gsm_mail_buf.mail_data.gprs.response_length = &recv_counts;
+  }
 
   if (mq_gsm != NULL)
   {
@@ -840,7 +907,36 @@ int8_t send_gprs_frame(ALARM_TYPEDEF alarm_type, time_t time, uint8_t order)
     else
     {
       rt_sem_take(gsm_mail_buf.result_sem, RT_WAITING_FOREVER);
-      gsm_put_hex(gsm_mail_buf.mail_data.gprs.response, recv_counts);
+      if (gsm_mail_buf.mail_data.gprs.has_response == 1)
+      {
+        if (send_result == 1)
+        {
+          if (recv_gprs_frame(gprs_recv_frame, recv_counts) == 1)
+          {
+            if ((gprs_recv_frame->cmd == (gprs_send_frame->cmd | 0x80)) &&
+                (gprs_recv_frame->order == gprs_send_frame->order))
+            {
+              send_result = 1;
+            }
+            else
+            {
+              send_result = -1;
+            }
+          }
+          else
+          {
+            send_result = -1;
+          }
+        }
+        else
+        {
+          send_result = -1;
+        }
+      }
+      else
+      {
+        send_result = 1;
+      }
     }
     rt_sem_delete(gsm_mail_buf.result_sem);
   }
@@ -892,7 +988,6 @@ void process_gprs_set_rfid_key(GPRS_SET_RFID_KEY *set_rfid_key)
 
   buf = &set_rfid_key->key[0][0];
 
-
   if (set_rfid_key->counts > RFID_KEY_NUMBERS)
   {
     return;
@@ -943,33 +1038,11 @@ void process_gprs_set_key0(GPRS_SET_KEY0 *gprs_set_key0)
   system_file_operate(&device_parameters, 1);
 }
 
-int8_t recv_gprs_frame(GPRS_RECV_FRAME_TYPEDEF *recv_frame)
+int8_t recv_gprs_frame(GPRS_RECV_FRAME_TYPEDEF *gprs_recv_frame, uint16_t recv_counts)
 {
-  uint8_t *process_buf = RT_NULL;
-  GPRS_RECV_FRAME_TYPEDEF *gprs_recv_frame = RT_NULL;
-  rt_device_t device = RT_NULL;
-  uint16_t recv_counts = 0;
-
-  device = rt_device_find(DEVICE_NAME_GSM_USART);
-
-  if (device == RT_NULL)
-  {
-    rt_kprintf("device %s is not exist!\n", DEVICE_NAME_GSM_USART);
-    return -1;
-  }
-
-  // recv process
-  process_buf = (uint8_t *)rt_malloc(sizeof(GPRS_RECV_FRAME_TYPEDEF));
-  memset(process_buf, 0, sizeof(GPRS_RECV_FRAME_TYPEDEF));
-  recv_counts = rt_device_read(device, 0, process_buf, sizeof(GPRS_RECV_FRAME_TYPEDEF));
-  if (recv_counts == 0)
-  {
-    rt_free(process_buf);
-    return -1;
-  }
-  gsm_put_hex(process_buf, recv_counts);
-  gprs_recv_frame = (GPRS_RECV_FRAME_TYPEDEF *)process_buf;
-
+  int8_t result = 1;
+  gsm_put_char(gprs_recv_frame, recv_counts);
+  gsm_put_hex(gprs_recv_frame, recv_counts);
   switch (gprs_recv_frame->cmd)
   {
     //list telephone
@@ -1066,14 +1139,19 @@ int8_t recv_gprs_frame(GPRS_RECV_FRAME_TYPEDEF *recv_frame)
       break;
     };
     default : {
+
+      if (recv_counts == 4 &&
+          gprs_recv_frame->length == 0)
+      {
+        result = 1;
+      }
+      else
+      {
+        result = -1;
+      }
       break;
     };
   }
-
-  *recv_frame = *gprs_recv_frame;
-
-  // frame process
-  rt_free(process_buf);
-  return 1;
+  return result;
 }
 

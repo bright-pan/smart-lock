@@ -52,7 +52,7 @@ void alarm_mail_process_thread_entry(void *parameter)
         gprs_mail_buf.time = alarm_mail_buf.time;
         gprs_mail_buf.alarm_type = alarm_mail_buf.alarm_type;
         /* send to gprs_mq */
-        //rt_mq_send(gprs_mq, &gprs_mail_buf, sizeof(GPRS_MAIL_TYPEDEF));
+        rt_mq_send(gprs_mq, &gprs_mail_buf, sizeof(GPRS_MAIL_TYPEDEF));
       }
       if (alarm_mail_buf.alarm_process_flag & ALARM_PROCESS_FLAG_MMS)
       {

@@ -84,6 +84,7 @@ typedef struct
   uint8_t *response;
   uint16_t request_length;
   uint16_t *response_length;
+  uint8_t has_response;
 }GSM_MAIL_GPRS;
 
 typedef struct
