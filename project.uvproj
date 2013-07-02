@@ -47,7 +47,7 @@
           <CreateExecutable>1</CreateExecutable>
           <CreateLib>0</CreateLib>
           <CreateHexFile>1</CreateHexFile>
-          <DebugInformation>1</DebugInformation>
+          <DebugInformation>0</DebugInformation>
           <BrowseInformation>0</BrowseInformation>
           <ListingPath>.\obj\</ListingPath>
           <HexFormatSelection>1</HexFormatSelection>
@@ -330,7 +330,7 @@
           </ArmAdsMisc>
           <Cads>
             <interw>1</interw>
-            <Optim>3</Optim>
+            <Optim>4</Optim>
             <oTime>0</oTime>
             <SplitLS>0</SplitLS>
             <OneElfS>1</OneElfS>
@@ -424,11 +424,6 @@
               <FileName>gsm_usart.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\gsm_usart.c</FilePath>
-            </File>
-            <File>
-              <FileName>sdcard.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\sdcard.c</FilePath>
             </File>
             <File>
               <FileName>cpuusage.c</FileName>

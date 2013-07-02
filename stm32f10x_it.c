@@ -370,13 +370,13 @@ void UART5_IRQHandler(void)
  *******************************************************************************/
 void SDIO_IRQHandler(void)
 {
-  extern int SD_ProcessIRQSrc(void);
+  //extern int SD_ProcessIRQSrc(void);
 
   /* enter interrupt */
   rt_interrupt_enter();
 
   /* Process All SDIO Interrupt Sources */
-  SD_ProcessIRQSrc();
+  //SD_ProcessIRQSrc();
 
   /* leave interrupt */
   rt_interrupt_leave();

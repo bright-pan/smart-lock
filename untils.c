@@ -139,40 +139,46 @@ void sys_file(void)
 	for(i =0; i< 10;i++)
 	{
 		rt_kprintf("arg.rfid_key[%d].flag   = %d \n",i,arg.rfid_key[i].flag);
-		rt_kprintf("arg.rfid_key[%d].key    = %x %x %x %x\n",i,arg.rfid_key[i].key[0],
-																												arg.rfid_key[i].key[1],
-																												arg.rfid_key[i].key[2],
-																												arg.rfid_key[i].key[3]);
+		rt_kprintf("arg.rfid_key[%d].key    = %x %x %x %x\n",
+								i,
+								arg.rfid_key[i].key[0],
+								arg.rfid_key[i].key[1],
+								arg.rfid_key[i].key[2],
+								arg.rfid_key[i].key[3]);
+								
 		if(arg.rfid_key[i+1].key[0] ==  '\0')
 		{
 			break;
 		}
 	}
 	rt_kprintf("arg.lock_gate_alarm_time  = %d \n",arg.lock_gate_alarm_time);
-	rt_kprintf("arg.device_id = %02x%02x%02x%02x%02x%02x \n",arg.device_id[0],
-																										arg.device_id[1],
-																										arg.device_id[2],
-																										arg.device_id[3],
-																										arg.device_id[4],
-																										arg.device_id[5]);
+	rt_kprintf("arg.device_id = %02x%02x%02x%02x%02x%02x \n",
+							arg.device_id[0],
+							arg.device_id[1],
+							arg.device_id[2],
+							arg.device_id[3],
+							arg.device_id[4],
+							arg.device_id[5]);
 																										
-	rt_kprintf("arg.key0 = %02x%02x%02x%02x%02x%02x%02x%02x \n",arg.key0[0],
-																										 arg.key0[1],
-																										 arg.key0[2],
-																										 arg.key0[3],
-																										 arg.key0[4],
-																										 arg.key0[5],
-																										 arg.key0[6],
-																										 arg.key0[7]);
+	rt_kprintf("arg.key0 = %02x%02x%02x%02x%02x%02x%02x%02x \n",
+							arg.key0[0],
+							arg.key0[1],
+							arg.key0[2],
+							arg.key0[3],
+							arg.key0[4],
+							arg.key0[5],
+							arg.key0[6],
+							arg.key0[7]);
 															
-	rt_kprintf("arg.key1 = %02x%02x%02x%02x%02x%02x%02x%02x\n\n",arg.key1[0],
-																											arg.key1[1],
-																											arg.key1[2],
-																											arg.key1[3],
-																											arg.key1[4],
-																											arg.key1[5],
-																											arg.key1[6],
-																											arg.key1[7]);
+	rt_kprintf("arg.key1 = %02x%02x%02x%02x%02x%02x%02x%02x\n\n",
+							arg.key1[0],
+							arg.key1[1],
+							arg.key1[2],
+							arg.key1[3],
+							arg.key1[4],
+							arg.key1[5],
+							arg.key1[6],
+							arg.key1[7]);
 }
 
 FINSH_FUNCTION_EXPORT(sys_file,--system file config);

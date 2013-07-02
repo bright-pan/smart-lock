@@ -470,6 +470,7 @@ int8_t lock_output(uint8_t direction)
     {
       while (counts-- > 0)
       {
+      	rt_kprintf("unlock cnt = %d\n",counts);
         rt_device_control(device_motor_b, RT_DEVICE_CTRL_SET_PULSE_COUNTS, &period);
         rt_device_control(device_motor_b, RT_DEVICE_CTRL_SEND_PULSE, (void *)0);
         rt_device_read(device_motor_status,0,&dat,0);

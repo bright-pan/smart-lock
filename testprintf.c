@@ -142,10 +142,11 @@ void printf_dev_data(rt_device_t dev,rt_uint8_t *buffer)
 
 void printf_loop_string(rt_uint8_t *buffer,rt_uint32_t size)
 {
+	rt_uint8_t* head = buffer;
 	while(size--)
 	{
-		rt_kprintf("%c",*buffer);
-		buffer++;
+		rt_kprintf("%02x ",*head);
+		head++;
 	}
 }
 
@@ -327,6 +328,11 @@ void ch_dev_rdwd(const char *name,const char* data)
 
 	device = rt_device_find(name);
 
+	if(device == RT_NULL)
+	{
+	  return ;
+	}
+
 	rt_device_write(device,0,data,size);
 
 	rt_thread_delay(10);
@@ -477,50 +483,12 @@ void f_n_l(const char *name)
 	}
 }
 FINSH_FUNCTION_EXPORT(f_n_l,send mq mms_mq);
-
-void rname(const char *l_name,const char *n_name)
+void gprs_pic(void)
 {
-	rename(l_name,n_name);
-}
-
-FINSH_FUNCTION_EXPORT(rname,file rename);
-void test_thread(void *arg)
-{
-	rt_thread_delay(1000);
-}
-void test_k(void)
-{
-	rt_thread_t	id;//threasd id
-	rt_uint8_t str[10];
-	static rt_uint8_t i = 0;
-
-//	while(1)
-	{
-
-		i++;
-		rt_sprintf(str,"rt%d",i);
-		id = rt_thread_create(str,test_thread,&i,1024*4,103,30);
-		if(RT_NULL == id )
-		{
-			rt_kprintf("graph thread create fail\n");
-			return ;
-		}
-		rt_thread_startup(id);
-	}
-}
-FINSH_FUNCTION_EXPORT(test_k,--thread creat test);
-
-void send_sever_dat(rt_uint8_t dat)
-{
-	rt_device_t dev;
-	rt_uint32_t time;
-
-	dev = rt_device_find("rtc");
-
-	rt_device_control(dev, RT_DEVICE_CTRL_RTC_GET_TIME, &time);
+	send_gprs_mail(ALARM_TYPE_GPRS_UPLOAD_PIC,0, 0,(void *)ALARM_TYPE_CAMERA_IRDASENSOR);
 	
-	send_gprs_frame(dat,time,0,RT_NULL);	
 }
-FINSH_FUNCTION_EXPORT(send_sever_dat,--server test);
+FINSH_FUNCTION_EXPORT(gprs_pic,gprs send picture);
+
 #endif
 

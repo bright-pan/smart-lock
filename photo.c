@@ -690,7 +690,7 @@ void photo_thread_entry(void *arg)
 	camera_power_control(&photo,1);	
 	while(1)
 	{
-		result =  rt_mq_recv(photo_start_mq,&recv_mq,sizeof(recv_mq),24*36000);
+		result =  rt_mq_recv(photo_start_mq,&recv_mq,sizeof(recv_mq),24*360000);//3600sx24h
 
 		if(work_flow_status() == -RT_ETIMEOUT)
 		{
@@ -741,6 +741,8 @@ void photo_thread_entry(void *arg)
 			
 			rt_kprintf("camera close power!!!\n");
 		}
+		rt_thread_delay(50);								//wait picture send finish
+		
 		rt_free(photo.data);
 	}
 }
