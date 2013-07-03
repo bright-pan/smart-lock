@@ -38,16 +38,16 @@ void voice_thread_entry(void *arg)
 	
 	while(1)
 	{
-		result =  rt_sem_take(voice_start_sem,500);
+		result =  rt_sem_take(voice_start_sem,RT_WAITING_FOREVER);
 		if(RT_EOK == result)
 		{
 	  	Amplifier_switch(1);
 	  	
 			voice_play(3);
-		}
-		else if(result == -RT_ETIMEOUT)
-		{
-			Amplifier_switch(0);
+
+	//		rt_thread_delay()
+		
+		//	Amplifier_switch(0);
 		}
 	}
 }

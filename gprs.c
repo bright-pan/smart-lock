@@ -22,6 +22,10 @@
 #include <string.h>
 #include "battery.h"
 #include <rtc.h>
+#include "mms_dev.h"
+
+#define PIC_PER_PAGE_SIZE		512
+#define PIC_NAME						"/2.jpg"
 
 #define WORK_ALARM_CAMERA_IRDASENSOR (1 << 0)
 #define WORK_ALARM_LOCK_SHELL (1 << 1)
@@ -205,6 +209,16 @@ static void get_dec_to_bcd_time(uint8_t date[],time_t time)
   date[4] = dec_to_bcd((uint8_t)(time_tm.tm_min % 100));
   date[5] = dec_to_bcd((uint8_t)(time_tm.tm_sec % 100));
 }
+static void get_pic_size(const char* name ,rt_uint32_t *size)
+{
+	struct stat status;
+
+	if(stat(name,&status) >= 0)
+	{
+		*size = status.st_size;
+	}
+}
+
 void lock_open_process(GPRS_LOCK_OPEN *lock_open,time_t time,rt_uint8_t key[])
 {
 	struct tm time_tm;
@@ -284,6 +298,60 @@ void battery_alarm_process(GPRS_POWER_ALARM* power_alarm,time_t time)
   power_alarm->time[4] = dec_to_bcd((uint8_t)(date.tm_min % 100));
   power_alarm->time[5] = dec_to_bcd((uint8_t)(date.tm_sec % 100));
 }
+void process_gprs_pic_arg(GPRS_SEND_PIC_ASK *pic_info,time_t time,void* user)
+{
+	struct tm		date;
+	rt_uint32_t size;
+	ALARM_TYPEDEF temp;
+
+	temp = *(ALARM_TYPEDEF*)user;
+	switch(temp)
+	{
+		case ALARM_TYPE_CAMERA_IRDASENSOR:
+		{
+			pic_info->type = 1;
+			break;
+		}
+		case ALARM_TYPE_RFID_KEY_ERROR:
+		{
+			pic_info->type = 3;
+			break;
+		}
+		case ALARM_TYPE_LOCK_TEMPERATURE:
+		{
+			pic_info->type = 4;
+			break;
+		}
+	}
+	if(pic_info->type == 0)
+	{
+		pic_info->type = 1;
+	}
+	//pic_info->type = *(rt_uint8_t *)user;
+	pic_info->form = 1;
+	pic_info->DPI = 1;
+	get_pic_size("/2.jpg",&size);
+	pic_info->pic_size[0] = (size & 0x0000ff00)>>8;
+	pic_info->pic_size[1] = (size & 0x000000ff);
+	pic_info->page = (size / 512);
+	if((size % 512) != 0)
+	{
+		pic_info->page++;
+	}
+
+	rt_kprintf("time = %d\n",time);
+	date = *localtime(&time);
+	date.tm_year += 1900;
+	date.tm_mon += 1;
+
+	pic_info->time[0] = dec_to_bcd((uint8_t)(date.tm_year % 100));
+  pic_info->time[1] = dec_to_bcd((uint8_t)(date.tm_mon % 100));
+  pic_info->time[2] = dec_to_bcd((uint8_t)(date.tm_mday % 100));
+  pic_info->time[3] = dec_to_bcd((uint8_t)(date.tm_hour % 100));
+  pic_info->time[4] = dec_to_bcd((uint8_t)(date.tm_min % 100));
+  pic_info->time[5] = dec_to_bcd((uint8_t)(date.tm_sec % 100));
+}
+
 void process_gprs_list_telephone(GPRS_SEND_LIST_TELEPHONE *list_telephone, uint16_t *length)
 {
   uint8_t index = 0;
@@ -386,6 +454,94 @@ int8_t send_gprs_auth_frame(void)
   rt_free(gprs_send_frame);
   rt_free(process_buf);
   return send_result;
+}
+void send_picture_data(void)
+{
+	int 					file_id = 0;
+	rt_uint8_t*		data_head_point = RT_NULL;
+	rt_uint8_t		loop_cnt = 0;
+	rt_uint8_t		page  = 0;
+	rt_uint32_t		send_size = 0;
+	rt_uint32_t 	size = 0;
+	rt_uint32_t		offset = 0;
+	rt_device_t		dev = RT_NULL;
+	GPRS_SEND_PIC pic_data;
+
+	dev = rt_device_find(DEVICE_NAME_GSM_USART);
+	if(dev == RT_NULL)
+	{
+		return ;
+	}
+	
+	data_head_point = pic_data.data = rt_malloc(PIC_PER_PAGE_SIZE+5);
+
+	rt_memset(pic_data.data,0,PIC_PER_PAGE_SIZE+5);
+	
+	get_pic_size(PIC_NAME,&size);
+
+	loop_cnt = (size / PIC_PER_PAGE_SIZE)+1;
+	
+	rt_kprintf("size = %d",size);
+									
+	pic_data.cmd = 0x0f;
+	pic_data.cur_page  = 0;
+	file_id = open(PIC_NAME,O_RDONLY,0);
+	pic_data.order = gprs_order;
+	while(loop_cnt--)
+	{
+		if( (size / PIC_PER_PAGE_SIZE) > 0)
+		{
+			size -= PIC_PER_PAGE_SIZE;
+			pic_data.length = PIC_PER_PAGE_SIZE+1;
+			page++;
+			offset = page*PIC_PER_PAGE_SIZE;
+		}
+		else if(loop_cnt == 0)
+		{
+			pic_data.length = size % PIC_PER_PAGE_SIZE+1; 
+		}
+		rt_kprintf("\roffset = %d\r",offset);
+		
+		lseek(file_id,offset,SEEK_SET);
+		
+		offset = page*PIC_PER_PAGE_SIZE;
+		
+		read(file_id,(void*)(pic_data.data+5),pic_data.length-1);
+
+		send_size = pic_data.length+4;
+		
+		*((pic_data.data)+0) = (rt_uint8_t)((pic_data.length) >> 8 & 0xff);
+		*((pic_data.data)+1) = (rt_uint8_t)(pic_data.length & 0xff);
+		*((pic_data.data)+2) = pic_data.cmd;
+		*((pic_data.data)+3) = pic_data.order;
+		*((pic_data.data)+3) = pic_data.order;
+		
+		*((pic_data.data)+4) = pic_data.cur_page;
+		pic_data.cur_page++;
+		rt_device_write(dev,0,pic_data.data,send_size);
+		rt_thread_delay(50);
+		//rt_device_write(dev,0,"at+cpisend\r",send_size);
+		//rt_thread_delay(200);
+		rt_memset(pic_data.data,0,PIC_PER_PAGE_SIZE+5);
+		
+		rt_device_read(dev,0,pic_data.data,20);
+
+		printf_loop_string(pic_data.data,20);
+		//rt_kprintf("pic_data.data = %d",pic_data.data);
+/*
+		if(pic_data.cur_page % 10 == 0)
+		{
+			if (gprs_send_heart() == 1)
+			{
+				rt_kprintf("send heart ok\n");
+			}
+		}
+*/		
+		rt_memset(pic_data.data,0,PIC_PER_PAGE_SIZE+5);
+	}
+	
+	close(file_id);
+	free(data_head_point);
 }
 
 int8_t send_gprs_frame(ALARM_TYPEDEF alarm_type, time_t time, uint8_t order, void* user)
@@ -556,6 +712,15 @@ int8_t send_gprs_frame(ALARM_TYPEDEF alarm_type, time_t time, uint8_t order, voi
 
       break;
     };
+    case ALARM_TYPE_GPRS_UPLOAD_PIC:
+    {
+    	gprs_send_frame->length = 12;
+      gprs_send_frame->cmd = 0x0E;
+      gprs_send_frame->order = 	gprs_order++;
+
+      process_gprs_pic_arg(&(gprs_send_frame->data.picture),time,user);
+			break;
+    }
     case ALARM_TYPE_GPRS_LIST_TELEPHONE: {
 
       gprs_send_frame->length = 0;
@@ -955,6 +1120,27 @@ int8_t send_gprs_frame(ALARM_TYPEDEF alarm_type, time_t time, uint8_t order, voi
 
       break;
     };
+
+
+    case ALARM_TYPE_GPRS_UPLOAD_PIC:
+    {
+    	*process_buf_bk++ = gprs_send_frame->data.picture.type;
+    	*process_buf_bk++ = gprs_send_frame->data.picture.form;
+    	*process_buf_bk++ = gprs_send_frame->data.picture.DPI;
+    	*process_buf_bk++ = gprs_send_frame->data.picture.pic_size[0];
+    	*process_buf_bk++ = gprs_send_frame->data.picture.pic_size[1];
+    	*process_buf_bk++ = gprs_send_frame->data.picture.page;
+    	rt_memcpy(process_buf_bk,gprs_send_frame->data.picture.time,6);
+    	process_length+=12;
+			break;
+    }
+    case ALARM_TYPE_GPRS_SEND_PIC_DATA:
+    {
+			send_picture_data();
+			rt_free(gprs_send_frame);
+  		rt_free(process_buf);
+  		return 1;
+    }
     default : {
       break;
     };
@@ -1042,7 +1228,9 @@ int8_t send_gprs_frame(ALARM_TYPEDEF alarm_type, time_t time, uint8_t order, voi
   rt_free(gprs_recv_frame);
   rt_free(process_buf);
   return send_result;
+
 }
+
 
 void process_gprs_set_telephone(GPRS_SET_TELEPHONE *set_telephone)
 {
@@ -1120,6 +1308,7 @@ uint8_t bcd_to_dec(uint8_t bcd)
 void process_gprs_set_time(GPRS_SET_TIME *gprs_set_time)
 {
   extern rt_err_t set_date(rt_uint32_t year, rt_uint32_t month, rt_uint32_t day);
+  extern rt_err_t set_time(rt_uint32_t hour, rt_uint32_t minute, rt_uint32_t second);
 	
   set_date(bcd_to_dec(gprs_set_time->time[0]) + 2000, bcd_to_dec(gprs_set_time->time[1]), bcd_to_dec(gprs_set_time->time[2]));
   set_time(bcd_to_dec(gprs_set_time->time[3]),bcd_to_dec(gprs_set_time->time[4]),bcd_to_dec(gprs_set_time->time[5]));
@@ -1140,6 +1329,7 @@ int8_t recv_gprs_frame(GPRS_RECV_FRAME_TYPEDEF *gprs_recv_frame, uint16_t recv_c
   
   gsm_put_char((uint8_t *)gprs_recv_frame, recv_counts);
   gsm_put_hex((uint8_t *)gprs_recv_frame, recv_counts);
+
   switch (gprs_recv_frame->cmd)
   {
     //list telephone
@@ -1235,8 +1425,14 @@ int8_t recv_gprs_frame(GPRS_RECV_FRAME_TYPEDEF *gprs_recv_frame, uint16_t recv_c
       }
       break;
     };
+    case 0x8e:
+    {
+    	gprs_send_heart();
+    	send_picture_data();
+    	//send_gprs_mail(ALARM_TYPE_GPRS_SEND_PIC_DATA,0, 0,RT_NULL);
+			break;
+    }
     default : {
-
       if (recv_counts == 4 &&
           gprs_recv_frame->length == 0)
       {

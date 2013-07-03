@@ -76,6 +76,16 @@ typedef struct {
 
 }GPRS_FAULT_ALARM;
 
+typedef struct 
+{
+	uint8_t   type;
+	uint8_t		form;
+	uint8_t 	DPI;
+	uint8_t		pic_size[2];
+	uint8_t		page;
+	uint8_t 	time[6];
+}GPRS_SEND_PIC_ASK;
+
 typedef struct {
 
   uint8_t type;
@@ -149,6 +159,17 @@ typedef struct
   uint8_t result;
 
 }GPRS_SEND_SET_KEY0;
+
+typedef struct 
+{
+	uint16_t 	length;
+  uint8_t 	cmd;
+  uint8_t 	order;
+	uint8_t 	cur_page;
+	uint8_t* 	data;
+	
+}GPRS_SEND_PIC;
+
 typedef union
 {
 
@@ -167,7 +188,7 @@ typedef union
   GPRS_SEND_SET_TIME set_time;
   GPRS_SEND_SET_KEY0 set_key0;
   GPRS_POWER_ALARM	battery;
-
+  GPRS_SEND_PIC_ASK picture;
 }GPRS_SEND_DATA;
 
 typedef struct
@@ -233,7 +254,6 @@ typedef struct
 
 typedef union
 {
-
   GPRS_LIST_TELEPHONE list_telephone;
   GPRS_SET_TELEPHONE set_telephone;
   GPRS_LIST_RFID_KEY list_rfid_key;

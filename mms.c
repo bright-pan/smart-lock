@@ -18,6 +18,7 @@
 #include "untils.h"
 #include "mms_dev.h"
 #include "testprintf.h"
+#include "gprs.h"
 
 #define MMS_RESEND_NUM 3
 
@@ -49,7 +50,7 @@ void mms_telephone_init(mms_dev_t mms)
 }
 void mms_picture_file_init(mms_dev_t mms)
 {
-  mms->pic_name[0] = "/1.jpg";	//send picture path
+  mms->pic_name[0] = "/2.jpg";	//send picture path
 // 	mms->pic_name[1] = "/2.jpg";
   mms->pic_name[1] = RT_NULL;
 
@@ -168,6 +169,8 @@ void mms_mail_process_thread_entry(void *parameter)
           if(!(mms_send_struct.error &= MMS_ERROR_FLAG(MMS_ERROR_1_FATAL)))
           {
             rt_kprintf("¡ÑMMS Send ok !\n");
+            
+						send_gprs_mail(ALARM_TYPE_GPRS_UPLOAD_PIC,mms_mail_buf->time, 0,(void *)mms_mail_buf->alarm_type);
             break;
           }
           mms_data_init(&mms_send_struct);		//init mms function

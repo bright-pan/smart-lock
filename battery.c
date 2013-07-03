@@ -29,13 +29,14 @@ static uint32_t battery_status = 0;
 #define SAMPLE_VALUE_BATTERY_REMAIN_50P 0x7FF
 
 #define BATTERY_ADC_VALUE_RANGE					750
-#define BATTERY_WORKING_VOLTAGE					15
+#define BATTERY_WORKING_TIME					15
 void battery_get_data(Battery_Data* data)
 {
 	rt_device_t status_dev;
 	rt_device_t adc_dev;
 	rt_uint16_t	range;
 	float scale = 0;
+	
 	status_dev = rt_device_find(DEVICE_NAME_BATTERY_SWITCH);
 	if(RT_NULL != status_dev)
 	{
@@ -53,11 +54,11 @@ void battery_get_data(Battery_Data* data)
 
 		//To compute work time
 		range = 0xfff - data->adc_value;
-		scale = (float)BATTERY_WORKING_VOLTAGE/(float)BATTERY_ADC_VALUE_RANGE;
-		data->work_time = BATTERY_WORKING_VOLTAGE - range*scale;//The remaining work time
-		if(data->work_time < 0)
+		scale = (float)BATTERY_WORKING_TIME/(float)BATTERY_ADC_VALUE_RANGE;
+		data->work_time = BATTERY_WORKING_TIME - range*scale;//The remaining work time
+		if(data->work_time > BATTERY_WORKING_TIME)
 		{
-			data->work_time = 0;
+			data->work_time = BATTERY_WORKING_TIME;
 		}
 	}
 }
