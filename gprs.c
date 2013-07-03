@@ -1427,7 +1427,7 @@ int8_t recv_gprs_frame(GPRS_RECV_FRAME_TYPEDEF *gprs_recv_frame, uint16_t recv_c
     };
     case 0x8e:
     {
-    	gprs_send_heart();
+    	//gprs_send_heart();
     	send_picture_data();
     	//send_gprs_mail(ALARM_TYPE_GPRS_SEND_PIC_DATA,0, 0,RT_NULL);
 			break;
