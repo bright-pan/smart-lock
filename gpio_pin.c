@@ -368,7 +368,7 @@ uint8_t gpio_pin_input(char *str)
   if (device != RT_NULL)
   {
     rt_device_read(device,0,&dat,0);
-    rt_kprintf("the gpio pin value is %d\n", dat);
+    rt_kprintf("the gpio pin device <%s> value is %d\n", str, dat);
   }
   else
   {
