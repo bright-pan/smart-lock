@@ -22,6 +22,7 @@
 
 #define GSM_MAIL_MAX_MSGS 20
 
+rt_mq_t mq_gsm;
 char smsc[20] = {0,};
 
 const char *at_command_map[] =
@@ -805,7 +806,7 @@ void gsm_process_thread_entry(void *parameters)
               }
               else
               {
-                if (memmem(&gprs_recv_frame, sizeof(GPRS_RECV_FRAME_TYPEDEF), "\r\nCLOSED\r\n", strlen("\r\nCLOSED\r\n")))
+                //if (memmem(&gprs_recv_frame, sizeof(GPRS_RECV_FRAME_TYPEDEF), "\r\nCLOSED\r\n", strlen("\r\nCLOSED\r\n")))
                 {
                   gsm_mode_switch(&gsm_mode, GSM_MODE_CMD);
                   *(gsm_mail_buf.result) = -1;
@@ -838,11 +839,11 @@ void gsm_process_thread_entry(void *parameters)
           recv_counts = rt_device_read(device_gsm_usart, 0, &gprs_recv_frame, sizeof(GPRS_RECV_FRAME_TYPEDEF));
           if (recv_counts)
           {
-            if (memmem(&gprs_recv_frame, sizeof(GPRS_RECV_FRAME_TYPEDEF), "\r\nCLOSED\r\n", strlen("\r\nCLOSED\r\n")))
+            //if (memmem(&gprs_recv_frame, sizeof(GPRS_RECV_FRAME_TYPEDEF), "\r\nCLOSED\r\n", strlen("\r\nCLOSED\r\n")))
             {
               gsm_mode_switch(&gsm_mode, GSM_MODE_CMD);
             }
-            else
+            //else
             {
               recv_gprs_frame(&gprs_recv_frame, recv_counts);
             }

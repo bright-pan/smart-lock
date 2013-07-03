@@ -33,7 +33,7 @@ typedef enum {
 extern rt_mutex_t mutex_gsm_mode;
 extern rt_event_t event_gsm_mode_request;
 extern rt_event_t event_gsm_mode_response;
-
+extern rt_mq_t mq_gsm;
 
 typedef enum
 {
@@ -76,7 +76,7 @@ typedef enum {
 
 }GSM_MODE_TYPEDEF;
 
-rt_mq_t mq_gsm;
+
 
 typedef struct
 {

@@ -123,11 +123,11 @@ void mms_mail_process_thread_entry(void *parameter)
     {
       rt_kprintf("receive mms mail < time: %d alarm_type: %d >\n", mms_mail_buf->time, mms_mail_buf->alarm_type);
 
-      rt_mutex_take(mutex_gsm_mode, RT_WAITING_FOREVER);
-      result = rt_event_recv(event_gsm_mode_response, EVENT_GSM_MODE_SETUP, RT_EVENT_FLAG_AND, RT_WAITING_FOREVER, &event);
+      //rt_mutex_take(mutex_gsm_mode, RT_WAITING_FOREVER);
+      //result = rt_event_recv(event_gsm_mode_response, EVENT_GSM_MODE_SETUP, RT_EVENT_FLAG_AND, RT_WAITING_FOREVER, &event);
       if (result == RT_EOK)
       {
-        if (gsm_mode_get() & EVENT_GSM_MODE_GPRS)
+        /*if (gsm_mode_get() & EVENT_GSM_MODE_GPRS)
         {
         	rt_kprintf("\ngsm mode requset for gprs_cmd mode\n");
           rt_event_recv(event_gsm_mode_response, EVENT_GSM_MODE_GPRS_CMD, RT_EVENT_FLAG_AND | RT_EVENT_FLAG_CLEAR, RT_WAITING_NO, &event);
@@ -155,7 +155,7 @@ void mms_mail_process_thread_entry(void *parameter)
             continue;
           }
           
-        }
+        } */
         // send mms data
         rt_kprintf("\nsend mms data!!!\n");
 			
@@ -176,7 +176,7 @@ void mms_mail_process_thread_entry(void *parameter)
           mms_data_init(&mms_send_struct);		//init mms function
         }
 				rt_event_send(work_flow_ok,FLOW_OK_FLAG);
-        if(i == MMS_RESEND_NUM)					//send fial
+        /*if(i == MMS_RESEND_NUM)					//send fial
         {
           rt_kprintf("\nsend mms failure!!!\n");
           // send failure
@@ -197,7 +197,7 @@ void mms_mail_process_thread_entry(void *parameter)
           rt_event_send(event_gsm_mode_request, EVENT_GSM_MODE_CMD);
 
           rt_mq_urgent(mms_mq, mms_mail_buf, sizeof(MMS_MAIL_TYPEDEF));
-        }
+        }   */
       }
       else // gsm is not setup
       {
@@ -205,7 +205,7 @@ void mms_mail_process_thread_entry(void *parameter)
       }
 
       // exit mail process
-      rt_mutex_release(mutex_gsm_mode);
+      //rt_mutex_release(mutex_gsm_mode);
     }
     else
     {
