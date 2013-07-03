@@ -516,8 +516,8 @@ void send_picture_data(void)
 		*((pic_data.data)+3) = pic_data.order;
 		*((pic_data.data)+3) = pic_data.order;
 		
-	//	*((pic_data.data)+4) = pic_data.cur_page;
-	//	pic_data.cur_page++;
+		*((pic_data.data)+4) = pic_data.cur_page;
+		pic_data.cur_page++;
 		rt_device_write(dev,0,pic_data.data,send_size);
 		rt_thread_delay(50);
 		//rt_device_write(dev,0,"at+cpisend\r",send_size);
