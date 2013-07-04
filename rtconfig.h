@@ -83,6 +83,7 @@
 
 /* SECTION: finsh, a C-Express shell */
 #define RT_USING_FINSH
+#define RT_USING_ZMODEM
 /* Using symbol table */
 #define FINSH_USING_SYMTAB
 #define FINSH_USING_DESCRIPTION
