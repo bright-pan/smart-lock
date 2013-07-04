@@ -481,6 +481,9 @@ void send_picture_data(void)
 	rt_uint32_t		offset = 0;
 	rt_device_t		dev = RT_NULL;
 	GPRS_SEND_PIC pic_data;
+	GSM_MAIL_TYPEDEF gsm_mail_buf;
+	rt_uint8_t		send_result;
+	rt_uint8_t		result;
 
 	dev = rt_device_find(DEVICE_NAME_GSM_USART);
 	if(dev == RT_NULL)
@@ -530,28 +533,25 @@ void send_picture_data(void)
 		*((pic_data.data)+2) = pic_data.cmd;
 		*((pic_data.data)+3) = pic_data.order;
 		*((pic_data.data)+3) = pic_data.order;
-		
-		*((pic_data.data)+4) = pic_data.cur_page;
+		*((pic_data.data)+4) = ++loop_cnt;
+		//*((pic_data.data)+4) = pic_data.cur_page;
 		pic_data.cur_page++;
-		rt_device_write(dev,0,pic_data.data,send_size);
-		rt_thread_delay(50);
-		//rt_device_write(dev,0,"at+cpisend\r",send_size);
-		//rt_thread_delay(200);
-		rt_memset(pic_data.data,0,PIC_PER_PAGE_SIZE+5);
 		
-		rt_device_read(dev,0,pic_data.data,20);
+		gsm_put_hex(pic_data.data, send_size);
+		//rt_device_write(device, 0, process_buf, process_length);
+		gsm_mail_buf.send_mode = GSM_MODE_GPRS;
+		gsm_mail_buf.result = &send_result;
+		gsm_mail_buf.result_sem = rt_sem_create("g_ret", 0, RT_IPC_FLAG_FIFO);
+		gsm_mail_buf.mail_data.gprs.request = pic_data.data;
+		gsm_mail_buf.mail_data.gprs.request_length = send_size;
+		gsm_mail_buf.mail_data.gprs.has_response = 0;
 
-		printf_loop_string(pic_data.data,20);
-		//rt_kprintf("pic_data.data = %d",pic_data.data);
-/*
-		if(pic_data.cur_page % 10 == 0)
-		{
-			if (gprs_send_heart() == 1)
-			{
-				rt_kprintf("send heart ok\n");
-			}
-		}
-*/		
+		result = rt_mq_send(mq_gsm, &gsm_mail_buf, sizeof(GSM_MAIL_TYPEDEF));
+
+		rt_sem_take(gsm_mail_buf.result_sem, RT_WAITING_FOREVER);
+		
+		//rt_thread_delay(50);
+		rt_kprintf("loop_cnt = %d\n",loop_cnt);
 		rt_memset(pic_data.data,0,PIC_PER_PAGE_SIZE+5);
 	}
 	
@@ -734,6 +734,8 @@ int8_t send_gprs_frame(ALARM_TYPEDEF alarm_type, time_t time, uint8_t order, voi
       gprs_send_frame->order = 	gprs_order++;
 
       process_gprs_pic_arg(&(gprs_send_frame->data.picture),time,user);
+
+      gsm_mail_buf.mail_data.gprs.has_response = 1;
 			break;
     }
     case ALARM_TYPE_GPRS_LIST_TELEPHONE: {
@@ -1154,6 +1156,7 @@ int8_t send_gprs_frame(ALARM_TYPEDEF alarm_type, time_t time, uint8_t order, voi
 			send_picture_data();
 			rt_free(gprs_send_frame);
   		rt_free(process_buf);
+  		
   		return 1;
     }
     default : {
