@@ -850,7 +850,14 @@ void camera_send_mail(ALARM_TYPEDEF alarm_type, time_t time)
 	send_mq.date = time;
 	send_mq.alarm_type = alarm_type;
 
-	rt_mq_send(photo_start_mq,&send_mq,sizeof(send_mq));
+	if(photo_start_mq != RT_NULL)
+	{
+		rt_mq_send(photo_start_mq,&send_mq,sizeof(send_mq));
+	}
+	else
+	{
+		rt_kprintf("photo_start_mq is RT_NULL\n");
+	}
 }
 
 
