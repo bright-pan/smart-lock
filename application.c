@@ -155,7 +155,7 @@ void rt_init_thread_entry(void* parameter)
 #ifdef	USE_WILDFIRE_TEST
   rt_kprintf("User Wild Fire Hardware Piatform TESE\n");
 #endif
-	system_file_operate(&device_parameters,0);
+  //system_file_operate(&device_parameters,0);
 
 }
 
@@ -187,7 +187,7 @@ int rt_application_init()
   {
     rt_thread_startup(gsm_process_thread);
   }
-  /* gprs heart process thread */
+  /* gprs heart process thread
   gprs_heart_process_thread = rt_thread_create("g_heart",
                                         gprs_heart_process_thread_entry, RT_NULL,
                                         512, 110, 20);

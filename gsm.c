@@ -738,6 +738,7 @@ void gsm_process_thread_entry(void *parameters)
   rt_err_t result;
   rt_uint8_t gsm_status;
   uint16_t recv_counts = 0;
+  int8_t send_counts = 0;
   uint8_t process_buf[512];
   GPRS_RECV_FRAME_TYPEDEF gprs_recv_frame;
   device_gsm_status = rt_device_find(DEVICE_NAME_GSM_STATUS);
@@ -797,21 +798,26 @@ void gsm_process_thread_entry(void *parameters)
             rt_device_write(device_gsm_usart, 0, gsm_mail_buf.mail_data.gprs.request, gsm_mail_buf.mail_data.gprs.request_length);
             if (gsm_mail_buf.mail_data.gprs.has_response == 1)
             {
-              rt_thread_delay(50);
-              recv_counts = rt_device_read(device_gsm_usart, 0, gsm_mail_buf.mail_data.gprs.response, sizeof(GPRS_RECV_FRAME_TYPEDEF));
-              *(gsm_mail_buf.mail_data.gprs.response_length) = recv_counts;
-              if (recv_counts == 0)
+              send_counts = 10;
+              while (send_counts-- > 0)
               {
-                *(gsm_mail_buf.result) = -1;
-              }
-              else
-              {
-                //if (memmem(&gprs_recv_frame, sizeof(GPRS_RECV_FRAME_TYPEDEF), "\r\nCLOSED\r\n", strlen("\r\nCLOSED\r\n")))
+                rt_thread_delay(100);
+                recv_counts = rt_device_read(device_gsm_usart, 0, gsm_mail_buf.mail_data.gprs.response, sizeof(GPRS_RECV_FRAME_TYPEDEF));
+                *(gsm_mail_buf.mail_data.gprs.response_length) = recv_counts;
+                if (recv_counts == 0)
                 {
-                  gsm_mode_switch(&gsm_mode, GSM_MODE_CMD);
                   *(gsm_mail_buf.result) = -1;
                 }
-                *(gsm_mail_buf.result) = 1;
+                else
+                {
+                  if (memmem(&gprs_recv_frame, sizeof(GPRS_RECV_FRAME_TYPEDEF), "\r\nCLOSED\r\n", strlen("\r\nCLOSED\r\n")))
+                  {
+                    gsm_mode_switch(&gsm_mode, GSM_MODE_CMD);
+                    *(gsm_mail_buf.result) = -1;
+                  }
+                  *(gsm_mail_buf.result) = 1;
+                  break;
+                }
               }
             }
             else
@@ -839,11 +845,11 @@ void gsm_process_thread_entry(void *parameters)
           recv_counts = rt_device_read(device_gsm_usart, 0, &gprs_recv_frame, sizeof(GPRS_RECV_FRAME_TYPEDEF));
           if (recv_counts)
           {
-            //if (memmem(&gprs_recv_frame, sizeof(GPRS_RECV_FRAME_TYPEDEF), "\r\nCLOSED\r\n", strlen("\r\nCLOSED\r\n")))
+            if (memmem(&gprs_recv_frame, sizeof(GPRS_RECV_FRAME_TYPEDEF), "\r\nCLOSED\r\n", strlen("\r\nCLOSED\r\n")))
             {
               gsm_mode_switch(&gsm_mode, GSM_MODE_CMD);
             }
-            //else
+            else
             {
               recv_gprs_frame(&gprs_recv_frame, recv_counts);
             }
