@@ -485,10 +485,21 @@ void f_n_l(const char *name)
 FINSH_FUNCTION_EXPORT(f_n_l,send mq mms_mq);
 void gprs_pic(void)
 {
-	send_gprs_mail(ALARM_TYPE_GPRS_UPLOAD_PIC,0, 0,(void *)ALARM_TYPE_CAMERA_IRDASENSOR);
+	send_gprs_mail(ALARM_TYPE_GPRS_UPLOAD_PIC,0, 0,(void *)ALARM_TYPE_LOCK_TEMPERATURE);
 	
 }
 FINSH_FUNCTION_EXPORT(gprs_pic,gprs send picture);
+
+volatile rt_uint32_t debug_delay1 = 500;
+
+void set_delay(rt_uint32_t t)
+{
+	debug_delay1 = t;
+}
+
+FINSH_FUNCTION_EXPORT(set_delay,set delay time);
+
+
 
 #endif
 
