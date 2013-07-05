@@ -29,8 +29,8 @@ void delay_us(uint32_t time)
 }
 
 #ifndef __GNUC__
-void *memmem(const void *haystack, size_t haystack_len,
-                const void *needle, size_t needle_len)
+void *memmem(const void *haystack, rt_size_t haystack_len,
+                const void *needle, rt_size_t needle_len)
 {
   const char *begin = haystack;
   const char *last_possible = begin + haystack_len - needle_len;
