@@ -692,13 +692,14 @@ void photo_thread_entry(void *arg)
 	{
 		result =  rt_mq_recv(photo_start_mq,&recv_mq,sizeof(recv_mq),24*360000);//3600sx24h
 
-		if(work_flow_status() == -RT_ETIMEOUT)
+		/*if(work_flow_status() == -RT_ETIMEOUT)
 		{
 #ifdef	CMAERA_DEBUG_INFO_PRINTF
 			rt_kprintf("one work flow not finsh\n\n");
 #endif
 			continue;
 		}
+		*/
 		if(RT_EOK == result)								//in working order
 		{
 			camera_power_control(&photo,1); 	//open camera power
@@ -732,7 +733,7 @@ void photo_thread_entry(void *arg)
 
 			rt_mutex_release(pic_file_mutex);
 			
-			camera_power_control(&photo,0); 	//close camera power
+			//camera_power_control(&photo,0); 	//close camera power
 
 		}
 		else if(-RT_ETIMEOUT == result)			//timeout checout module
