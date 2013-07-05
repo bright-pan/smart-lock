@@ -63,7 +63,7 @@ extern DEVICE_PARAMETERS_TYPEDEF device_parameters;
 void system_file_operate(DEVICE_PARAMETERS_TYPEDEF *arg,rt_uint8_t flag);
 
 #ifndef __GNUC__
-void *memmem(const void *haystack, size_t haystack_len,
-               const void *needle, size_t needle_len);
+void *memmem(const void *haystack, rt_size_t haystack_len,
+               const void *needle, rt_size_t needle_len);
 #endif
 #endif

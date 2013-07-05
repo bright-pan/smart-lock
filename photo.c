@@ -597,7 +597,7 @@ void photo_deal(camera_dev_t camera,cm_recv_mq_t recv_mq)
 	/*  Receive timeout make no difference */
 	if((CM_RUN_DEAL_OK == camera->error)||(CM_RECV_OUT_TIME & camera->error))
 	{
-	rt_mq_send(mms_mq, &mms_mail_buf, sizeof(MMS_MAIL_TYPEDEF));
+		//rt_mq_send(mms_mq, &mms_mail_buf, sizeof(MMS_MAIL_TYPEDEF));
 	}
 	else
 	{
@@ -692,13 +692,14 @@ void photo_thread_entry(void *arg)
 	{
 		result =  rt_mq_recv(photo_start_mq,&recv_mq,sizeof(recv_mq),24*360000);//3600sx24h
 
-		if(work_flow_status() == -RT_ETIMEOUT)
+		/*if(work_flow_status() == -RT_ETIMEOUT)
 		{
 #ifdef	CMAERA_DEBUG_INFO_PRINTF
 			rt_kprintf("one work flow not finsh\n\n");
 #endif
 			continue;
 		}
+		*/
 		if(RT_EOK == result)								//in working order
 		{
 			camera_power_control(&photo,1); 	//open camera power
@@ -732,7 +733,7 @@ void photo_thread_entry(void *arg)
 
 			rt_mutex_release(pic_file_mutex);
 			
-			camera_power_control(&photo,0); 	//close camera power
+			//camera_power_control(&photo,0); 	//close camera power
 
 		}
 		else if(-RT_ETIMEOUT == result)			//timeout checout module
@@ -850,7 +851,14 @@ void camera_send_mail(ALARM_TYPEDEF alarm_type, time_t time)
 	send_mq.date = time;
 	send_mq.alarm_type = alarm_type;
 
-	rt_mq_send(photo_start_mq,&send_mq,sizeof(send_mq));
+	if(photo_start_mq != RT_NULL)
+	{
+		rt_mq_send(photo_start_mq,&send_mq,sizeof(send_mq));
+	}
+	else
+	{
+		rt_kprintf("photo_start_mq is RT_NULL\n");
+	}
 }
 
 

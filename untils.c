@@ -29,8 +29,8 @@ void delay_us(uint32_t time)
 }
 
 #ifndef __GNUC__
-void *memmem(const void *haystack, size_t haystack_len,
-                const void *needle, size_t needle_len)
+void *memmem(const void *haystack, rt_size_t haystack_len,
+                const void *needle, rt_size_t needle_len)
 {
   const char *begin = haystack;
   const char *last_possible = begin + haystack_len - needle_len;
@@ -99,7 +99,7 @@ DEVICE_PARAMETERS_TYPEDEF device_parameters = {
   //lock gate alarm time
   30,
   //device id
-  {0x01,0xA1,0x00,0x01,0x01,0x02},
+  {0x01,0xA1,0x00,0x01,0x01,0x01},
   //key0
   {0x31,0x31,0x31,0x31,0x31,0x31,0x31,0x31},
   //key1
@@ -139,20 +139,23 @@ void system_file_operate(DEVICE_PARAMETERS_TYPEDEF *arg,rt_uint8_t flag)
 #ifdef RT_USING_FINSH
 #include <finsh.h>
 
-void sys_file(void)
+void sys_file(rt_uint8_t status)
 {
 	DEVICE_PARAMETERS_TYPEDEF arg;
 	rt_uint8_t i;
-	
-//	system_file_operate(&device_parameters,1);
+
+	if(status == 1)
+	{
+		system_file_operate(&device_parameters,1);
+	}
 	
 	system_file_operate(&arg,0);
 
 	rt_kprintf("/********************************\nbelow is system cur config file content\n\n");
 	for(i =0; i< 10;i++)
 	{
-		rt_kprintf("arg.call_telephone[%d].flag    = %d \n",i,arg.alarm_telephone[i].flag);
-		rt_kprintf("arg.call_telephone[%d].address = %s \n",i,arg.alarm_telephone[i].address);
+		rt_kprintf("arg.alarm_telephone[%d].flag    = %d \n",i,arg.alarm_telephone[i].flag);
+		rt_kprintf("arg.alarm_telephone[%d].address = %s \n",i,arg.alarm_telephone[i].address);
 		if(arg.alarm_telephone[i+1].address[0] == '\0' )
 		{
 			break;

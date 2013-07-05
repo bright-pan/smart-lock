@@ -67,7 +67,7 @@ void alarm_mail_process_thread_entry(void *parameter)
         /* produce mail */
         local_mail_buf.time = alarm_mail_buf.time;
         local_mail_buf.alarm_type = alarm_mail_buf.alarm_type;
-        //rt_mq_send(local_mq, &local_mail_buf, sizeof(LOCAL_MAIL_TYPEDEF));
+        rt_mq_send(local_mq, &local_mail_buf, sizeof(LOCAL_MAIL_TYPEDEF));
       }
     }
     else
