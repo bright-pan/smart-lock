@@ -37,25 +37,45 @@ extern rt_mq_t mq_gsm;
 
 typedef enum
 {
-  AT = 0,// AT
+  AT = 0,//index=0
   AT_CNMI,
   AT_CSCA,
   AT_CMGF,
   AT_CPIN,
-  AT_CSQ,
+  AT_CSQ,//index=5
   AT_CGREG,
   AT_CGATT,
   AT_CIPMODE,
   AT_CSTT,
-  AT_CIICR,
+  AT_CIICR,//index=10
   AT_CIFSR,
   AT_CIPSHUT,
   AT_CIPSTATUS,
   AT_CIPSTART,
-  AT_CMGS,
+  AT_CMGS,//index=15
+  AT_CMGS_SUFFIX,
   ATO,
   PLUS3,
-  AT_CMGS_SUFFIX,
+  AT_CMMSINIT,
+  AT_CMMSTERM,//index=20
+  AT_CMMSCURL,
+  AT_CMMSCID,
+  AT_CMMSPROTO,
+  AT_CMMSSENDCFG,
+  AT_SAPBR_CONTYPE,//index=25
+  AT_SAPBR_APN,
+  AT_SAPBR_OPEN,
+  AT_SAPBR_CLOSE,
+  AT_SAPBR_REQUEST,
+  AT_CMMSEDIT_OPEN,//index=30
+  AT_CMMSEDIT_CLOSE,
+  AT_CMMSDOWN_PIC,
+  AT_CMMSDOWN_TITLE,
+  AT_CMMSDOWN_TXT,
+  AT_CMMSDOWN_DATA,//index=35
+  AT_CMMSRECP,
+  AT_CMMSSEND,
+
 }AT_COMMAND_INDEX_TYPEDEF;
 
 typedef enum
@@ -93,9 +113,41 @@ typedef struct
   uint8_t *buf;
 }GSM_MAIL_CMD_CMGS;
 
+typedef struct
+{
+  uint8_t *buf;
+}GSM_MAIL_CMD_CMMSRECP;
+
+typedef struct
+{
+  uint32_t length;
+}GSM_MAIL_CMD_CMMSDOWN_PIC;
+
+typedef struct
+{
+  uint32_t length;
+}GSM_MAIL_CMD_CMMSDOWN_TITLE;
+
+typedef struct
+{
+  uint32_t length;
+}GSM_MAIL_CMD_CMMSDOWN_TXT;
+
+typedef struct
+{
+  uint32_t length;
+  uint8_t *buf;
+  uint8_t has_complete;
+}GSM_MAIL_CMD_CMMSDOWN_DATA;
+
 typedef union
 {
   GSM_MAIL_CMD_CMGS cmgs;
+  GSM_MAIL_CMD_CMMSRECP cmmsrecp;
+  GSM_MAIL_CMD_CMMSDOWN_PIC cmmsdown_pic;
+  GSM_MAIL_CMD_CMMSDOWN_TITLE cmmsdown_title;
+  GSM_MAIL_CMD_CMMSDOWN_TXT cmmsdown_txt;
+  GSM_MAIL_CMD_CMMSDOWN_DATA cmmsdown_data;
 }GSM_MAIL_CMD_DATA;
 
 typedef struct

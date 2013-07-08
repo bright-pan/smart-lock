@@ -277,4 +277,5 @@ typedef struct
 
 int8_t send_gprs_frame(ALARM_TYPEDEF alarm_type, time_t time, uint8_t order, void* user);
 int8_t recv_gprs_frame(GPRS_RECV_FRAME_TYPEDEF *gprs_recv_frame, uint16_t recv_counts);
+int8_t send_gprs_auth_frame(void);
 #endif

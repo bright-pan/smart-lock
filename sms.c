@@ -352,7 +352,7 @@ void sms_mail_process_thread_entry(void *parameter)
           resend_counts = 0;
           while (resend_counts < 5)
           {
-            //if (sms_pdu_ucs_send(device_parameters.alarm_telephone[alarm_telephone_counts].address, smsc, sms_ucs, sms_ucs_length))
+            if (sms_pdu_ucs_send(device_parameters.alarm_telephone[alarm_telephone_counts].address, smsc, sms_ucs, sms_ucs_length))
             {
               break;
             }
@@ -509,7 +509,7 @@ int8_t sms_pdu_ucs_send(char *dest_address, char *smsc_address, uint16_t *conten
     result = rt_mq_send(mq_gsm, &gsm_mail_buf, sizeof(GSM_MAIL_TYPEDEF));
     if (result == -RT_EFULL)
     {
-      rt_kprintf("sms_mq is full!!!\n");
+      rt_kprintf("mq_gsm is full!!!\n");
       send_result = AT_RESPONSE_ERROR;
     }
     else
@@ -520,7 +520,7 @@ int8_t sms_pdu_ucs_send(char *dest_address, char *smsc_address, uint16_t *conten
   }
   else
   {
-    rt_kprintf("sms_mq is RT_NULL!!!\n");
+    rt_kprintf("mq_gsm is RT_NULL!!!\n");
     send_result = AT_RESPONSE_ERROR;
   }
 

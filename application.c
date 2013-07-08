@@ -187,7 +187,7 @@ int rt_application_init()
   {
     rt_thread_startup(gsm_process_thread);
   }
-  /* gprs heart process thread */
+  /* gprs heart process thread
   gprs_heart_process_thread = rt_thread_create("g_heart",
                                         gprs_heart_process_thread_entry, RT_NULL,
                                         512, 110, 20);
@@ -214,7 +214,7 @@ int rt_application_init()
     rt_thread_startup(sms_mail_process_thread);
   }
   
-  /* mms mail process thread
+  /* mms mail process thread */
   mms_mail_process_thread = rt_thread_create("mms",
                                              mms_mail_process_thread_entry, RT_NULL,
                                              1024, 107, 20);
