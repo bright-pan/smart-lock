@@ -252,6 +252,13 @@ typedef struct
 
 }GPRS_SET_KEY0;
 
+typedef struct 
+{
+	uint8_t	result;
+	uint8_t	resend_num;
+	uint8_t	data[100];
+}GPRS_PIC_RESULT;
+
 typedef union
 {
   GPRS_LIST_TELEPHONE list_telephone;
@@ -262,7 +269,7 @@ typedef union
   GPRS_SET_USER_PARAMETERS set_user_parameters;
   GPRS_SET_TIME set_time;
   GPRS_SET_KEY0 set_key0;
-
+	GPRS_PIC_RESULT pic_send_result;
 }GPRS_RECV_DATA;
 
 typedef struct

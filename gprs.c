@@ -219,6 +219,10 @@ static void get_pic_size(const char* name ,rt_uint32_t *size)
 	{
 		*size = status.st_size;
 	}
+	else
+	{
+		rt_kprintf("get file info fail \n\n");
+	}
 }
 
 void lock_open_process(GPRS_LOCK_OPEN *lock_open,time_t time,rt_uint8_t key[])
@@ -481,8 +485,8 @@ static void get_page_pic_data(int file_id,GPRS_SEND_PIC *pic,rt_uint8_t cur_page
 {		
 	rt_uint32_t				offset = 0;
 
-	offset = pic->cur_page * PIC_PER_PAGE_SIZE;
-	lseek(file_id,offset,SEEK_SET);
+	offset = pic->cur_page * PIC_PER_PAGE_SIZE;		//read data pos
+	lseek(file_id,offset,SEEK_SET);								//file fixed position
 	read(file_id,(void*)(pic->data+5),pic->length-1);
 	*((pic->data)+0) = (rt_uint8_t)((pic->length) >> 8 & 0xff);
 	*((pic->data)+1) = (rt_uint8_t)(pic->length & 0xff);
@@ -490,17 +494,47 @@ static void get_page_pic_data(int file_id,GPRS_SEND_PIC *pic,rt_uint8_t cur_page
 	*((pic->data)+3) = pic->order;
 	*((pic->data)+4) = cur_page;
 }
+
+void send_page_pic_data(int file_id,GPRS_SEND_PIC* pic,rt_uint8_t page,GSM_MAIL_TYPEDEF* gsm_mail)
+{
+	rt_uint32_t	pic_size;
+	
+	get_pic_size(PIC_NAME,&pic_size);
+	if((page+1)*PIC_PER_PAGE_SIZE > pic_size)
+	{
+		pic->length = PIC_PER_PAGE_SIZE+1; //data length include curpage and data
+		gsm_mail->mail_data.gprs.has_response = 0; 	
+	}
+	else
+	{
+		pic->length = pic_size % PIC_PER_PAGE_SIZE+1; //send data length
+		gsm_mail->mail_data.gprs.has_response = 1;			//last page data need recv response
+	}
+	get_page_pic_data(file_id,pic,page);
+	if (mq_gsm != NULL)
+	{
+		rt_mq_send(mq_gsm,gsm_mail, sizeof(GSM_MAIL_TYPEDEF));
+	}
+	else
+	{
+		rt_kprintf("mq_gsm is NUll picture uploading\n");
+	}
+	rt_sem_take(gsm_mail->result_sem, RT_WAITING_FOREVER);
+	if(*(gsm_mail->result) == 1)
+	{
+		rt_kprintf("send picture data ok\n");
+	}
+}
 void send_picture_data(void)
 {
 	extern volatile rt_uint32_t debug_delay1;
 	int 							pic_file_id;			
 	rt_uint8_t				page_sum;
 	rt_err_t					sem_result;
-	rt_int8_t				send_result;
+	rt_int8_t					send_result;
 	rt_uint16_t				recv_counts;
 	rt_uint32_t				pic_size;
 	rt_uint32_t				send_length;
-	rt_uint32_t				offset = 0;
 	GPRS_SEND_PIC			pic_data;
 	GSM_MAIL_TYPEDEF 	gsm_mail_buf;
 	GPRS_RECV_FRAME_TYPEDEF gprs_recv_frame;
@@ -508,18 +542,21 @@ void send_picture_data(void)
 	get_pic_size(PIC_NAME,&pic_size);
 	
 	pic_file_id = open(PIC_NAME,O_RDWR,0);
-	
+
+	if(pic_file_id < 0)
+	{
+		rt_kprintf("file open fail\n");
+	}
 	pic_data.data = rt_malloc(PIC_PER_PAGE_SIZE+5);
 	pic_data.cmd = 0x0f;
-	pic_data.cur_page  = 91;
+	pic_data.cur_page  = 0;
 	pic_data.order = gprs_order;
 	page_sum = pic_size / 512;
 	if((pic_size % 512) != 0)							
 	{
 		page_sum++;
 	}
-	page_sum = 1;
-
+	//page_sum = 1;
 	gsm_mail_buf.result_sem = rt_sem_create("g_pic", 0, RT_IPC_FLAG_FIFO);
 	if(gsm_mail_buf.result_sem == RT_NULL)
 	{
@@ -530,39 +567,25 @@ void send_picture_data(void)
 		if(page_sum > 0)
 		{
 			pic_data.length = PIC_PER_PAGE_SIZE+1; //data length include curpage and data
+			gsm_mail_buf.mail_data.gprs.has_response = 0;
 		}
 		else
 		{
-			pic_data.length = pic_size % PIC_PER_PAGE_SIZE+1; 
+			pic_data.length = pic_size % PIC_PER_PAGE_SIZE+1; //send data length
+			gsm_mail_buf.mail_data.gprs.has_response = 1;			//last page data need recv response
 		}
 		send_length = pic_data.length+4;
-/*
-		offset = pic_data.cur_page * PIC_PER_PAGE_SIZE;
-		lseek(pic_file_id,offset,SEEK_SET);
-		
-		read(pic_file_id,(void*)(pic_data.data+5),pic_data.length-1);
-*/
+
 		get_page_pic_data(pic_file_id,&pic_data,pic_data.cur_page);
-/*
-		*((pic_data.data)+0) = (rt_uint8_t)((pic_data.length) >> 8 & 0xff);
-		*((pic_data.data)+1) = (rt_uint8_t)(pic_data.length & 0xff);
-		*((pic_data.data)+2) = pic_data.cmd;
-		*((pic_data.data)+3) = pic_data.order;
-		*((pic_data.data)+4) = pic_data.cur_page++;
-*/
+
+		pic_data.cur_page++;
+		
 		gsm_put_hex(pic_data.data, send_length);
 		gsm_mail_buf.send_mode = GSM_MODE_GPRS;
 		gsm_mail_buf.result = &send_result;
 		gsm_mail_buf.mail_data.gprs.request = pic_data.data;
 		gsm_mail_buf.mail_data.gprs.request_length = send_length;
-		if(page_sum == 0)
-		{
-			gsm_mail_buf.mail_data.gprs.has_response = 1;
-		}
-		else
-		{
-			gsm_mail_buf.mail_data.gprs.has_response = 0;
-		}
+		
 		if(gsm_mail_buf.mail_data.gprs.has_response == 1)
 		{
 			gsm_mail_buf.mail_data.gprs.response = (uint8_t *)&gprs_recv_frame;
@@ -577,18 +600,32 @@ void send_picture_data(void)
 		{
 			rt_kprintf("mq_gsm is NUll picture uploading\n");
 		}
-		sem_result = rt_sem_take(gsm_mail_buf.result_sem, 500);
+		sem_result = rt_sem_take(gsm_mail_buf.result_sem, RT_WAITING_FOREVER);
 		if(-RT_ETIMEOUT == sem_result)
 		{
 			rt_kprintf("\nresend\n");
+		}
+		if(send_result == 1)
+		{
+			rt_kprintf("send picture data ok\n");
 		}
 		rt_thread_delay(debug_delay1);
 		if(gsm_mail_buf.mail_data.gprs.has_response == 1)						//last frame picture data need recv answer
 		{
 			if (recv_gprs_frame(&gprs_recv_frame, recv_counts) == 1)
 			{
+				rt_uint8_t	cur_page = 0;
+				
 				rt_kprintf("recv data ok\n");
 				send_result = 1;
+				
+				if(gprs_recv_frame.data.pic_send_result.result != 0)		//Resend the packet				
+				{
+					while(cur_page != gprs_recv_frame.data.pic_send_result.result)
+					{
+						//send_page_pic_data(pic_file_id,&pic_data,cur_page++,);
+					}
+				}
 			}
 			else
 			{
@@ -596,7 +633,6 @@ void send_picture_data(void)
 				send_result = -1;
 			}
 		}
-		
 		rt_kprintf("loop_cnt = %d\n",page_sum);
 		rt_memset(pic_data.data,0,PIC_PER_PAGE_SIZE+5);
 	}
@@ -604,149 +640,10 @@ void send_picture_data(void)
 	rt_thread_delay(300);
 	rt_sem_delete(gsm_mail_buf.result_sem);
 	free(pic_data.data);
+	//send_page_pic_data(70);
 	
 }
-/*void send_picture_data(void)
-{
-	extern volatile rt_uint32_t debug_delay1;
-	int 					file_id = 0;
-	rt_uint8_t*		data_head_point = RT_NULL;
-	rt_uint8_t		loop_cnt = 0;
-	rt_uint8_t		page  = 0;
-	rt_uint32_t		send_size = 0;
-	rt_uint32_t 	size = 0;
-	rt_uint32_t		offset = 0;
-	rt_device_t		dev = RT_NULL;
-	GPRS_SEND_PIC pic_data;
-	GSM_MAIL_TYPEDEF gsm_mail_buf;
-	rt_uint8_t		send_result;
-	rt_uint8_t		result;
-	rt_err_t			sem_result;
-	GPRS_RECV_FRAME_TYPEDEF* gprs_recv_frame;
-	rt_uint16_t recv_counts=0;
-	rt_uint8_t		resend_frame_cnt = 0;
 
-	dev = rt_device_find(DEVICE_NAME_GSM_USART);
-	if(dev == RT_NULL)
-	{
-		return ;
-	}
-	
-	data_head_point = pic_data.data = rt_malloc(PIC_PER_PAGE_SIZE+5);
-
-	rt_memset(pic_data.data,0,PIC_PER_PAGE_SIZE+5);
-	
-	get_pic_size(PIC_NAME,&size);
-
-	loop_cnt = (size / PIC_PER_PAGE_SIZE)+1;
-	
-	rt_kprintf("size = %d",size);
-									
-	pic_data.cmd = 0x0f;
-	pic_data.cur_page  = 0;
-	file_id = open(PIC_NAME,O_RDWR,0);
-	pic_data.order = gprs_order;
-	gsm_mail_buf.result_sem = rt_sem_create("g_pic", 0, RT_IPC_FLAG_FIFO);
-	if(gsm_mail_buf.result_sem == RT_NULL)
-	{
-		return ;
-	}
-	rt_thread_delay(300);
-	while(loop_cnt != 0)
-	{
-		loop_cnt--;
-		resend_frame_cnt = 0;								//retransmission fail number
-		if(loop_cnt > 250)//error value
-		{
-			break;
-		}
-		if(loop_cnt > 0)
-		{
-			size -= PIC_PER_PAGE_SIZE;
-			pic_data.length = PIC_PER_PAGE_SIZE+1;
-			offset = page*PIC_PER_PAGE_SIZE;
-			page++;
-		}
-		else if(loop_cnt == 0)
-		{
-			pic_data.length = size % PIC_PER_PAGE_SIZE+1; 
-		}
-		rt_kprintf("offset = %d\n",offset);
-
-		lseek(file_id,offset,SEEK_SET);
-		
-		offset = page*PIC_PER_PAGE_SIZE;
-		
-		read(file_id,(void*)(pic_data.data+5),pic_data.length-1);
-
-		send_size = pic_data.length+4;
-		
-		*((pic_data.data)+0) = (rt_uint8_t)((pic_data.length) >> 8 & 0xff);
-		*((pic_data.data)+1) = (rt_uint8_t)(pic_data.length & 0xff);
-		*((pic_data.data)+2) = pic_data.cmd;
-		*((pic_data.data)+3) = pic_data.order;
-		*((pic_data.data)+4) = pic_data.cur_page;
-		pic_data.cur_page++;
-		
-		gsm_put_hex(pic_data.data, send_size);
-chongxing:
-		gsm_mail_buf.send_mode = GSM_MODE_GPRS;
-		gsm_mail_buf.result = &send_result;
-		gsm_mail_buf.mail_data.gprs.request = pic_data.data;
-		gsm_mail_buf.mail_data.gprs.request_length = send_size;
-		if(loop_cnt == 0)
-		{
-			gsm_mail_buf.mail_data.gprs.has_response = 1;
-		}
-		else
-		{
-			gsm_mail_buf.mail_data.gprs.has_response = 0;
-		}
-		if(gsm_mail_buf.mail_data.gprs.has_response == 1)
-		{
-			gprs_recv_frame = (GPRS_RECV_FRAME_TYPEDEF *)rt_malloc(sizeof(GPRS_RECV_FRAME_TYPEDEF));
-			memset(gprs_recv_frame, 0, sizeof(GPRS_RECV_FRAME_TYPEDEF));
-	
-			gsm_mail_buf.mail_data.gprs.response = (uint8_t *)gprs_recv_frame;
-			gsm_mail_buf.mail_data.gprs.response_length = &recv_counts;
-		}
-		rt_kprintf("send_size = %d\n",send_size);
-		if (mq_gsm != NULL)
-		{
-			result = rt_mq_send(mq_gsm, &gsm_mail_buf, sizeof(GSM_MAIL_TYPEDEF));
-		}
-		else
-		{
-			rt_kprintf("mq_gsm is NUll picture uploading\n");
-		}
-		sem_result = rt_sem_take(gsm_mail_buf.result_sem, 500);
-		if(-RT_ETIMEOUT == sem_result)
-		{
-			
-			rt_kprintf("\nresend\n");
-			goto chongxing;
-		}
-		if(gsm_mail_buf.mail_data.gprs.has_response == 1)						//last frame picture data need recv answer
-		{
-			if (recv_gprs_frame(gprs_recv_frame, recv_counts) == 1)
-			{
-				rt_kprintf("recv data ok\n");
-			}
-			else
-			{
-				rt_kprintf("recv data fail\n");
-			}
-		}
-		rt_thread_delay(debug_delay1);
-		rt_kprintf("loop_cnt = %d\n",loop_cnt);
-		rt_memset(pic_data.data,0,PIC_PER_PAGE_SIZE+5);
-	}
-	close(file_id);
-	rt_thread_delay(300);
-	rt_sem_delete(gsm_mail_buf.result_sem);
-	free(data_head_point);
-}
-*/
 int8_t send_gprs_frame(ALARM_TYPEDEF alarm_type, time_t time, uint8_t order, void* user)
 {
   uint8_t *process_buf = RT_NULL;
@@ -1646,7 +1543,14 @@ int8_t recv_gprs_frame(GPRS_RECV_FRAME_TYPEDEF *gprs_recv_frame, uint16_t recv_c
     }
     case 0x8f:
     {
+    	rt_uint8_t i;
 			rt_kprintf("picture send data recv respond \n");
+			rt_kprintf("%d\n",gprs_recv_frame->data.pic_send_result.resend_num);
+			for(i = 0; i < 100;i++)
+			{
+				rt_kprintf("%x",gprs_recv_frame->data.pic_send_result.data[i]);
+			}
+			break;
     }
     default : {
       if (recv_counts == 4 &&
