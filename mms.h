@@ -15,7 +15,15 @@
 #ifndef _MMS_H_
 #define _MMS_H_
 
+#include "rtthread.h"
+#include "rtdevice.h"
+
 #include "alarm.h"
+#include <dfs_init.h>
+#include <dfs_elm.h>
+#include <dfs_fs.h>
+#include "dfs_posix.h"
+
 
 #define MMS_MAIL_MAX_MSGS 20
 

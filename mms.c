@@ -16,102 +16,132 @@
 #include "gsm.h"
 #include <string.h>
 #include "untils.h"
-#include "mms_dev.h"
-#include "testprintf.h"
 #include "gprs.h"
 
 #define MMS_RESEND_NUM 3
 
-static const char  title[] ={0xfe,0xff,0x60,0xA6,0x5F,0xB7,0x66,0x7A,0x80,0xFD}; //智能悦德
-static const char  text[] ={0xfe,0xff,0x5F,0x53,0x52,0x4D,0x64,0x44,0x50,0xCF,0x59,0x34,0x60,0xC5,0x51,0xB5}; //"彩信ok
+static const char  mms_title[] ={0xfe,0xff,0x60,0xA6,0x5F,0xB7,0x66,0x7A,0x80,0xFD}; //智能悦德
+static const char  mms_text[] ={0xfe,0xff,0x5F,0x53,0x52,0x4D,0x64,0x44,0x50,0xCF,0x59,0x34,0x60,0xC5,0x51,0xB5}; //"彩信ok
 
 rt_mq_t mms_mq;
 
-void mms_telephone_init(mms_dev_t mms)
+int8_t send_mms(char *pic_name)
 {
-  rt_uint8_t telephone_num;
-	
-  telephone_num = TELEPHONE_NUMBERS;
-  mms->number = 0;
-  while (telephone_num--)
-  {
-    if (device_parameters.alarm_telephone[telephone_num].flag)
-    {
-      mms->mobile_no[mms->number] = (rt_uint8_t *)device_parameters.alarm_telephone[telephone_num].address;//copy telephon
-      if(mms->number >= MOBILE_NO_NUM)	//	Array Bounds Write
-      {
-        rt_kprintf("★Telephone number copy Serious Problems !!!\n");
-        break;
-      }
-      mms->number++;
-    }
-  }
-  mms->mobile_no[mms->number] = RT_NULL;
-}
-void mms_picture_file_init(mms_dev_t mms)
-{
-  mms->pic_name[0] = "/2.jpg";	//send picture path
-// 	mms->pic_name[1] = "/2.jpg";
-  mms->pic_name[1] = RT_NULL;
-
-  mms_get_send_file_size(mms,0);//get picture size
-//	mms_get_send_file_size(mms,1);
-	
-}
-void mms_data_init(mms_dev_t mms)
-{
-  rt_device_t dev = RT_NULL;
-	
-
-  dev = rt_device_find(MMS_USART_DEVICE_NAME);
-	
-  if(RT_NULL != dev)
-  {
-    mms->usart = dev;
-    rt_kprintf("mms set usart ok\n");
-  }
-  else
-  {
-    mms->usart = RT_NULL;
-  }
-	
-  mms->error = MMS_ERROR_OK;						
-  mms_error_record_init(mms);						//error record clear
-
-  mms_telephone_init(mms);							//init telephone relevant data
-
-  mms_picture_file_init(mms);
-
-	
-  mms->title.size = sizeof(title);
-  mms->title.string = title;
-
-  mms->text.size = sizeof(text);
-  mms->text.string = text;
-
-  mms_info(mms);
-}
-
-
-int8_t send_mms(void)
-{
+  struct stat status;
+  int file_id;
   int8_t result = -1;
+  uint32_t read_size = 0;
+  uint8_t *process_buf = (uint8_t *)rt_malloc(512);
+  
+  if (stat(pic_name,&status))
+  {
+    rt_kprintf("\nsend mms but get picture size is error!!!\n");
+    return result;
+  }
+  
   // mms initial
   if ((send_cmd_mail(AT_CMMSINIT, 50, "", 0, 0) == AT_RESPONSE_OK) &&
       (send_cmd_mail(AT_CMMSCURL, 50, "", 0, 0) == AT_RESPONSE_OK) &&
       (send_cmd_mail(AT_CMMSCID, 50, "", 0, 0) == AT_RESPONSE_OK) &&
       (send_cmd_mail(AT_CMMSPROTO, 50, "", 0, 0) == AT_RESPONSE_OK) &&
-      (send_cmd_mail(AT_CMMSSENDCFG, 50, "", 0, 0) == AT_RESPONSE_OK) &&
-      (send_cmd_mail(AT_SAPBR_CONTYPE, 50, "", 0, 0) == AT_RESPONSE_OK) &&
-      (send_cmd_mail(AT_SAPBR_APN, 50, "", 0, 0) == AT_RESPONSE_OK) &&
-      (send_cmd_mail(AT_SAPBR_OPEN, 50, "", 0, 0) == AT_RESPONSE_OK))
+      (send_cmd_mail(AT_CMMSSENDCFG, 50, "", 0, 0) == AT_RESPONSE_OK))
   {
-    
+    //active bearer profile
+    if ((send_cmd_mail(AT_SAPBR_CONTYPE, 50, "", 0, 0) == AT_RESPONSE_OK) &&
+        (send_cmd_mail(AT_SAPBR_APN, 50, "", 0, 0) == AT_RESPONSE_OK) &&
+        (send_cmd_mail(AT_SAPBR_OPEN, 50, "", 0, 0) == AT_RESPONSE_OK) &&
+        (send_cmd_mail(AT_SAPBR_REQUEST, 50, "", 0, 0) == AT_RESPONSE_OK))
+    {
+      //send mms
+      //open mms edit
+      if (send_cmd_mail(AT_CMMSEDIT_OPEN, 50, "", 0, 0) == AT_RESPONSE_OK)
+      {
+        if (send_cmd_mail(AT_CMMSDOWN_TITLE, 50, "", sizeof(mms_title),0) == AT_RESPONSE_CONNECT_OK)
+        {
+          if(send_cmd_mail(AT_CMMSDOWN_DATA, 50, mms_title, sizeof(mms_title),1) == AT_RESPONSE_OK)
+          {
+            if (send_cmd_mail(AT_CMMSDOWN_TEXT, 50, "", sizeof(mms_text),0) == AT_RESPONSE_CONNECT_OK)
+            {
+              if (send_cmd_mail(AT_CMMSDOWN_DATA, 50, mms_text, sizeof(mms_text),1) == AT_RESPONSE_OK)
+              {
+                if (send_cmd_mail(AT_CMMSDOWN_PIC, 50, "", status.st_size,0) == AT_RESPONSE_CONNECT_OK)
+                {
+                  extern rt_mutex_t pic_file_mutex;
+                  rt_mutex_take(pic_file_mutex,RT_WAITING_FOREVER);
+
+                  file_id = open(pic_name,O_RDONLY,0);
+
+                  if (file_id < 0)
+                  {
+                    rt_kprintf("\nopen picture error!!!\n");
+                    rt_mutex_release(pic_file_mutex);
+                    goto process_result;
+                  }
+                  do {
+
+                    memset(process_buf,0,512);
+                    if (status.st_size > 512)
+                    {
+                      read_size = read(file_id,process_buf,512);
+                    }
+                    else
+                    {
+                      read_size = read(file_id,process_buf,status.st_size);
+                    }
+
+                    status.st_size -= read_size;
+
+                    if (status.st_size > 0)
+                    {
+                      send_cmd_mail(AT_CMMSDOWN_DATA, 50, process_buf, read_size, 0);
+                    }
+                    else
+                    {
+                      if (send_cmd_mail(AT_CMMSDOWN_DATA, 50, process_buf, read_size, 1) == AT_RESPONSE_OK)
+                      {
+                        result = 1;
+                      }
+                    }
+
+                  }while (status.st_size > 0);
+
+                  if(close(file_id))
+                  {
+                    rt_kprintf("close file error\n");
+                  }
+
+                  rt_mutex_release(pic_file_mutex);
+                }
+
+                if ((send_cmd_mail(AT_CMMSRECP, 50, "21255274@qq.com", 0,0) == AT_RESPONSE_OK) &&
+                    (send_cmd_mail(AT_CMMSRECP, 50, "13544033975", 0,0) == AT_RESPONSE_OK))
+                {
+                  if (send_cmd_mail(AT_CMMSSEND, 50, "", 0,0) == AT_RESPONSE_OK)
+                  {
+                  
+                  }
+                }
+              }
+            }
+          }
+        }
+
+        /*        
+
+        {
+          
+        }
+        */
+      }
+    }
   }
-  else
-  {
-    result = -1;
-  }
+process_result:
+  send_cmd_mail(AT_CMMSEDIT_CLOSE, 50, "", 0, 0);
+  send_cmd_mail(AT_SAPBR_CLOSE, 50, "", 0, 0);
+  send_cmd_mail(AT_CMMSTERM, 50, "", 0, 0);
+
+  rt_free(process_buf);
+  return result;
 }
 
 void mms_mail_process_thread_entry(void *parameter)
@@ -132,7 +162,7 @@ void mms_mail_process_thread_entry(void *parameter)
     if (result == RT_EOK)
     {
       rt_kprintf("receive mms mail < time: %d alarm_type: %d >\n", mms_mail_buf->time, mms_mail_buf->alarm_type);
-      send_mms();
+      send_mms("/1.jpg");
     }
     else
     {

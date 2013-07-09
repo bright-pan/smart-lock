@@ -55,7 +55,7 @@ void at_command_map_init(void)
   at_command_map[AT_CMMSPROTO] = "AT+CMMSPROTO=\"10.0.0.172\",80\r";
   at_command_map[AT_CMMSSENDCFG] = "AT+CMMSSENDCFG=6,3,0,0,2,4\r";
   at_command_map[AT_SAPBR_CONTYPE] = "AT+SAPBR=3,1,\"Contype\",\"GPRS\"\r";
-  at_command_map[AT_SAPBR_APN] = "AT+SAPBR=3,1,\"APN\",\"CMNET\"\r";
+  at_command_map[AT_SAPBR_APN] = "AT+SAPBR=3,1,\"APN\",\"CMWAP\"\r";
   at_command_map[AT_SAPBR_OPEN] = "AT+SAPBR=1,1\r";
   at_command_map[AT_SAPBR_CLOSE] = "AT+SAPBR=0,1\r";
   at_command_map[AT_SAPBR_REQUEST] = "AT+SAPBR=2,1\r";
@@ -63,7 +63,7 @@ void at_command_map_init(void)
   at_command_map[AT_CMMSEDIT_CLOSE] = "AT+CMMSEDIT=0\r";
   at_command_map[AT_CMMSDOWN_PIC] = "AT+CMMSDOWN=\"PIC\",%d,50000\r";
   at_command_map[AT_CMMSDOWN_TITLE] = "AT+CMMSDOWN=\"TITLE\",%d,50000\r";
-  at_command_map[AT_CMMSDOWN_TXT] = "AT+CMMSDOWN=\"TXT\",%d,50000\r";
+  at_command_map[AT_CMMSDOWN_TEXT] = "AT+CMMSDOWN=\"TEXT\",%d,50000\r";
   at_command_map[AT_CMMSRECP] = "AT+CMMSRECP=\"%s\"\r";
   at_command_map[AT_CMMSSEND] = "AT+CMMSSEND\r";
 }
@@ -332,6 +332,25 @@ int8_t at_response_process(AT_COMMAND_INDEX_TYPEDEF index, uint8_t *buf)
               gsm_put_hex(process_buf, strlen((char *)process_buf));
               if (strstr((char *)process_buf, "OK"))
               {
+                result = AT_RESPONSE_OK;
+              }
+            }
+            goto complete;
+          }
+          break;
+        };
+        case AT_CMMSRECP : {
+
+          if (strstr((char *)process_buf, (char *)buf))
+          {
+            memset(process_buf, 0, 512);
+            recv_counts = gsm_recv_frame(process_buf);
+            if (recv_counts)
+            {
+              gsm_put_char(process_buf, strlen((char *)process_buf));
+              gsm_put_hex(process_buf, strlen((char *)process_buf));
+              if (strstr((char *)process_buf, "OK"))
+              {
             
                 result = AT_RESPONSE_OK;
               }
@@ -344,23 +363,23 @@ int8_t at_response_process(AT_COMMAND_INDEX_TYPEDEF index, uint8_t *buf)
 
           if (strstr((char *)process_buf, at_command_map[index]))
           {
-              delay_counts = 0;
-              while (delay_counts++ < 10)
+            delay_counts = 0;
+            while (delay_counts++ < 10)
+            {
+              rt_thread_delay(200);
+              memset(process_buf, 0, 512);
+              recv_counts = gsm_recv_frame(process_buf);
+              if (recv_counts)
               {
-                rt_thread_delay(200);
-                memset(process_buf, 0, 512);
-                recv_counts = gsm_recv_frame(process_buf);
-                if (recv_counts)
+                gsm_put_char(process_buf, strlen((char *)process_buf));
+                gsm_put_hex(process_buf, strlen((char *)process_buf));
+                if (strstr((char *)process_buf, "OK"))
                 {
-                  gsm_put_char(process_buf, strlen((char *)process_buf));
-                  gsm_put_hex(process_buf, strlen((char *)process_buf));
-                  if (strstr((char *)process_buf, "OK"))
-                  {
-                    result = AT_RESPONSE_OK;
-                  }
-                  break;
+                  result = AT_RESPONSE_OK;
                 }
+                break;
               }
+            }
             goto complete;
           }
           break;
@@ -369,16 +388,21 @@ int8_t at_response_process(AT_COMMAND_INDEX_TYPEDEF index, uint8_t *buf)
 
           if (strstr((char *)process_buf, at_command_map[index]))
           {
-            memset(process_buf, 0, 512);
-            recv_counts = gsm_recv_frame(process_buf);
-            if (recv_counts)
+            delay_counts = 0;
+            while (delay_counts++ < 50)
             {
-              gsm_put_char(process_buf, strlen((char *)process_buf));
-              gsm_put_hex(process_buf, strlen((char *)process_buf));
-              if (strstr((char *)process_buf, "OK"))
+              rt_thread_delay(200);
+              memset(process_buf, 0, 512);
+              recv_counts = gsm_recv_frame(process_buf);
+              if (recv_counts)
               {
-            
-                result = AT_RESPONSE_OK;
+                gsm_put_char(process_buf, strlen((char *)process_buf));
+                gsm_put_hex(process_buf, strlen((char *)process_buf));
+                if (strstr((char *)process_buf, "OK"))
+                {
+                  result = AT_RESPONSE_OK;
+                }
+                break;
               }
             }
             goto complete;
@@ -620,7 +644,7 @@ int8_t at_response_process(AT_COMMAND_INDEX_TYPEDEF index, uint8_t *buf)
         };
         case AT_CMMSDOWN_PIC :
         case AT_CMMSDOWN_TITLE :
-        case AT_CMMSDOWN_TXT : {
+        case AT_CMMSDOWN_TEXT : {
 
           if (strstr((char *)process_buf, (char *)buf))
           {
@@ -632,7 +656,7 @@ int8_t at_response_process(AT_COMMAND_INDEX_TYPEDEF index, uint8_t *buf)
               gsm_put_hex(process_buf, strlen((char *)process_buf));
               if (strstr((char *)process_buf, "CONNECT"))
               {
-                result = AT_RESPONSE_OK;
+                result = AT_RESPONSE_CONNECT_OK;
               }
             }
             goto complete;
@@ -760,7 +784,7 @@ int8_t gsm_command(AT_COMMAND_INDEX_TYPEDEF index, uint16_t delay, GSM_MAIL_CMD 
 
       break;
     };
-    case AT_CMMSDOWN_TXT:{
+    case AT_CMMSDOWN_TEXT:{
 
       memset(process_buf, 0, 512);
       rt_sprintf((char *)process_buf,
@@ -1133,7 +1157,7 @@ AT_RESPONSE_TYPEDEF send_cmd_mail(AT_COMMAND_INDEX_TYPEDEF command_index, uint16
       gsm_mail_buf.mail_data.cmd.cmd_data.cmmsdown_title.length = length;
       break;
     };
-    case AT_CMMSDOWN_TXT : {
+    case AT_CMMSDOWN_TEXT : {
       gsm_mail_buf.mail_data.cmd.cmd_data.cmmsdown_txt.length = length;
       break;
     };
