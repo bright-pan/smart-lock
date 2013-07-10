@@ -30,11 +30,6 @@ typedef enum {
   GSM_SMS_SEND_FAILURE,
 }GsmStatus;
 
-extern rt_mutex_t mutex_gsm_mode;
-extern rt_event_t event_gsm_mode_request;
-extern rt_event_t event_gsm_mode_response;
-extern rt_mq_t mq_gsm;
-
 typedef enum
 {
   AT = 0,//index=0
@@ -200,5 +195,7 @@ void gsm_put_hex(const uint8_t *str, uint16_t length);
 AT_RESPONSE_TYPEDEF send_cmd_mail(AT_COMMAND_INDEX_TYPEDEF command_index, uint16_t delay, uint8_t *buf, uint32_t length, uint8_t has_complete);
 
 extern char smsc[20];
+extern rt_mq_t mq_gsm;
+extern rt_mutex_t mutex_gsm_mail_sequence;
 
 #endif

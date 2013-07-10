@@ -161,6 +161,7 @@ void mms_mail_process_thread_entry(void *parameter)
     if (result == RT_EOK)
     {
       rt_kprintf("\nreceive mms mail < time: %d alarm_type: %d >\n", mms_mail_buf.time, mms_mail_buf.alarm_type);
+      rt_mutex_take(mutex_gsm_mail_sequence,RT_WAITING_FOREVER);
       if (!send_mms(mms_mail_buf.pic_name))
       {
         rt_kprintf("\nsend mms success!!!\n");
@@ -169,6 +170,7 @@ void mms_mail_process_thread_entry(void *parameter)
       {
         rt_kprintf("\nsend mms failure!!!\n");
       }
+      rt_mutex_release(mutex_gsm_mail_sequence);
     }
     else
     {

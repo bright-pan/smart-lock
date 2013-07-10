@@ -100,11 +100,13 @@ void gprs_mail_process_thread_entry(void *parameter)
     {
       rt_kprintf("receive gprs mail < time: %d alarm_type: %d >\n", gprs_mail_buf.time, gprs_mail_buf.alarm_type);
       //send gprs data
+      rt_mutex_take(mutex_gsm_mail_sequence,RT_WAITING_FOREVER);
       if(gprs_mail_buf.alarm_type == ALARM_TYPE_GPRS_SEND_PIC_DATA)
       {
       	extern void send_picture_data(void);
       	
       	send_picture_data();
+        rt_mutex_release(mutex_gsm_mail_sequence);
 				continue;
       }
       if (send_gprs_frame(gprs_mail_buf.alarm_type, gprs_mail_buf.time, gprs_mail_buf.order, RT_NULL) == 1)
@@ -122,6 +124,7 @@ void gprs_mail_process_thread_entry(void *parameter)
           error_counts = 0;
         }
       }
+      rt_mutex_release(mutex_gsm_mail_sequence);
     }
     else
     {

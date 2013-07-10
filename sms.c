@@ -298,7 +298,7 @@ void sms_mail_process_thread_entry(void *parameter)
   const uint16_t *temp_ucs;
   uint16_t temp_ucs_length;
   SMS_MAIL_TYPEDEF sms_mail_buf;
-
+  int8_t send_result;
   sms_data_init(sms_data);
 
   while (1)
@@ -347,7 +347,10 @@ void sms_mail_process_thread_entry(void *parameter)
           resend_counts = 0;
           while (resend_counts < 5)
           {
-            if (sms_pdu_ucs_send(device_parameters.alarm_telephone[alarm_telephone_counts].address, smsc, sms_ucs, sms_ucs_length))
+            rt_mutex_take(mutex_gsm_mail_sequence,RT_WAITING_FOREVER);
+            send_result = sms_pdu_ucs_send(device_parameters.alarm_telephone[alarm_telephone_counts].address, smsc, sms_ucs, sms_ucs_length);
+            rt_mutex_release(mutex_gsm_mail_sequence);
+            if (send_result)
             {
               break;
             }

@@ -193,7 +193,7 @@ int rt_application_init()
   gprs_mq = rt_mq_create("gprs", sizeof(GPRS_MAIL_TYPEDEF),
                          GPRS_MAIL_MAX_MSGS,
                          RT_IPC_FLAG_FIFO);
-
+  mutex_gsm_mail_sequence = rt_mutex_create("mt_gms", RT_IPC_FLAG_FIFO);
   /* gsm process thread */
   gsm_process_thread = rt_thread_create("gsm",
                                         gsm_process_thread_entry, RT_NULL,

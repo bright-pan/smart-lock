@@ -22,7 +22,8 @@
 
 #define GSM_MAIL_MAX_MSGS 20
 
-rt_mq_t mq_gsm;
+rt_mq_t mq_gsm = RT_NULL;
+rt_mutex_t mutex_gsm_mail_sequence;
 char smsc[20] = {0,};
 
 const char *at_command_map[50];
@@ -308,7 +309,6 @@ int8_t at_response_process(AT_COMMAND_INDEX_TYPEDEF index, uint8_t *buf)
         case AT_CPIN :
         case AT_CIPMODE:
         case AT_CSTT :
-        case AT_CIICR :
         case AT_CIPSHUT :
         case AT_CMMSINIT :
         case AT_CMMSTERM :
@@ -353,6 +353,31 @@ int8_t at_response_process(AT_COMMAND_INDEX_TYPEDEF index, uint8_t *buf)
               {
             
                 result = AT_RESPONSE_OK;
+              }
+            }
+            goto complete;
+          }
+          break;
+        };
+        case AT_CIICR : {
+
+          if (strstr((char *)process_buf, at_command_map[index]))
+          {
+            delay_counts = 0;
+            while (delay_counts++ < 10)
+            {
+              rt_thread_delay(200);
+              memset(process_buf, 0, 512);
+              recv_counts = gsm_recv_frame(process_buf);
+              if (recv_counts)
+              {
+                gsm_put_char(process_buf, strlen((char *)process_buf));
+                gsm_put_hex(process_buf, strlen((char *)process_buf));
+                if (strstr((char *)process_buf, "OK"))
+                {
+                  result = AT_RESPONSE_OK;
+                }
+                break;
               }
             }
             goto complete;
