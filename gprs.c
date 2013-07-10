@@ -39,7 +39,8 @@
 #define FAULT_ALARM_POWER_FAULT (1 << 2)
 #define FAULT_ALARM_MOTOR_FAULT (1 << 6)
 
-rt_mq_t gprs_mq;
+rt_mq_t gprs_mq = RT_NULL;
+
 static uint8_t gprs_order = 0;
 static uint16_t work_alarm_type_map[50] = {0, };
 static uint16_t fault_alarm_type_map[50] = {0, };
@@ -88,10 +89,7 @@ void gprs_mail_process_thread_entry(void *parameter)
   create_k1();
   work_alarm_type_map_init();
   fault_alarm_type_map_init();
-  /* initial msg queue */
-  gprs_mq = rt_mq_create("gprs", sizeof(GPRS_MAIL_TYPEDEF),
-                         GPRS_MAIL_MAX_MSGS,
-                         RT_IPC_FLAG_FIFO);
+
   while (1)
   {
     /* process mail */

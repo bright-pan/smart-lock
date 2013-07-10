@@ -20,7 +20,7 @@
 #include <stdio.h>
 #include "untils.h"
 
-rt_mq_t sms_mq;
+rt_mq_t sms_mq = RT_NULL;
 
 /*
 智能锁自动断电，将自动启动电池供电
@@ -298,11 +298,6 @@ void sms_mail_process_thread_entry(void *parameter)
   const uint16_t *temp_ucs;
   uint16_t temp_ucs_length;
   SMS_MAIL_TYPEDEF sms_mail_buf;
-
-  /* initial msg queue */
-  sms_mq = rt_mq_create("sms", sizeof(SMS_MAIL_TYPEDEF),
-                        SMS_MAIL_MAX_MSGS,
-                        RT_IPC_FLAG_FIFO);
 
   sms_data_init(sms_data);
 

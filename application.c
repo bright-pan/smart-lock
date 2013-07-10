@@ -159,13 +159,12 @@ void rt_init_thread_entry(void* parameter)
 
 }
 
-
 static void logo_led_timeout(void *parameters)
 {
   gpio_pin_output(DEVICE_NAME_LOGO_LED, 0);
   rt_timer_stop(logo_led_timer);
  // rt_timer_delete(logo_led_timer);
-}      
+}
 
 int rt_application_init()
 {
@@ -177,6 +176,23 @@ int rt_application_init()
   rt_thread_t local_mail_process_thread;
   rt_thread_t gsm_process_thread;
   rt_thread_t battery_check_process_thread;
+
+  /* initial alarm msg queue */
+  alarm_mq = rt_mq_create("alarm", sizeof(ALARM_MAIL_TYPEDEF),
+                          ALARM_MAIL_MAX_MSGS,
+                          RT_IPC_FLAG_FIFO);
+  /* initial sms msg queue */
+  sms_mq = rt_mq_create("sms", sizeof(SMS_MAIL_TYPEDEF),
+                        SMS_MAIL_MAX_MSGS,
+                        RT_IPC_FLAG_FIFO);
+  /* initial mms msg queue */
+  mms_mq = rt_mq_create("mms", sizeof(MMS_MAIL_TYPEDEF),
+                        MMS_MAIL_MAX_MSGS,
+                        RT_IPC_FLAG_FIFO);
+  /* initial gprs msg queue */
+  gprs_mq = rt_mq_create("gprs", sizeof(GPRS_MAIL_TYPEDEF),
+                         GPRS_MAIL_MAX_MSGS,
+                         RT_IPC_FLAG_FIFO);
 
   /* gsm process thread */
   gsm_process_thread = rt_thread_create("gsm",

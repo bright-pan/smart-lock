@@ -20,7 +20,7 @@
 #include <locale.h>
 #include <stdlib.h>
 
-rt_mq_t alarm_mq;
+rt_mq_t alarm_mq = RT_NULL;
 //char s[512];
 void alarm_mail_process_thread_entry(void *parameter)
 {
@@ -30,8 +30,6 @@ void alarm_mail_process_thread_entry(void *parameter)
   GPRS_MAIL_TYPEDEF gprs_mail_buf;
   LOCAL_MAIL_TYPEDEF local_mail_buf;
   MMS_MAIL_TYPEDEF mms_mail_buf;
-  /* initial alarm msg queue */
-  alarm_mq = rt_mq_create("alarm", sizeof(ALARM_MAIL_TYPEDEF), ALARM_MAIL_MAX_MSGS, RT_IPC_FLAG_FIFO);
   
   while (1)
   {

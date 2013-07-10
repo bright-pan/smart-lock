@@ -23,7 +23,7 @@
 static const char  mms_title[] ={0xfe,0xff,0x60,0xA6,0x5F,0xB7,0x66,0x7A,0x80,0xFD}; //ÖÇÄÜÔÃµÂ
 static const char  mms_text[] ={0xfe,0xff,0x5F,0x53,0x52,0x4D,0x64,0x44,0x50,0xCF,0x59,0x34,0x60,0xC5,0x51,0xB5}; //"²ÊÐÅok
 
-rt_mq_t mms_mq;
+rt_mq_t mms_mq = RT_NULL;
 
 int8_t send_mms(char *pic_name)
 {
@@ -151,10 +151,7 @@ void mms_mail_process_thread_entry(void *parameter)
   rt_err_t result;
   /* malloc a buff for process mail */
   MMS_MAIL_TYPEDEF mms_mail_buf;
-  /* initial msg queue */
-  mms_mq = rt_mq_create("mms", sizeof(MMS_MAIL_TYPEDEF),
-                        MMS_MAIL_MAX_MSGS,
-                        RT_IPC_FLAG_FIFO);
+
   while (1)
   {
     /* process mail */
