@@ -32,7 +32,7 @@ int8_t send_mms(char *pic_name)
   int8_t result = -1;
   uint32_t read_size = 0;
   uint8_t *process_buf = (uint8_t *)rt_malloc(512);
-  
+  uint8_t alarm_telephone_counts;
   if (stat(pic_name,&status))
   {
     rt_kprintf("\nsend mms but get picture size is error!!!\n");
@@ -40,31 +40,31 @@ int8_t send_mms(char *pic_name)
   }
   
   // mms initial
-  if ((send_cmd_mail(AT_CMMSINIT, 50, "", 0, 0) == AT_RESPONSE_OK) &&
-      (send_cmd_mail(AT_CMMSCURL, 50, "", 0, 0) == AT_RESPONSE_OK) &&
-      (send_cmd_mail(AT_CMMSCID, 50, "", 0, 0) == AT_RESPONSE_OK) &&
-      (send_cmd_mail(AT_CMMSPROTO, 50, "", 0, 0) == AT_RESPONSE_OK) &&
-      (send_cmd_mail(AT_CMMSSENDCFG, 50, "", 0, 0) == AT_RESPONSE_OK))
+  if ((send_cmd_mail(AT_CMMSINIT, 50, (uint8_t *)"", 0, 0) == AT_RESPONSE_OK) &&
+      (send_cmd_mail(AT_CMMSCURL, 50, (uint8_t *)"", 0, 0) == AT_RESPONSE_OK) &&
+      (send_cmd_mail(AT_CMMSCID, 50, (uint8_t *)"", 0, 0) == AT_RESPONSE_OK) &&
+      (send_cmd_mail(AT_CMMSPROTO, 50, (uint8_t *)"", 0, 0) == AT_RESPONSE_OK) &&
+      (send_cmd_mail(AT_CMMSSENDCFG, 50, (uint8_t *)"", 0, 0) == AT_RESPONSE_OK))
   {
     //active bearer profile
-    if ((send_cmd_mail(AT_SAPBR_CONTYPE, 50, "", 0, 0) == AT_RESPONSE_OK) &&
-        (send_cmd_mail(AT_SAPBR_APN, 50, "", 0, 0) == AT_RESPONSE_OK) &&
-        (send_cmd_mail(AT_SAPBR_OPEN, 50, "", 0, 0) == AT_RESPONSE_OK) &&
-        (send_cmd_mail(AT_SAPBR_REQUEST, 50, "", 0, 0) == AT_RESPONSE_OK))
+    if ((send_cmd_mail(AT_SAPBR_CONTYPE, 50, (uint8_t *)"", 0, 0) == AT_RESPONSE_OK) &&
+        (send_cmd_mail(AT_SAPBR_APN, 50, (uint8_t *)"", 0, 0) == AT_RESPONSE_OK) &&
+        (send_cmd_mail(AT_SAPBR_OPEN, 50, (uint8_t *)"", 0, 0) == AT_RESPONSE_OK) &&
+        (send_cmd_mail(AT_SAPBR_REQUEST, 50, (uint8_t *)"", 0, 0) == AT_RESPONSE_OK))
     {
       //send mms
       //open mms edit
-      if (send_cmd_mail(AT_CMMSEDIT_OPEN, 50, "", 0, 0) == AT_RESPONSE_OK)
+      if (send_cmd_mail(AT_CMMSEDIT_OPEN, 50, (uint8_t *)"", 0, 0) == AT_RESPONSE_OK)
       {
-        if (send_cmd_mail(AT_CMMSDOWN_TITLE, 50, "", sizeof(mms_title),0) == AT_RESPONSE_CONNECT_OK)
+        if (send_cmd_mail(AT_CMMSDOWN_TITLE, 50, (uint8_t *)"", sizeof(mms_title),0) == AT_RESPONSE_CONNECT_OK)
         {
-          if(send_cmd_mail(AT_CMMSDOWN_DATA, 50, mms_title, sizeof(mms_title),1) == AT_RESPONSE_OK)
+          if(send_cmd_mail(AT_CMMSDOWN_DATA, 50, (uint8_t *)mms_title, sizeof(mms_title),1) == AT_RESPONSE_OK)
           {
-            if (send_cmd_mail(AT_CMMSDOWN_TEXT, 50, "", sizeof(mms_text),0) == AT_RESPONSE_CONNECT_OK)
+            if (send_cmd_mail(AT_CMMSDOWN_TEXT, 50, (uint8_t *)"", sizeof(mms_text),0) == AT_RESPONSE_CONNECT_OK)
             {
-              if (send_cmd_mail(AT_CMMSDOWN_DATA, 50, mms_text, sizeof(mms_text),1) == AT_RESPONSE_OK)
+              if (send_cmd_mail(AT_CMMSDOWN_DATA, 50, (uint8_t *)mms_text, sizeof(mms_text),1) == AT_RESPONSE_OK)
               {
-                if (send_cmd_mail(AT_CMMSDOWN_PIC, 50, "", status.st_size,0) == AT_RESPONSE_CONNECT_OK)
+                if (send_cmd_mail(AT_CMMSDOWN_PIC, 50, (uint8_t *)"", status.st_size,0) == AT_RESPONSE_CONNECT_OK)
                 {
                   extern rt_mutex_t pic_file_mutex;
                   rt_mutex_take(pic_file_mutex,RT_WAITING_FOREVER);
@@ -99,46 +99,48 @@ int8_t send_mms(char *pic_name)
                     {
                       if (send_cmd_mail(AT_CMMSDOWN_DATA, 50, process_buf, read_size, 1) == AT_RESPONSE_OK)
                       {
-                        result = 1;
                       }
                     }
-
                   }while (status.st_size > 0);
-
                   if(close(file_id))
                   {
                     rt_kprintf("close file error\n");
                   }
 
-                  rt_mutex_release(pic_file_mutex);
-                }
 
-                if ((send_cmd_mail(AT_CMMSRECP, 50, "21255274@qq.com", 0,0) == AT_RESPONSE_OK) &&
-                    (send_cmd_mail(AT_CMMSRECP, 50, "13544033975", 0,0) == AT_RESPONSE_OK))
-                {
-                  if (send_cmd_mail(AT_CMMSSEND, 50, "", 0,0) == AT_RESPONSE_OK)
+                  rt_mutex_release(pic_file_mutex);
+                  // send telephone
+                  alarm_telephone_counts = 0;
+                  while (alarm_telephone_counts < TELEPHONE_NUMBERS)
                   {
-                  
+                    if (device_parameters.alarm_telephone[alarm_telephone_counts].flag)
+                    {
+                      if (send_cmd_mail(AT_CMMSRECP, 50, (uint8_t *)(device_parameters.alarm_telephone[alarm_telephone_counts].address + 2), 0,0) != AT_RESPONSE_OK)
+                      {
+                        rt_kprintf("set telephone %s error\n", (device_parameters.alarm_telephone[alarm_telephone_counts].address + 2));
+                      }
+                    }
+                    alarm_telephone_counts++;
+                  }
+                  if (send_cmd_mail(AT_CMMSRECP, 50, (uint8_t *)"21255274@qq.com", 0,0) == AT_RESPONSE_OK)
+                  {
+                    if (send_cmd_mail(AT_CMMSSEND, 50, (uint8_t *)"", 0,0) == AT_RESPONSE_OK)
+                    {
+                      result = 0;
+                    }
                   }
                 }
               }
             }
           }
         }
-
-        /*        
-
-        {
-          
-        }
-        */
       }
     }
   }
 process_result:
-  send_cmd_mail(AT_CMMSEDIT_CLOSE, 50, "", 0, 0);
-  send_cmd_mail(AT_SAPBR_CLOSE, 50, "", 0, 0);
-  send_cmd_mail(AT_CMMSTERM, 50, "", 0, 0);
+  send_cmd_mail(AT_CMMSEDIT_CLOSE, 50, (uint8_t *)"", 0, 0);
+  send_cmd_mail(AT_SAPBR_CLOSE, 50, (uint8_t *)"", 0, 0);
+  send_cmd_mail(AT_CMMSTERM, 50, (uint8_t *)"", 0, 0);
 
   rt_free(process_buf);
   return result;
@@ -148,7 +150,7 @@ void mms_mail_process_thread_entry(void *parameter)
 {
   rt_err_t result;
   /* malloc a buff for process mail */
-  MMS_MAIL_TYPEDEF *mms_mail_buf = (MMS_MAIL_TYPEDEF *)rt_malloc(sizeof(MMS_MAIL_TYPEDEF));
+  MMS_MAIL_TYPEDEF mms_mail_buf;
   /* initial msg queue */
   mms_mq = rt_mq_create("mms", sizeof(MMS_MAIL_TYPEDEF),
                         MMS_MAIL_MAX_MSGS,
@@ -156,30 +158,37 @@ void mms_mail_process_thread_entry(void *parameter)
   while (1)
   {
     /* process mail */
-    memset(mms_mail_buf, 0, sizeof(MMS_MAIL_TYPEDEF));
-    result = rt_mq_recv(mms_mq, mms_mail_buf, sizeof(MMS_MAIL_TYPEDEF), 100);
+    memset(&mms_mail_buf, 0, sizeof(MMS_MAIL_TYPEDEF));
+    result = rt_mq_recv(mms_mq, &mms_mail_buf, sizeof(MMS_MAIL_TYPEDEF), 100);
     /* mail receive ok */
     if (result == RT_EOK)
     {
-      rt_kprintf("receive mms mail < time: %d alarm_type: %d >\n", mms_mail_buf->time, mms_mail_buf->alarm_type);
-      send_mms("/1.jpg");
+      rt_kprintf("\nreceive mms mail < time: %d alarm_type: %d >\n", mms_mail_buf.time, mms_mail_buf.alarm_type);
+      if (!send_mms(mms_mail_buf.pic_name))
+      {
+        rt_kprintf("\nsend mms success!!!\n");
+      }
+      else
+      {
+        rt_kprintf("\nsend mms failure!!!\n");
+      }
     }
     else
     {
       /* mail receive error */
     }
   }
-  rt_free(mms_mail_buf);
 }
 
 
-void send_mms_mail(ALARM_TYPEDEF alarm_type, time_t time)
+void send_mms_mail(ALARM_TYPEDEF alarm_type, time_t time, char *pic_name)
 {
   MMS_MAIL_TYPEDEF buf;
   extern rt_device_t rtc_device;
   rt_err_t result;
   //send mail
   buf.alarm_type = alarm_type;
+  buf.pic_name = pic_name;
   if (!time)
   {
     rt_device_control(rtc_device, RT_DEVICE_CTRL_RTC_GET_TIME, &(buf.time));
@@ -206,5 +215,5 @@ void send_mms_mail(ALARM_TYPEDEF alarm_type, time_t time)
 #ifdef RT_USING_FINSH
 #include <finsh.h>
 
-FINSH_FUNCTION_EXPORT(send_mms_mail, send_mms_mail[index time])
+FINSH_FUNCTION_EXPORT(send_mms_mail, send_mms_mail[index time pic_name])
 #endif

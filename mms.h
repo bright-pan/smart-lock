@@ -31,6 +31,7 @@ typedef struct
 {
   time_t time;
   ALARM_TYPEDEF alarm_type;
+  char *pic_name;
 }MMS_MAIL_TYPEDEF;
 
 extern rt_mq_t mms_mq;
