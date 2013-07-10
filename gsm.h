@@ -197,7 +197,7 @@ rt_uint32_t gsm_mode_get(void);
 void gsm_mode_set(rt_uint32_t mode);
 void gsm_put_char(const uint8_t *str, uint16_t length);
 void gsm_put_hex(const uint8_t *str, uint16_t length);
-
+AT_RESPONSE_TYPEDEF send_cmd_mail(AT_COMMAND_INDEX_TYPEDEF command_index, uint16_t delay, uint8_t *buf, uint32_t length, uint8_t has_complete);
 
 extern char smsc[20];
 

@@ -1087,10 +1087,10 @@ void gsm_process_thread_entry(void *parameters)
         if (gsm_mode == GSM_MODE_CMD)
         {
           //cmd data
-          //memset(process_buf, 0, 512);
-          //gsm_recv_frame(process_buf);
-          //gsm_put_char(process_buf, strlen((char *)process_buf));
-          //gsm_put_hex(process_buf, strlen((char *)process_buf));
+          memset(process_buf, 0, 512);
+          gsm_recv_frame(process_buf);
+          gsm_put_char(process_buf, strlen((char *)process_buf));
+          gsm_put_hex(process_buf, strlen((char *)process_buf));
         }
         else
         {
