@@ -33,12 +33,15 @@ int8_t send_mms(char *pic_name)
   uint32_t read_size = 0;
   uint8_t *process_buf = (uint8_t *)rt_malloc(512);
   uint8_t alarm_telephone_counts;
+
   if (stat(pic_name,&status))
   {
     rt_kprintf("\nsend mms but get picture size is error!!!\n");
     return result;
   }
-  
+  send_cmd_mail(AT_CMMSEDIT_CLOSE, 50, (uint8_t *)"", 0, 0);
+  send_cmd_mail(AT_SAPBR_CLOSE, 50, (uint8_t *)"", 0, 0);
+  send_cmd_mail(AT_CMMSTERM, 50, (uint8_t *)"", 0, 0);
   // mms initial
   if ((send_cmd_mail(AT_CMMSINIT, 50, (uint8_t *)"", 0, 0) == AT_RESPONSE_OK) &&
       (send_cmd_mail(AT_CMMSCURL, 50, (uint8_t *)"", 0, 0) == AT_RESPONSE_OK) &&
