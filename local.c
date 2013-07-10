@@ -104,6 +104,9 @@ void local_mail_process_thread_entry(void *parameter)
           rfid_key_detect_process();
           break;
         };
+        default : {
+          break;
+        };
       }
     }
     else
