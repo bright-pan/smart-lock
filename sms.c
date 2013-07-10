@@ -292,7 +292,7 @@ void sms_mail_process_thread_entry(void *parameter)
   rt_err_t result;
   struct tm tm_time;
   int8_t resend_counts = 0;
-  int8_t alarm_telephone_counts = 0;
+  uint8_t alarm_telephone_counts = 0;
   //uint16_t ucs_buf[256];
   uint16_t *sms_ucs, *sms_ucs_bk, sms_ucs_length;
   const uint16_t *temp_ucs;
@@ -343,8 +343,8 @@ void sms_mail_process_thread_entry(void *parameter)
       // send sms
       rt_kprintf("\nsend sms!!!\n");
 
-      alarm_telephone_counts = TELEPHONE_NUMBERS - 1;
-      while (alarm_telephone_counts >= 0)
+      alarm_telephone_counts = 0;
+      while (alarm_telephone_counts < TELEPHONE_NUMBERS)
       {
         if (device_parameters.alarm_telephone[alarm_telephone_counts].flag)
         {
@@ -365,7 +365,7 @@ void sms_mail_process_thread_entry(void *parameter)
             // send failure
           }
         }
-        alarm_telephone_counts--;
+        alarm_telephone_counts++;
       }
       //      sms("8613544033975","",0);
       rt_free(sms_ucs);
