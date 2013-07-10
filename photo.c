@@ -327,7 +327,7 @@ void photo_get_size(camera_dev_t camera,rt_uint8_t frame_flag)
 		rt_kprintf("max_cnt = %d\n",max_cnt);
 #endif
 	}
-	while((camera->size >60000) ||(camera->size < 0));
+	while((camera->size >60000) ||(camera->size < 200000));
 	/*   calculate receive size		*/
 	//camera->size = (camera->data[5] << 24) |(camera->data[6] << 16) \
 	//|(camera->data[7] << 8) |(camera->data[8]); 
