@@ -25,7 +25,7 @@
 #include "mms_dev.h"
 
 #define PIC_PER_PAGE_SIZE		512
-#define PIC_NAME						"/7.jpg"
+#define PIC_NAME						"/1.jpg"
 
 #define WORK_ALARM_CAMERA_IRDASENSOR (1 << 0)
 #define WORK_ALARM_LOCK_SHELL (1 << 1)
@@ -488,6 +488,7 @@ static void get_page_pic_data(int file_id,GPRS_SEND_PIC *pic,rt_uint8_t cur_page
 	offset = cur_page * PIC_PER_PAGE_SIZE;		//read data pos
 	lseek(file_id,offset,SEEK_SET);								//file fixed position
 	read(file_id,(void*)(pic->data+5),pic->length-1);
+	rt_kprintf("get this of data length %d\n",pic->length);
 	*((pic->data)+0) = (rt_uint8_t)((pic->length) >> 8 & 0xff);
 	*((pic->data)+1) = (rt_uint8_t)(pic->length & 0xff);
 	*((pic->data)+2) = pic->cmd;
@@ -498,16 +499,19 @@ static void get_page_pic_data(int file_id,GPRS_SEND_PIC *pic,rt_uint8_t cur_page
 void send_page_pic_data(int file_id,GPRS_SEND_PIC* pic,rt_uint8_t page,GSM_MAIL_TYPEDEF* gsm_mail)
 {
 	rt_uint32_t	pic_size;
+	rt_uint32_t	cur_size;
 	
-	get_pic_size(PIC_NAME,&pic_size);
-	if((page+1)*PIC_PER_PAGE_SIZE <= pic_size)
+	get_pic_size(PIC_NAME,&pic_size);					//get picture size
+	cur_size = ((page+1)*PIC_PER_PAGE_SIZE);	//calculate cur send pos
+	//rt_kprintf("cur_size = %d,pic_size = %d",cur_size,pic_size);
+	if(cur_size < pic_size)
 	{
-		pic->length = PIC_PER_PAGE_SIZE+1; //data length include curpage and data
+		pic->length = PIC_PER_PAGE_SIZE+1; 			//data length include curpage and data
 		gsm_mail->mail_data.gprs.has_response = 0; 	
 	}
 	else
-	{
-		pic->length = pic_size % PIC_PER_PAGE_SIZE+1; //send data length
+	{  
+		pic->length = pic_size % PIC_PER_PAGE_SIZE+1; 	//send data length
 		gsm_mail->mail_data.gprs.has_response = 1;			//last page data need recv response
 	}
 	get_page_pic_data(file_id,pic,page);
@@ -526,6 +530,25 @@ void send_page_pic_data(int file_id,GPRS_SEND_PIC* pic,rt_uint8_t page,GSM_MAIL_
 	{
 		rt_kprintf("send picture data ok\n");
 	}
+}
+
+void send_last_page_data(int file_id,GPRS_SEND_PIC* pic,GSM_MAIL_TYPEDEF* gsm_mail)
+{
+	rt_uint32_t pic_size;
+	rt_uint8_t	last_page_pos;
+	
+	get_pic_size(PIC_NAME,&pic_size);
+	if((pic_size % PIC_PER_PAGE_SIZE) != 0)
+	{
+		last_page_pos = pic_size / PIC_PER_PAGE_SIZE;
+		rt_kprintf("\n\nlast page data lentg %d\n",(pic_size / PIC_PER_PAGE_SIZE));
+	}
+	else
+	{
+		last_page_pos = (pic_size / PIC_PER_PAGE_SIZE)-1;
+		rt_kprintf("\n\nlast page data lentg %d\n",(pic_size / PIC_PER_PAGE_SIZE)-1);	
+	}
+	send_page_pic_data(file_id,pic,last_page_pos,gsm_mail);
 }
 void send_picture_data(void)
 {
@@ -551,14 +574,15 @@ void send_picture_data(void)
 	}
 	pic_data.data = rt_malloc(PIC_PER_PAGE_SIZE+5);
 	pic_data.cmd = 0x0f;
-	pic_data.cur_page  = 24;
 	pic_data.order = gprs_order;
+	pic_data.cur_page  = 0;
 	page_sum = pic_size / PIC_PER_PAGE_SIZE;
 	if((pic_size % PIC_PER_PAGE_SIZE) != 0)							
 	{
 		page_sum++;
 	}
-	page_sum = 3;
+	rt_kprintf("page_sum = %d\n",page_sum);
+	//page_sum = 3;
 	gsm_mail_buf.result_sem = rt_sem_create("g_pic", 0, RT_IPC_FLAG_FIFO);
 	if(gsm_mail_buf.result_sem == RT_NULL)
 	{
@@ -635,24 +659,21 @@ void send_picture_data(void)
 															&gsm_mail_buf);										//resend not send ok of data
 						rt_thread_delay(debug_delay1);		
 					}
-					get_pic_size(PIC_NAME,&pic_size);
-					if((pic_size % PIC_PER_PAGE_SIZE) != 0)
-					{
-						send_page_pic_data(pic_file_id,&pic_data,(pic_size / PIC_PER_PAGE_SIZE),&gsm_mail_buf);
-						rt_kprintf("\n\nlast page data lentg %d\n",(pic_size / PIC_PER_PAGE_SIZE));
-					}
-					else
-					{
-						rt_kprintf("\n\nlast page data lentg %d\n",(pic_size / PIC_PER_PAGE_SIZE)-1);
-						send_page_pic_data(pic_file_id,&pic_data,(pic_size / PIC_PER_PAGE_SIZE)-1,&gsm_mail_buf);
-					}
+					/*send last page picture data*/
+					send_last_page_data(pic_file_id,&pic_data,&gsm_mail_buf);
 				}
 			}
 			else
 			{
-				rt_kprintf("recv data fail\n");
+				/*rt_kprintf("recv data fail\n");
 				send_page_pic_data(pic_file_id,&pic_data,--pic_data.cur_page,&gsm_mail_buf);
 				send_result = -1;
+				*/
+				/*send last page picture data*/
+				//pic_data.order = gprs_order++;
+				send_last_page_data(pic_file_id,&pic_data,&gsm_mail_buf);
+				pic_data.cur_page--;
+				page_sum++;
 			}
 		}
 		rt_kprintf("loop_cnt = %d\n",page_sum);
