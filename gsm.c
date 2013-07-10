@@ -1060,7 +1060,8 @@ void gsm_process_thread_entry(void *parameters)
                 }
                 else
                 {
-                  if (memmem(&gprs_recv_frame, sizeof(GPRS_RECV_FRAME_TYPEDEF), "\r\nCLOSED\r\n", strlen("\r\nCLOSED\r\n")))
+                  if (memmem(&gprs_recv_frame, sizeof(GPRS_RECV_FRAME_TYPEDEF), "\r\nCLOSED\r\n", strlen("\r\nCLOSED\r\n")) ||
+                      memmem(&gprs_recv_frame, sizeof(GPRS_RECV_FRAME_TYPEDEF), gsm_mail_buf.mail_data.gprs.request, gsm_mail_buf.mail_data.gprs.request_length))
                   {
                     gsm_mode_switch(&gsm_mode, GSM_MODE_CMD);
                     *(gsm_mail_buf.result) = -1;
