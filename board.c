@@ -188,6 +188,7 @@ void rt_hw_board_init()
   rt_hw_gsm_power_register();
   rt_hw_gsm_status_register();
   rt_hw_gsm_ring_register();
+  rt_hw_gsm_dtr_register();
   /* rfid device register */
   rt_hw_rfid_uart_register();
   rt_hw_rfid_power_register();

@@ -236,6 +236,26 @@ void rt_hw_gsm_power_register(void)
   gpio_device->ops = &gpio_pin_user_ops;
   rt_hw_gpio_register(gpio_device, gpio_user_data->name, (RT_DEVICE_FLAG_RDWR), gpio_user_data);
 }
+/* gsm dtr device */
+struct gpio_pin_user_data gsm_dtr_user_data = 
+{
+  DEVICE_NAME_GSM_DTR,
+  GPIOC,
+  GPIO_Pin_1,
+  GPIO_Mode_Out_PP,
+  GPIO_Speed_50MHz,
+  RCC_APB2Periph_GPIOC,
+  1,
+};
+gpio_device gsm_dtr_device;
+void rt_hw_gsm_dtr_register(void)
+{
+  gpio_device *gpio_device = &gsm_dtr_device;
+  struct gpio_pin_user_data *gpio_user_data = &gsm_dtr_user_data;
+
+  gpio_device->ops = &gpio_pin_user_ops;
+  rt_hw_gpio_register(gpio_device, gpio_user_data->name, (RT_DEVICE_FLAG_RDWR), gpio_user_data);
+}
 /* gsm status device */
 struct gpio_pin_user_data gsm_status_user_data = 
 {

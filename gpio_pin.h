@@ -25,6 +25,7 @@
 #define DEVICE_NAME_GSM_POWER "g_power"
 #define DEVICE_NAME_GSM_STATUS "g_stat"
 #define DEVICE_NAME_GSM_LED "g_led"
+#define DEVICE_NAME_GSM_DTR "g_dtr"
 
 #define DEVICE_NAME_VOICE_RESET "vo_rst"
 #define DEVICE_NAME_VOICE_SWITCH "vo_sw"
@@ -40,6 +41,7 @@
 void rt_hw_gsm_led_register(void);
 void rt_hw_gsm_power_register(void);
 void rt_hw_gsm_status_register(void);
+void rt_hw_gsm_dtr_register(void);
 
 void rt_hw_rfid_power_register(void);
 
