@@ -70,6 +70,11 @@ typedef enum
   AT_CMMSDOWN_DATA,//index=35
   AT_CMMSRECP,
   AT_CMMSSEND,
+  ATI,
+  AT_GSV,
+  AT_V,
+  AT_D1,
+  AT_W,
 
 }AT_COMMAND_INDEX_TYPEDEF;
 
