@@ -327,7 +327,7 @@ void photo_get_size(camera_dev_t camera,rt_uint8_t frame_flag)
 		rt_kprintf("max_cnt = %d\n",max_cnt);
 #endif
 	}
-	while((camera->size >60000) ||(camera->size < 200000));
+	while((camera->size >60000) ||(camera->size < 20000));
 	/*   calculate receive size		*/
 	//camera->size = (camera->data[5] << 24) |(camera->data[6] << 16) \
 	//|(camera->data[7] << 8) |(camera->data[8]); 
@@ -575,7 +575,7 @@ void photo_change_pic_filename(cm_recv_mq_t recv_mq)
 void photo_deal(camera_dev_t camera,cm_recv_mq_t recv_mq)
 {
 	//struct cm_send_mq send_mq;
-	MMS_MAIL_TYPEDEF mms_mail_buf;
+	//MMS_MAIL_TYPEDEF mms_mail_buf;
 
 	if('\0' == *(recv_mq->name2))
 	{
@@ -592,12 +592,14 @@ void photo_deal(camera_dev_t camera,cm_recv_mq_t recv_mq)
 		photo_create_file_one(camera,recv_mq->name2);	
 	}
 	/* camera woker finish send Message Queuing */
-	mms_mail_buf.alarm_type = recv_mq->alarm_type;
-	mms_mail_buf.time = recv_mq->date;
+	//mms_mail_buf.alarm_type = recv_mq->alarm_type;
+	//mms_mail_buf.time = recv_mq->date;
 	/*  Receive timeout make no difference */
 	if((CM_RUN_DEAL_OK == camera->error)||(CM_RECV_OUT_TIME & camera->error))
 	{
+		extern void send_mms_mail(ALARM_TYPEDEF alarm_type, time_t time, char *pic_name);
 		//rt_mq_send(mms_mq, &mms_mail_buf, sizeof(MMS_MAIL_TYPEDEF));
+		send_mms_mail(recv_mq->alarm_type,0,(char*)recv_mq->name2);//send mms
 	}
 	else
 	{
@@ -1004,8 +1006,9 @@ void camera_infrared_thread_enter(void *arg)
 						
 						rt_device_control(rtc_dev, RT_DEVICE_CTRL_RTC_GET_TIME, &cur_data);
 						//send sem alarm information
-						send_alarm_mail(ALARM_TYPE_CAMERA_IRDASENSOR, ALARM_PROCESS_FLAG_SMS |\
-						ALARM_PROCESS_FLAG_GPRS | ALARM_PROCESS_FLAG_LOCAL, ir_pin_dat, cur_data);
+						send_alarm_mail(ALARM_TYPE_CAMERA_IRDASENSOR,
+													 ALARM_PROCESS_FLAG_SMS | ALARM_PROCESS_FLAG_GPRS | ALARM_PROCESS_FLAG_LOCAL,
+													 ir_pin_dat, cur_data);
 					}
 				}
 			}
