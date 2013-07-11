@@ -1101,7 +1101,10 @@ void gsm_process_thread_entry(void *parameters)
                     gsm_mode_switch(&gsm_mode, GSM_MODE_CMD);
                     *(gsm_mail_buf.result) = -1;
                   }
-                  *(gsm_mail_buf.result) = 1;
+                  else
+                  {
+                    *(gsm_mail_buf.result) = 1;
+                  }
                   break;
                 }
               }
