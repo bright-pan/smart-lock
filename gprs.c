@@ -1286,7 +1286,6 @@ int8_t send_gprs_frame(ALARM_TYPEDEF alarm_type, time_t time, uint8_t order, voi
   }
 
   //send frame
-  gsm_put_hex(process_buf, process_length);
   //rt_device_write(device, 0, process_buf, process_length);
   gsm_mail_buf.send_mode = GSM_MODE_GPRS;
   gsm_mail_buf.result = &send_result;
@@ -1323,6 +1322,7 @@ int8_t send_gprs_frame(ALARM_TYPEDEF alarm_type, time_t time, uint8_t order, voi
     else
     {
       rt_sem_take(gsm_mail_buf.result_sem, RT_WAITING_FOREVER);
+      gsm_put_hex(gsm_mail_buf.mail_data.gprs.request, gsm_mail_buf.mail_data.gprs.request_length);
       if (gsm_mail_buf.mail_data.gprs.has_response == 1)
       {
         if (send_result == 1)
