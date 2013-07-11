@@ -1033,10 +1033,10 @@ void gsm_process_thread_entry(void *parameters)
                         GSM_MAIL_MAX_MSGS,
                         RT_IPC_FLAG_FIFO);
 
-
   while (1)
   {
-    if (gsm_reset() == GSM_RESET_SUCCESS)
+    if (gsm_reset() == GSM_RESET_SUCCESS ||
+        gsm_reset() == GSM_RESET_SUCCESS)
     {
       if (gsm_init_process() == 1)
       {
@@ -1151,7 +1151,8 @@ void gsm_process_thread_entry(void *parameters)
       // gsm is not setup
       while (1)
       {
-        if (gsm_reset() == GSM_RESET_SUCCESS)
+        if (gsm_reset() == GSM_RESET_SUCCESS ||
+            gsm_reset() == GSM_RESET_SUCCESS)
         {
           if (gsm_init_process() == 1)
           {
