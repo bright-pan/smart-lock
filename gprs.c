@@ -25,7 +25,7 @@
 #include "mms_dev.h"
 
 #define PIC_PER_PAGE_SIZE		512
-#define PIC_NAME						"/1.jpg"
+#define PIC_NAME						"/2.jpg"
 
 #define WORK_ALARM_CAMERA_IRDASENSOR (1 << 0)
 #define WORK_ALARM_LOCK_SHELL (1 << 1)
@@ -647,7 +647,7 @@ rt_int8_t send_picture_data(void)
 			close(pic_file_id);			
 			return -1;
 		}
-		rt_sem_take(gsm_mail_buf.result_sem, RT_WAITING_FOREVER);
+		rt_sem_take(gsm_mail_buf.result_sem, 500);
 		if(send_result == 1)//send data ok
 		{
 			rt_kprintf("send picture data ok\n");
@@ -691,8 +691,8 @@ rt_int8_t send_picture_data(void)
 															&gsm_mail_buf);										
 						rt_thread_delay(debug_delay1);		
 					}
-					//send_last_page_data(pic_file_id,&pic_data,&gsm_mail_buf);
-					page_sum++;
+					send_last_page_data(pic_file_id,&pic_data,&gsm_mail_buf);
+					/*page_sum++;
 					pic_data.cur_page--;
 					resend_num++;
 					if(resend_num > 3)
@@ -701,7 +701,7 @@ rt_int8_t send_picture_data(void)
 						rt_sem_delete(gsm_mail_buf.result_sem);
 						close(pic_file_id);
 						return -1;
-					}
+					}*/
 					break;
 				}
 				case -3:
@@ -1062,7 +1062,11 @@ int8_t send_gprs_frame(ALARM_TYPEDEF alarm_type, time_t time, uint8_t order, voi
     };
     case ALARM_TYPE_GPRS_SEND_PIC_DATA:
     {
+    	extern rt_mutex_t	pic_file_mutex;
+    	
+    	rt_mutex_take(pic_file_mutex,RT_WAITING_FOREVER);
     	send_result = send_picture_data();
+    	rt_mutex_release(pic_file_mutex);
     	gprs_order++;
     	goto	quitgprsdatasend;
     	//break;
