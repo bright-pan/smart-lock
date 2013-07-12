@@ -103,7 +103,7 @@ void gprs_mail_process_thread_entry(void *parameter)
       //send gprs data
       rt_mutex_take(mutex_gsm_mail_sequence,RT_WAITING_FOREVER);
 
-      if (send_gprs_frame(gprs_mail_buf.alarm_type, gprs_mail_buf.time, gprs_mail_buf.order, RT_NULL) == 1)
+      if (send_gprs_frame(gprs_mail_buf.alarm_type, gprs_mail_buf.time, gprs_mail_buf.order, gprs_mail_buf.user) == 1)
       {
         rt_kprintf("\nsend gprs data success!!!\n");
         error_counts = 0;
