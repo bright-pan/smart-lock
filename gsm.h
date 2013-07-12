@@ -70,9 +70,14 @@ typedef enum
   AT_CMMSDOWN_DATA,//index=35
   AT_CMMSRECP,
   AT_CMMSSEND,
+  AT_CLCC,
+  ATA,
+  ATH5,//index=40
+  AT_RING,
+  AT_RECV_SMS,
   ATI,
   AT_GSV,
-  AT_V,
+  AT_V,//index=45
   AT_D1,
   AT_W,
 
@@ -200,6 +205,7 @@ void gsm_put_hex(const uint8_t *str, uint16_t length);
 AT_RESPONSE_TYPEDEF send_cmd_mail(AT_COMMAND_INDEX_TYPEDEF command_index, uint16_t delay, uint8_t *buf, uint32_t length, uint8_t has_complete);
 
 extern char smsc[20];
+extern char phone_call[20];
 extern rt_mq_t mq_gsm;
 extern rt_mutex_t mutex_gsm_mail_sequence;
 

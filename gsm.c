@@ -24,18 +24,15 @@
 
 rt_mq_t mq_gsm = RT_NULL;
 rt_mutex_t mutex_gsm_mail_sequence;
-char smsc[20] = {0,};
 
-const char *at_command_map[50];
+char smsc[20] = {0,};
+char phone_call[20] = {0,};
+
+const char *at_command_map[60];
 
 void at_command_map_init(void)
 {
   at_command_map[AT] = "AT\r";
-  at_command_map[ATI] = "ATI\r";
-  at_command_map[AT_GSV] = "AT+GSV\r";
-  at_command_map[AT_V] = "AT&V\r";
-  at_command_map[AT_D1] = "AT&D1\r";
-  at_command_map[AT_W] = "AT&W\r";
   at_command_map[AT_CNMI] = "AT+CNMI=2,1\r";
   at_command_map[AT_CSCA] = "AT+CSCA?\r";
   at_command_map[AT_CMGF] = "AT+CMGF=0\r";
@@ -72,6 +69,16 @@ void at_command_map_init(void)
   at_command_map[AT_CMMSDOWN_TEXT] = "AT+CMMSDOWN=\"TEXT\",%d,50000\r";
   at_command_map[AT_CMMSRECP] = "AT+CMMSRECP=\"%s\"\r";
   at_command_map[AT_CMMSSEND] = "AT+CMMSSEND\r";
+  at_command_map[AT_CLCC] = "AT+CLCC\r";
+  at_command_map[ATA] = "ATA\r";
+  at_command_map[ATH5] = "ATH5\r";
+  at_command_map[AT_RING] = "";
+  at_command_map[AT_RECV_SMS] = "";
+  at_command_map[ATI] = "ATI\r";
+  at_command_map[AT_GSV] = "AT+GSV\r";
+  at_command_map[AT_V] = "AT&V\r";
+  at_command_map[AT_D1] = "AT&D1\r";
+  at_command_map[AT_W] = "AT&W\r";
 }
 
 void gsm_put_char(const uint8_t *str, uint16_t length)
@@ -246,6 +253,7 @@ uint16_t gsm_recv_frame(uint8_t *buf)
 
 rescan_frame:
 
+  memset(buf, 0, length);
   buf_bk = buf;
   temp = 0;
   length = 0;
@@ -273,6 +281,7 @@ rescan_frame:
     }
     ++counts;
   }
+  /*
   if (strstr((char *)buf,"RING"))
   {
     // has phone call
@@ -283,6 +292,7 @@ rescan_frame:
     // has sms recv
     goto rescan_frame;
   }
+  */
   return length;
 }
 
@@ -327,7 +337,9 @@ int8_t at_response_process(AT_COMMAND_INDEX_TYPEDEF index, uint8_t *buf)
         case AT_SAPBR_APN :
         case AT_SAPBR_CLOSE :
         case AT_CMMSEDIT_OPEN :
-        case AT_CMMSEDIT_CLOSE : {
+        case AT_CMMSEDIT_CLOSE :
+        case ATA:
+        case ATH5: {
 
           if (strstr((char *)process_buf, at_command_map[index]))
           {
@@ -494,6 +506,7 @@ int8_t at_response_process(AT_COMMAND_INDEX_TYPEDEF index, uint8_t *buf)
 
                   if (strstr((char *)process_buf + 200, "OK"))
                   {
+                    memset(smsc, 0, sizeof(smsc));
                     sscanf((char *)process_buf, "%*[^\"]\"+%[^\"]", smsc);
                     result = AT_RESPONSE_OK;
                   }
@@ -701,11 +714,50 @@ int8_t at_response_process(AT_COMMAND_INDEX_TYPEDEF index, uint8_t *buf)
           if (strstr((char *)process_buf, "OK"))
           {
             result = AT_RESPONSE_OK;
+            goto complete;
           }
-          goto complete;
           break;
         };
+        case AT_RING : {
 
+          if (strstr((char *)process_buf, "RING"))
+          {
+            result = AT_RESPONSE_OK;
+            goto complete;
+          }
+          break;
+        };
+        case AT_CLCC : {
+          if (strstr((char *)process_buf, at_command_map[index]))
+          {
+            memset(process_buf, 0, 512);
+            recv_counts = gsm_recv_frame(process_buf);
+            if (recv_counts)
+            {
+              gsm_put_char(process_buf, strlen((char *)process_buf));
+              gsm_put_hex(process_buf, strlen((char *)process_buf));
+              if (!strstr((char *)process_buf, "ERROR"))
+              {
+                memset(process_buf + 200, 0, 512-200);
+                recv_counts = gsm_recv_frame(process_buf + 200);
+                if (recv_counts)
+                {
+                  gsm_put_char(process_buf+200, strlen((char *)process_buf+200));
+                  gsm_put_hex(process_buf+200, strlen((char *)process_buf+200));
+
+                  if (strstr((char *)process_buf + 200, "OK"))
+                  {
+                    memset(phone_call, 0, sizeof(phone_call));
+                    sscanf((char *)process_buf, "%*[^\"]\"%[^\"]", phone_call);
+                    result = AT_RESPONSE_OK;
+                  }
+                }
+              }
+            }
+            goto complete;
+          }
+          break;
+        };
         default:{
           goto complete;
           break;
@@ -856,6 +908,11 @@ int8_t gsm_command(AT_COMMAND_INDEX_TYPEDEF index, uint16_t delay, GSM_MAIL_CMD 
                       strlen(at_command_map[index]));
 
       gsm_put_char((uint8_t *)at_command_map[index], strlen(at_command_map[index]));
+      break;
+    };
+    case AT_RING :
+    case AT_RECV_SMS :{
+
       break;
     };
     default: {

@@ -14,6 +14,7 @@
 #include "local.h"
 #include "gpio_exti.h"
 #include "sms.h"
+#include "gsm.h"
 #include "gprs.h"
 #include "gpio_pwm.h"
 #include "gpio_pin.h"
@@ -40,6 +41,8 @@ static int32_t battery_switch_timeout_counts = 0;
 
 static void rfid_key_detect_process(void);
 static void rfid_key_detect_timeout(void *parameters);
+
+static void gsm_ring_process(void);
 
 void local_mail_process_thread_entry(void *parameter)
 {
@@ -87,8 +90,8 @@ void local_mail_process_thread_entry(void *parameter)
           break;
         };
         case ALARM_TYPE_GSM_RING : {
-          // receive call
-          // receive sms
+          // receive call and sms
+          gsm_ring_process();
           break;
         };
         case ALARM_TYPE_BATTERY_SWITCH : {
@@ -397,5 +400,46 @@ void send_local_mail(ALARM_TYPEDEF alarm_type, time_t time)
   {
     rt_kprintf("local_mq is RT_NULL!!!\n");
   }
+}
+
+static void gsm_ring_process(void)
+{
+  uint8_t call_telephone_counts = 0;
+
+  rt_thread_delay(50);
+  rt_mutex_take(mutex_gsm_mail_sequence,RT_WAITING_FOREVER);
+  if (gpio_pin_input(DEVICE_NAME_GSM_RING) == 0)
+  {
+    //phone call
+    if (send_cmd_mail(AT_RING, 200, (uint8_t *)"", 0, 0) == AT_RESPONSE_OK &&
+        send_cmd_mail(AT_CLCC, 100, (uint8_t *)"", 0, 0) == AT_RESPONSE_OK)
+    {
+      call_telephone_counts = 0;
+      while (call_telephone_counts < TELEPHONE_NUMBERS)
+      {
+        if (device_parameters.call_telephone[call_telephone_counts].flag)
+        {
+          if (strstr(phone_call, device_parameters.call_telephone[call_telephone_counts].address))
+          {
+            rt_kprintf("\nAnswer %s phone call!!!\n", (char *)(device_parameters.call_telephone[call_telephone_counts].address));
+            send_cmd_mail(ATA, 100, (uint8_t *)"", 0, 0);
+            break;
+          }
+
+        }
+        call_telephone_counts++;
+      }
+      if (call_telephone_counts >= TELEPHONE_NUMBERS)
+      {
+        send_cmd_mail(ATH5, 100, (uint8_t *)"", 0, 0);
+      }
+    }
+  }
+  else
+  {
+    //sms receive
+    send_cmd_mail(AT_RECV_SMS, 100, (uint8_t *)"", 0, 0);
+  }
+  rt_mutex_release(mutex_gsm_mail_sequence);
 }
 
