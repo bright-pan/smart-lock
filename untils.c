@@ -84,6 +84,10 @@ DEVICE_PARAMETERS_TYPEDEF device_parameters = {
       0,
       "8613316975697"
     },
+    {
+			1,
+			"075586607370"
+    },
   },
   // rfid key
   {

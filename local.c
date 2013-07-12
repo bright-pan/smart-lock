@@ -22,7 +22,7 @@
 #include "untils.h"
 #include "rfid_uart.h"
 #include "photo.h"
-
+#include "voiceapp.h"
 /* local msg queue for local alarm */
 rt_mq_t local_mq;
 GPRS_MAIL_USER gprs_mail_user;
@@ -423,6 +423,8 @@ static void gsm_ring_process(void)
           {
             rt_kprintf("\nAnswer %s phone call!!!\n", (char *)(device_parameters.call_telephone[call_telephone_counts].address));
             send_cmd_mail(ATA, 100, (uint8_t *)"", 0, 0);
+            rt_event_send(call_event,CALL_EVENT_START);
+            voice_output(0);
             break;
           }
 
