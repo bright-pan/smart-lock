@@ -25,9 +25,7 @@
 #include "sms.h"
 #include "gprs.h"
 
-
-
-
+#define IR_ACTIVE_STATUS								0
 
 const rt_uint8_t reset_camrea_cmd[] =	{0x56,0x00,0x26,0x00};
 const rt_uint8_t switch_frame_cmd[] = {0x56,0x00,0x36,0x01,0x03};
@@ -735,7 +733,7 @@ void photo_thread_entry(void *arg)
 
 			rt_mutex_release(pic_file_mutex);
 			
-			//camera_power_control(&photo,0); 	//close camera power
+			camera_power_control(&photo,0); 	//close camera power
 
 		}
 		else if(-RT_ETIMEOUT == result)			//timeout checout module
@@ -962,7 +960,7 @@ void camera_infrared_thread_enter(void *arg)
 				{
 					rt_device_read(ir_dev,0,&ir_pin_dat,1);
 					rt_thread_delay(1);
-					if(ir_pin_dat == 1)
+					if(ir_pin_dat == IR_ACTIVE_STATUS)
 					{
 						if(flag>0)
 						{

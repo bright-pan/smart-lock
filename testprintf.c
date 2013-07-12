@@ -499,7 +499,35 @@ void set_delay(rt_uint32_t t)
 
 FINSH_FUNCTION_EXPORT(set_delay,set delay time);
 
+void light_ir_test(rt_uint8_t	status)
+{
+	rt_uint8_t dat = 0;
+	rt_device_t dev = RT_NULL;
+	rt_device_t	led = RT_NULL;
+	rt_uint32_t	loop = 0xffffffff;
 
+	dev = rt_device_find("cm_photo");
+	led = rt_device_find("cm_led");
+	if((RT_NULL!= dev)||(RT_NULL != led))
+	{
+		while(loop--)
+		{
+			rt_device_read(dev,0,&dat,1);
+			if(1 == status)
+			{
+				if(1 == dat)
+				{
+					rt_device_write(led,0,&status,1);
+				}
+			}
+			else if(0 == status)
+			{
+				rt_device_write(led,0,&status,1);
+			}
+		}
+	}
+}
+FINSH_FUNCTION_EXPORT(light_ir_test,Infrared and optical test);
 
 #endif
 
