@@ -26,7 +26,6 @@
 #define DEVICE_NAME_LOCK_GATE "lk_gate"
 
 #define DEVICE_NAME_CAMERA_COVER "cm_cover"
-#define DEVICE_NAME_CAMERA_PHOTOSENSOR "cm_photo"
 #define DEVICE_NAME_CAMERA_IRDASENSOR "cm_irda"
 
 #define DEVICE_NAME_GSM_RING "g_ring"

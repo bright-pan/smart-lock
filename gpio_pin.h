@@ -35,6 +35,8 @@
 
 #define DEVICE_NAME_CAMERA_LED "cm_led"
 #define DEVICE_NAME_CAMERA_POWER "cm_power"
+#define DEVICE_NAME_CAMERA_PHOTOSENSOR "cm_photo"
+
 
 #define DEVICE_NAME_RFID_POWER "rf_power"
 
