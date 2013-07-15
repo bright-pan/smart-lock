@@ -23,6 +23,7 @@
 #include "battery.h"
 #include <rtc.h>
 #include "mms_dev.h"
+#include "gpio_pin.h"
 
 #define PIC_PER_PAGE_SIZE		512
 #define PIC_NAME						"/2.jpg"

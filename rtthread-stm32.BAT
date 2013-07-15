@@ -11,7 +11,3 @@ SET CPU_CLOCK=0x00000000
 "C:\Keil\ARM\BIN40\ArmCC" --Via ".\obj\application.__i"
 "C:\Keil\ARM\BIN40\ArmCC" --Via ".\obj\startup.__i"
 "C:\Keil\ARM\BIN40\ArmCC" --Via ".\obj\board.__i"
-"C:\Keil\ARM\BIN40\ArmCC" --Via ".\obj\dataqueue.__i"
-"C:\Keil\ARM\BIN40\ArmCC" --Via ".\obj\gsm_usart.__i"
-"C:\Keil\ARM\BIN40\ArmCC" --Via ".\obj\cpuusage.__i"
-"C:\Keil\ARM\BIN40\ArmCC" --Via ".\obj\photo.__i"
