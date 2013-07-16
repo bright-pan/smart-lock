@@ -485,8 +485,9 @@ void f_n_l(const char *name)
 FINSH_FUNCTION_EXPORT(f_n_l,send mq mms_mq);
 void gprs_pic(void)
 {
-	send_gprs_mail(ALARM_TYPE_GPRS_UPLOAD_PIC,0, 0,(void *)ALARM_TYPE_LOCK_TEMPERATURE);
+	static ALARM_TYPEDEF type = ALARM_TYPE_LOCK_TEMPERATURE;
 	
+	send_gprs_mail(ALARM_TYPE_GPRS_UPLOAD_PIC,0, 0,(void *)&type);
 }
 FINSH_FUNCTION_EXPORT(gprs_pic,gprs send picture);
 
