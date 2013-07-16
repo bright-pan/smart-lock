@@ -172,7 +172,7 @@ struct gpio_exti_user_data rfid_key_detect_user_data =
   DEVICE_NAME_RFID_KEY_DETECT,
   GPIOD,
   GPIO_Pin_10,
-  GPIO_Mode_IPD,
+  GPIO_Mode_IN_FLOATING,
   GPIO_Speed_50MHz,
   RCC_APB2Periph_GPIOD |RCC_APB2Periph_AFIO,
   GPIO_PortSourceGPIOD,
@@ -198,21 +198,21 @@ void rt_hw_rfid_key_detect_register(void)
 }
 
 /* motor_status device pd8 */
-rt_err_t motor_status_rx_ind(rt_device_t dev, rt_size_t size)
+/*rt_err_t motor_status_rx_ind(rt_device_t dev, rt_size_t size)
 {
   gpio_device *gpio = RT_NULL;
   time_t time;
 
   RT_ASSERT(dev != RT_NULL);
-  gpio = (gpio_device *)dev;
+  gpio = (gpio_device *)dev; */
   /* produce mail */
-  rt_device_control(rtc_device, RT_DEVICE_CTRL_RTC_GET_TIME, &time);
+  //rt_device_control(rtc_device, RT_DEVICE_CTRL_RTC_GET_TIME, &time);
   /* send mail */
-  send_alarm_mail(ALARM_TYPE_MOTOR_STATUS, ALARM_PROCESS_FLAG_LOCAL, gpio->pin_value, time);
+/*  send_alarm_mail(ALARM_TYPE_MOTOR_STATUS, ALARM_PROCESS_FLAG_LOCAL, gpio->pin_value, time);
 
   return RT_EOK;
-}
-
+}*/
+/*
 gpio_device motor_status_device;
 
 struct gpio_exti_user_data motor_status_user_data = 
@@ -220,7 +220,7 @@ struct gpio_exti_user_data motor_status_user_data =
   DEVICE_NAME_MOTOR_STATUS,
   GPIOD,
   GPIO_Pin_8,
-  GPIO_Mode_IPD,
+  GPIO_Mode_IN_FLOATING,
   GPIO_Speed_50MHz,
   RCC_APB2Periph_GPIOD |RCC_APB2Periph_AFIO,
   GPIO_PortSourceGPIOD,
@@ -243,31 +243,31 @@ void rt_hw_motor_status_register(void)
   
   rt_hw_gpio_register(gpio_device, gpio_user_data->name, (RT_DEVICE_FLAG_RDWR | RT_DEVICE_FLAG_INT_RX), gpio_user_data);
   rt_device_set_rx_indicate((rt_device_t)gpio_device, gpio_user_data->gpio_exti_rx_indicate);
-}
+}*/
 /* camera_photosensor device pb0 */
-rt_err_t camera_photosensor_rx_ind(rt_device_t dev, rt_size_t size)
+/*rt_err_t camera_photosensor_rx_ind(rt_device_t dev, rt_size_t size)
 {
   gpio_device *gpio = RT_NULL;
   time_t time;
 
   RT_ASSERT(dev != RT_NULL);
-  gpio = (gpio_device *)dev;
+  gpio = (gpio_device *)dev; */
   /* produce mail */
-  rt_device_control(rtc_device, RT_DEVICE_CTRL_RTC_GET_TIME, &time);
+  //rt_device_control(rtc_device, RT_DEVICE_CTRL_RTC_GET_TIME, &time);
   /* send mail */
-  send_alarm_mail(ALARM_TYPE_CAMERA_PHOTOSENSOR, ALARM_PROCESS_FLAG_LOCAL, gpio->pin_value, time);
+  /*send_alarm_mail(ALARM_TYPE_CAMERA_PHOTOSENSOR, ALARM_PROCESS_FLAG_LOCAL, gpio->pin_value, time);
 
   return RT_EOK;
-}
+}*/
 
-gpio_device camera_photosensor_device;
+/*gpio_device camera_photosensor_device;
 
 struct gpio_exti_user_data camera_photosensor_user_data = 
 {
   DEVICE_NAME_CAMERA_PHOTOSENSOR,
   GPIOB,
   GPIO_Pin_0,
-  GPIO_Mode_IPD,
+  GPIO_Mode_IN_FLOATING,
   GPIO_Speed_50MHz,
   RCC_APB2Periph_GPIOB |RCC_APB2Periph_AFIO,
   GPIO_PortSourceGPIOB,
@@ -290,7 +290,7 @@ void rt_hw_camera_photosensor_register(void)
   
   rt_hw_gpio_register(gpio_device, gpio_user_data->name, (RT_DEVICE_FLAG_RDWR | RT_DEVICE_FLAG_INT_RX), gpio_user_data);
   rt_device_set_rx_indicate((rt_device_t)gpio_device, gpio_user_data->gpio_exti_rx_indicate);
-}
+}*/
 #define CM_IR_SAMPLE_TIME               0
 /* camera_irdasensor device pb0 */
 rt_err_t camera_irdasensor_rx_ind(rt_device_t dev, rt_size_t size)
@@ -453,7 +453,7 @@ struct gpio_exti_user_data lock_gate_user_data =
   DEVICE_NAME_LOCK_GATE,
   GPIOD,
   GPIO_Pin_12,
-  GPIO_Mode_IPD,
+  GPIO_Mode_IN_FLOATING,
   GPIO_Speed_50MHz,
   RCC_APB2Periph_GPIOD |RCC_APB2Periph_AFIO,
   GPIO_PortSourceGPIOD,
@@ -569,7 +569,7 @@ struct gpio_exti_user_data gate_temperature_user_data =
   DEVICE_NAME_GATE_TEMPERATRUE,
   GPIOD,
   GPIO_Pin_15,
-  GPIO_Mode_IPD,
+  GPIO_Mode_IN_FLOATING,
   GPIO_Speed_50MHz,
   RCC_APB2Periph_GPIOD | RCC_APB2Periph_AFIO,
   GPIO_PortSourceGPIOD,
@@ -626,7 +626,7 @@ struct gpio_exti_user_data lock_temperature_user_data =
   DEVICE_NAME_LOCK_TEMPERATRUE,
   GPIOD,
   GPIO_Pin_14,
-  GPIO_Mode_IPD,
+  GPIO_Mode_IN_FLOATING,
   GPIO_Speed_50MHz,
   RCC_APB2Periph_GPIOD | RCC_APB2Periph_AFIO,
   GPIO_PortSourceGPIOD,
@@ -683,7 +683,7 @@ struct gpio_exti_user_data battery_switch_user_data =
   DEVICE_NAME_BATTERY_SWITCH,
   GPIOD,
   GPIO_Pin_9,
-  GPIO_Mode_IPD,
+  GPIO_Mode_IPU,
   GPIO_Speed_50MHz,
   RCC_APB2Periph_GPIOD | RCC_APB2Periph_AFIO,
   GPIO_PortSourceGPIOD,
@@ -724,7 +724,7 @@ struct gpio_exti_user_data key2_user_data =
   "key2",
   GPIOE,
   GPIO_Pin_6,
-  GPIO_Mode_IN_FLOATING,
+  GPIO_Mode_IPD,
   GPIO_Speed_50MHz,
   RCC_APB2Periph_GPIOE | RCC_APB2Periph_AFIO,
   GPIO_PortSourceGPIOE,

@@ -28,7 +28,7 @@ static uint32_t battery_status = 0;
 #define SAMPLE_VALUE_BATTERY_REMAIN_20P 0x333
 #define SAMPLE_VALUE_BATTERY_REMAIN_50P 0x7FF
 
-#define BATTERY_ADC_VALUE_RANGE					750
+#define BATTERY_ADC_VALUE_RANGE					1530
 #define BATTERY_WORKING_TIME					15
 void battery_get_data(Battery_Data* data)
 {

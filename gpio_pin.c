@@ -364,6 +364,54 @@ void rt_hw_test_register(void)
   rt_hw_gpio_register(gpio_device, gpio_user_data->name, (RT_DEVICE_FLAG_RDWR), gpio_user_data);
 }
 
+/* motor status device */
+gpio_device motor_status_device;
+
+struct gpio_pin_user_data motor_status_user_data = 
+{
+  DEVICE_NAME_MOTOR_STATUS,
+  GPIOD,
+  GPIO_Pin_8,
+  GPIO_Mode_IPD,
+  GPIO_Speed_50MHz,
+  RCC_APB2Periph_GPIOD |RCC_APB2Periph_AFIO,
+  1
+};
+
+void rt_hw_motor_status_register(void)
+{
+	gpio_device *gpio_device = &motor_status_device;
+	struct gpio_pin_user_data *gpio_user_data = &motor_status_user_data;
+
+	gpio_device->ops = &gpio_pin_user_ops;
+	rt_hw_gpio_register(gpio_device, gpio_user_data->name, (RT_DEVICE_FLAG_RDWR), gpio_user_data);
+}
+
+
+/* camera photosensor device */
+gpio_device camera_photosensor_device;
+
+struct gpio_pin_user_data camera_photosensor_user_data = 
+{
+  DEVICE_NAME_CAMERA_PHOTOSENSOR,
+  GPIOB,
+  GPIO_Pin_0,
+  GPIO_Mode_IPD,
+  GPIO_Speed_50MHz,
+  RCC_APB2Periph_GPIOB |RCC_APB2Periph_AFIO,
+	1
+};
+
+void rt_hw_camera_photosensor_register(void)
+{
+  gpio_device *gpio_device = &camera_photosensor_device;
+  struct gpio_pin_user_data *gpio_user_data = &camera_photosensor_user_data;
+
+  gpio_device->ops = &gpio_pin_user_ops;
+  
+  rt_hw_gpio_register(gpio_device, gpio_user_data->name, (RT_DEVICE_FLAG_RDWR), gpio_user_data);
+}
+
 void gpio_pin_output(char *str, const rt_uint8_t dat)
 {
   rt_device_t device = RT_NULL;

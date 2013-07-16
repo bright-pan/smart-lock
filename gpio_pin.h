@@ -35,8 +35,13 @@
 
 #define DEVICE_NAME_CAMERA_LED "cm_led"
 #define DEVICE_NAME_CAMERA_POWER "cm_power"
+#define DEVICE_NAME_CAMERA_PHOTOSENSOR "cm_photo"
+
 
 #define DEVICE_NAME_RFID_POWER "rf_power"
+
+#define DEVICE_NAME_MOTOR_STATUS "mt_stat"
+
 
 void rt_hw_gsm_led_register(void);
 void rt_hw_gsm_power_register(void);
@@ -54,6 +59,9 @@ void rt_hw_voice_switch_register(void);
 void rt_hw_voice_amp_register(void);
 
 void rt_hw_test_register(void);
+
+void rt_hw_motor_status_register(void);
+
 
 uint8_t gpio_pin_input(char *str);
 void gpio_pin_output(char *str, const rt_uint8_t dat);

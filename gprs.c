@@ -23,6 +23,7 @@
 #include "battery.h"
 #include <rtc.h>
 #include "mms_dev.h"
+#include "gpio_pin.h"
 
 #define PIC_PER_PAGE_SIZE		512
 #define PIC_NAME						"/2.jpg"
@@ -601,7 +602,7 @@ rt_int8_t send_picture_data(void)
 	if(gsm_mail_buf.result_sem == RT_NULL)
 	{
 		
-		free(pic_data.data);
+		rt_free(pic_data.data);
 		rt_sem_delete(gsm_mail_buf.result_sem);
 		close(pic_file_id);		
 		return -1;
@@ -642,7 +643,7 @@ rt_int8_t send_picture_data(void)
 			rt_kprintf("mq_gsm is NUll picture uploading\n");
 			/*send system unusual*/
 			
-			free(pic_data.data);
+			rt_free(pic_data.data);
 			rt_sem_delete(gsm_mail_buf.result_sem);
 			close(pic_file_id);			
 			return -1;
@@ -658,7 +659,7 @@ rt_int8_t send_picture_data(void)
 			page_error++;
 			if(page_error >= 3)
 			{
-				free(pic_data.data);
+				rt_free(pic_data.data);
 				rt_sem_delete(gsm_mail_buf.result_sem);
 				close(pic_file_id);
 				return -1;
@@ -697,7 +698,7 @@ rt_int8_t send_picture_data(void)
 					resend_num++;
 					if(resend_num > 3)
 					{
-						free(pic_data.data);
+						rt_free(pic_data.data);
 						rt_sem_delete(gsm_mail_buf.result_sem);
 						close(pic_file_id);
 						return -1;
@@ -706,7 +707,7 @@ rt_int8_t send_picture_data(void)
 				}
 				case -3:
 				{
-					free(pic_data.data);
+					rt_free(pic_data.data);
 					rt_sem_delete(gsm_mail_buf.result_sem);
 					close(pic_file_id);
 					return -1;
@@ -714,7 +715,7 @@ rt_int8_t send_picture_data(void)
 				}
 				case -4:	//receive unusual	send sotp
 				{
-					free(pic_data.data);
+					rt_free(pic_data.data);
 					rt_sem_delete(gsm_mail_buf.result_sem);
 					close(pic_file_id);
 					return -1;
@@ -729,7 +730,7 @@ rt_int8_t send_picture_data(void)
 					resend_num++;
 					if(resend_num > 3)
 					{
-						free(pic_data.data);
+						rt_free(pic_data.data);
 						rt_sem_delete(gsm_mail_buf.result_sem);
 						close(pic_file_id);
 						return -1;
@@ -744,7 +745,7 @@ rt_int8_t send_picture_data(void)
 	close(pic_file_id);
 	rt_thread_delay(300);
 	rt_sem_delete(gsm_mail_buf.result_sem);
-	free(pic_data.data);
+	rt_free(pic_data.data);
 	return 1;
 }
 
@@ -1436,11 +1437,11 @@ int8_t send_gprs_frame(ALARM_TYPEDEF alarm_type, time_t time, uint8_t order, voi
     rt_kprintf("mq_gsm is RT_NULL!!!\n");
     send_result = -1;
   }
-quitgprsdatasend:
   rt_thread_delay(50);
-  rt_free(gprs_send_frame);
   rt_free(gprs_recv_frame);
   rt_free(process_buf);
+quitgprsdatasend:  
+  rt_free(gprs_send_frame);
   return send_result;
 
 }
