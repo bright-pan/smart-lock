@@ -42,6 +42,8 @@
 
 rt_mq_t gprs_mq = RT_NULL;
 
+uint8_t http_address[100] = {0, };
+
 static uint8_t gprs_order = 0;
 static uint16_t work_alarm_type_map[50] = {0, };
 static uint16_t fault_alarm_type_map[50] = {0, };
@@ -224,13 +226,13 @@ static void get_pic_size(const char* name ,rt_uint32_t *size)
 
 void lock_open_process(GPRS_LOCK_OPEN *lock_open,time_t time,rt_uint8_t key[])
 {
-	struct tm time_tm;
+  struct tm time_tm;
 	
-	strncpy((char*)lock_open->key,(const char*)key,4);
-	time_tm = *localtime(&time);
+  strncpy((char*)lock_open->key,(const char*)key,4);
+  time_tm = *localtime(&time);
   time_tm.tm_year += 1900;
   time_tm.tm_mon += 1;
-	lock_open->time[0] = dec_to_bcd((uint8_t)(time_tm.tm_year % 100));
+  lock_open->time[0] = dec_to_bcd((uint8_t)(time_tm.tm_year % 100));
   lock_open->time[1] = dec_to_bcd((uint8_t)(time_tm.tm_mon % 100));
   lock_open->time[2] = dec_to_bcd((uint8_t)(time_tm.tm_mday % 100));
   lock_open->time[3] = dec_to_bcd((uint8_t)(time_tm.tm_hour % 100));
@@ -284,12 +286,12 @@ void fault_alarm_process(ALARM_TYPEDEF alarm_type, GPRS_FAULT_ALARM* fault_alarm
 
 void battery_alarm_process(GPRS_POWER_ALARM* power_alarm,time_t time)
 {
-	struct tm		date;
-	Battery_Data battery_dat;
+  struct tm		date;
+  Battery_Data battery_dat;
 
-	battery_get_data(&battery_dat);
-	power_alarm->status = battery_dat.status;
-	power_alarm->dump_energy = battery_dat.work_time;
+  battery_get_data(&battery_dat);
+  power_alarm->status = battery_dat.status;
+  power_alarm->dump_energy = battery_dat.work_time;
   date = *localtime(&time);
   date.tm_year += 1900;
   date.tm_mon += 1;
@@ -303,59 +305,59 @@ void battery_alarm_process(GPRS_POWER_ALARM* power_alarm,time_t time)
 }
 rt_int8_t process_gprs_pic_arg(GPRS_SEND_PIC_ASK *pic_info,time_t time,void* user)
 {
-	struct tm		date;
-	rt_uint32_t size;
-	ALARM_TYPEDEF temp;
+  struct tm		date;
+  rt_uint32_t size;
+  ALARM_TYPEDEF temp;
 
-	temp = *(ALARM_TYPEDEF*)user;
-	switch(temp)
-	{
-		case ALARM_TYPE_CAMERA_IRDASENSOR:
-		{
-			pic_info->type = 1;
-			break;
-		}
-		case ALARM_TYPE_RFID_KEY_ERROR:
-		{
-			pic_info->type = 3;
-			break;
-		}
-		case ALARM_TYPE_LOCK_TEMPERATURE:
-		{
-			pic_info->type = 4;
-			break;
-		}
-		default:
-		{
-			break;
-		}
-	}
-	if(pic_info->type == 0)
-	{
-		pic_info->type = 1;
-	}
-	//pic_info->type = *(rt_uint8_t *)user;
-	pic_info->form = 1;
-	pic_info->DPI = 1;
-	get_pic_size(PIC_NAME,&size);					//get picture file size
-	if(size == 0)
-	{
-		return -1;
-	}
-	pic_info->pic_size[0] = (size & 0x0000ff00)>>8;
-	pic_info->pic_size[1] = (size & 0x000000ff);
-	pic_info->page = (size / 512);
-	if((size % 512) != 0)
-	{
-		pic_info->page++;
-	}
+  temp = *(ALARM_TYPEDEF*)user;
+  switch(temp)
+  {
+    case ALARM_TYPE_CAMERA_IRDASENSOR:
+      {
+        pic_info->type = 1;
+        break;
+      }
+    case ALARM_TYPE_RFID_KEY_ERROR:
+      {
+        pic_info->type = 3;
+        break;
+      }
+    case ALARM_TYPE_LOCK_TEMPERATURE:
+      {
+        pic_info->type = 4;
+        break;
+      }
+    default:
+      {
+        break;
+      }
+  }
+  if(pic_info->type == 0)
+  {
+    pic_info->type = 1;
+  }
+  //pic_info->type = *(rt_uint8_t *)user;
+  pic_info->form = 1;
+  pic_info->DPI = 1;
+  get_pic_size(PIC_NAME,&size);					//get picture file size
+  if(size == 0)
+  {
+    return -1;
+  }
+  pic_info->pic_size[0] = (size & 0x0000ff00)>>8;
+  pic_info->pic_size[1] = (size & 0x000000ff);
+  pic_info->page = (size / 512);
+  if((size % 512) != 0)
+  {
+    pic_info->page++;
+  }
 
-	rt_kprintf("time = %d\n",time);
-	date = *localtime(&time);
-	date.tm_year += 1900;
-	date.tm_mon += 1;
+  rt_kprintf("time = %d\n",time);
+  date = *localtime(&time);
+  date.tm_year += 1900;
+  date.tm_mon += 1;
 
-	pic_info->time[0] = dec_to_bcd((uint8_t)(date.tm_year % 100));
+  pic_info->time[0] = dec_to_bcd((uint8_t)(date.tm_year % 100));
   pic_info->time[1] = dec_to_bcd((uint8_t)(date.tm_mon % 100));
   pic_info->time[2] = dec_to_bcd((uint8_t)(date.tm_mday % 100));
   pic_info->time[3] = dec_to_bcd((uint8_t)(date.tm_hour % 100));
@@ -1062,6 +1064,26 @@ int8_t send_gprs_frame(ALARM_TYPEDEF alarm_type, time_t time, uint8_t order, voi
       gsm_mail_buf.mail_data.gprs.has_response = 0;
       break;
     };
+    case ALARM_TYPE_GPRS_SET_HTTP_SUCCESS: {
+
+      gprs_send_frame->length = 1;
+      gprs_send_frame->cmd = 0x19;
+      gprs_send_frame->order = order;
+
+      gprs_send_frame->data.set_http.result = 1;
+      gsm_mail_buf.mail_data.gprs.has_response = 0;
+      break;
+    };
+    case ALARM_TYPE_GPRS_SET_HTTP_FAILURE: {
+
+      gprs_send_frame->length = 1;
+      gprs_send_frame->cmd = 0x19;
+      gprs_send_frame->order = order;
+
+      gprs_send_frame->data.set_http.result = 0;
+      gsm_mail_buf.mail_data.gprs.has_response = 0;
+      break;
+    };
     case ALARM_TYPE_GPRS_SEND_PIC_DATA:
     {
     	extern rt_mutex_t	pic_file_mutex;
@@ -1073,6 +1095,7 @@ int8_t send_gprs_frame(ALARM_TYPEDEF alarm_type, time_t time, uint8_t order, voi
     	goto	quitgprsdatasend;
     	//break;
     }
+
     default : { 
       break;
     };
@@ -1112,12 +1135,12 @@ int8_t send_gprs_frame(ALARM_TYPEDEF alarm_type, time_t time, uint8_t order, voi
 			break;
     }
     case ALARM_TYPE_RFID_KEY_SUCCESS: {	
-    	memcpy(process_buf_bk,gprs_send_frame->data.lock_open.key,4);
-			process_buf_bk += 4;
-//			process_length += 4;
-			memcpy(process_buf_bk,gprs_send_frame->data.lock_open.time,6);
-			process_length += 10;
-			break;
+      memcpy(process_buf_bk,gprs_send_frame->data.lock_open.key,4);
+      process_buf_bk += 4;
+      //			process_length += 4;
+      memcpy(process_buf_bk,gprs_send_frame->data.lock_open.time,6);
+      process_length += 10;
+      break;
     }
     
     case ALARM_TYPE_GPRS_HEART : {
@@ -1343,8 +1366,20 @@ int8_t send_gprs_frame(ALARM_TYPEDEF alarm_type, time_t time, uint8_t order, voi
 
       break;
     };
+    case ALARM_TYPE_GPRS_SET_HTTP_SUCCESS: {
 
+      *process_buf_bk++ = gprs_send_frame->data.set_http.result;
+      process_length += 1;
 
+      break;
+    };
+    case ALARM_TYPE_GPRS_SET_HTTP_FAILURE: {
+
+      *process_buf_bk++ = gprs_send_frame->data.set_http.result;
+      process_length += 1;
+
+      break;
+    };
     case ALARM_TYPE_GPRS_UPLOAD_PIC:
     {
     	*process_buf_bk++ = gprs_send_frame->data.picture.type;
@@ -1536,6 +1571,16 @@ void process_gprs_set_key0(GPRS_SET_KEY0 *gprs_set_key0)
   //save to file
   system_file_operate(&device_parameters, 1);
 }
+void process_gprs_set_http(GPRS_SET_HTTP *gprs_set_http, uint8_t length)
+{
+  if(length >= 100)
+  {
+    length = 99;
+  }
+
+  memset(http_address, 0, sizeof(http_address));
+  memcpy(http_address, gprs_set_http->http_address, length);
+}
 
 int8_t recv_gprs_frame(GPRS_RECV_FRAME_TYPEDEF *gprs_recv_frame, uint16_t recv_counts)
 {
@@ -1654,6 +1699,20 @@ int8_t recv_gprs_frame(GPRS_RECV_FRAME_TYPEDEF *gprs_recv_frame, uint16_t recv_c
       }
       break;
     };
+    //set http
+    case 0x99: {
+
+      if (recv_counts == 4 + gprs_recv_frame->length)
+      {
+        process_gprs_set_http(&gprs_recv_frame->data.set_http, gprs_recv_frame->length);
+        send_gprs_mail(ALARM_TYPE_GPRS_SET_HTTP_SUCCESS, 0, gprs_recv_frame->order,RT_NULL);
+      }
+      else
+      {
+        send_gprs_mail(ALARM_TYPE_GPRS_SET_HTTP_FAILURE, 0, gprs_recv_frame->order,RT_NULL);
+      }
+      break;
+    };
       
     case 0x8E:
     {
@@ -1663,48 +1722,48 @@ int8_t recv_gprs_frame(GPRS_RECV_FRAME_TYPEDEF *gprs_recv_frame, uint16_t recv_c
 			break;
     }
     case 0x8F:
-    {
+      {
     	rt_uint8_t i;
-			rt_kprintf("picture send data recv respond \n");
-			rt_kprintf("%d\n",gprs_recv_frame->data.pic_send_result.resend_num);
-			for(i = 0; i < 100;i++)
-			{
-				rt_kprintf("%x",gprs_recv_frame->data.pic_send_result.data[i]);
-			}
+        rt_kprintf("picture send data recv respond \n");
+        rt_kprintf("%d\n",gprs_recv_frame->data.pic_send_result.resend_num);
+        for(i = 0; i < 100;i++)
+        {
+          rt_kprintf("%x",gprs_recv_frame->data.pic_send_result.data[i]);
+        }
 
-			switch(gprs_recv_frame->data.pic_send_result.result)
+        switch(gprs_recv_frame->data.pic_send_result.result)
     	{
-				case 0:					//send ok
-				{
-					result = 1;
-					rt_kprintf("gprs data send ok\n");
-					break;
-				}
-				case 1:					//receive imperfect
-				{
-					result = -2;
-					rt_kprintf("gprs data receive imperfect\n");
-					break;
-				}case 2:				//receive	unusual resend
-				{
-					result = -3;
-					rt_kprintf("gprs data receive	unusual resend\n");
-					break;
-				}
-				case 3:					//receive unusual	send sotp
-				{
-					result = -4;
-					rt_kprintf("gprs data receive unusual	send sotp\n");
-					break;
-				}
-				default:
-				{
-					result = -1;
-					rt_kprintf("gprs data error\n");
-				}
+          case 0:					//send ok
+            {
+              result = 1;
+              rt_kprintf("gprs data send ok\n");
+              break;
+            }
+          case 1:					//receive imperfect
+            {
+              result = -2;
+              rt_kprintf("gprs data receive imperfect\n");
+              break;
+            }case 2:				//receive	unusual resend
+            {
+              result = -3;
+              rt_kprintf("gprs data receive	unusual resend\n");
+              break;
+            }
+          case 3:					//receive unusual	send sotp
+            {
+              result = -4;
+              rt_kprintf("gprs data receive unusual	send sotp\n");
+              break;
+            }
+          default:
+            {
+              result = -1;
+              rt_kprintf("gprs data error\n");
+            }
     	}
-			break;
-    }
+        break;
+      }
     default : {
       if (recv_counts == 4 &&
           gprs_recv_frame->length == 0)

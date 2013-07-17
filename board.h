@@ -23,6 +23,7 @@
 #include "gpio_adc.h"
 #include "alarm.h"
 #include "sms.h"
+#include "aip.h"
 #include "gprs.h"
 #include "local.h"
 #include "gsm_usart.h"

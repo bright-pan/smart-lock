@@ -172,6 +172,7 @@ int rt_application_init()
   rt_thread_t alarm_mail_process_thread;
   rt_thread_t sms_mail_process_thread;
   rt_thread_t mms_mail_process_thread;
+  rt_thread_t aip_mail_process_thread;
   rt_thread_t gprs_mail_process_thread;
   rt_thread_t local_mail_process_thread;
   rt_thread_t gsm_process_thread;
@@ -188,6 +189,10 @@ int rt_application_init()
   /* initial mms msg queue */
   mms_mq = rt_mq_create("mms", sizeof(MMS_MAIL_TYPEDEF),
                         MMS_MAIL_MAX_MSGS,
+                        RT_IPC_FLAG_FIFO);
+  /* initial aip msg queue */
+  aip_mq = rt_mq_create("aip", sizeof(AIP_MAIL_TYPEDEF),
+                        AIP_MAIL_MAX_MSGS,
                         RT_IPC_FLAG_FIFO);
   /* initial gprs msg queue */
   gprs_mq = rt_mq_create("gprs", sizeof(GPRS_MAIL_TYPEDEF),
@@ -227,6 +232,14 @@ int rt_application_init()
   if (mms_mail_process_thread != RT_NULL)
   {
     rt_thread_startup(mms_mail_process_thread);
+  }
+  /* aip mail process thread */
+  aip_mail_process_thread = rt_thread_create("aip",
+                                             aip_mail_process_thread_entry, RT_NULL,
+                                             1024, 104, 20);
+  if (aip_mail_process_thread != RT_NULL)
+  {
+    rt_thread_startup(aip_mail_process_thread);
   }
   
   /* gprs mail process thread */

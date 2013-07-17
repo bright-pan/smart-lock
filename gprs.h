@@ -160,13 +160,20 @@ typedef struct
 
 }GPRS_SEND_SET_KEY0;
 
+typedef struct
+{
+
+  uint8_t result;
+
+}GPRS_SEND_SET_HTTP;
+
 typedef struct 
 {
-	uint16_t 	length;
+  uint16_t 	length;
   uint8_t 	cmd;
   uint8_t 	order;
-	uint8_t 	cur_page;
-	uint8_t* 	data;
+  uint8_t 	cur_page;
+  uint8_t* 	data;
 	
 }GPRS_SEND_PIC;
 
@@ -187,6 +194,7 @@ typedef union
   GPRS_SEND_SET_USER_PARAMETERS set_user_parameters;
   GPRS_SEND_SET_TIME set_time;
   GPRS_SEND_SET_KEY0 set_key0;
+  GPRS_SEND_SET_HTTP set_http;
   GPRS_POWER_ALARM	battery;
   GPRS_SEND_PIC_ASK picture;
 }GPRS_SEND_DATA;
@@ -252,11 +260,17 @@ typedef struct
 
 }GPRS_SET_KEY0;
 
+typedef struct
+{
+  uint8_t http_address[100];
+
+}GPRS_SET_HTTP;
+
 typedef struct 
 {
-	uint8_t	result;
-	uint8_t	resend_num;
-	uint8_t	data[100];
+  uint8_t	result;
+  uint8_t	resend_num;
+  uint8_t	data[100];
 }GPRS_PIC_RESULT;
 
 typedef union
@@ -269,7 +283,8 @@ typedef union
   GPRS_SET_USER_PARAMETERS set_user_parameters;
   GPRS_SET_TIME set_time;
   GPRS_SET_KEY0 set_key0;
-	GPRS_PIC_RESULT pic_send_result;
+  GPRS_SET_HTTP set_http;
+  GPRS_PIC_RESULT pic_send_result;
 }GPRS_RECV_DATA;
 
 typedef struct
