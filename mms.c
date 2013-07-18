@@ -167,6 +167,10 @@ void mms_mail_process_thread_entry(void *parameter)
       rt_mutex_take(mutex_gsm_mail_sequence,RT_WAITING_FOREVER);
       if (!send_mms(mms_mail_buf.pic_name))
       {
+      	static ALARM_TYPEDEF alarm_type ;
+      	
+      	alarm_type = mms_mail_buf.alarm_type;
+      	send_gprs_mail(ALARM_TYPE_GPRS_UPLOAD_PIC,0, 0,(void *)&alarm_type);
         rt_kprintf("\nsend mms success!!!\n");
       }
       else

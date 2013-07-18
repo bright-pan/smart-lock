@@ -48,7 +48,7 @@
           <CreateLib>0</CreateLib>
           <CreateHexFile>1</CreateHexFile>
           <DebugInformation>1</DebugInformation>
-          <BrowseInformation>0</BrowseInformation>
+          <BrowseInformation>1</BrowseInformation>
           <ListingPath>.\obj\</ListingPath>
           <HexFormatSelection>1</HexFormatSelection>
           <Merge32K>0</Merge32K>
@@ -474,6 +474,16 @@
               <FileName>gprs_pic.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\gprs_pic.c</FilePath>
+            </File>
+            <File>
+              <FileName>SPI_Flash.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\SPI_Flash.c</FilePath>
+            </File>
+            <File>
+              <FileName>file_update.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\file_update.c</FilePath>
             </File>
           </Files>
         </Group>

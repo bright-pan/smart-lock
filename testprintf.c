@@ -21,6 +21,8 @@
 #include "gprs.h"
 #include "mms.h"
 #include "alarm.h"
+#include "SPI_Flash.h"
+#include "file_update.h"
 
 
 
@@ -485,8 +487,9 @@ void f_n_l(const char *name)
 FINSH_FUNCTION_EXPORT(f_n_l,send mq mms_mq);
 void gprs_pic(void)
 {
-	send_gprs_mail(ALARM_TYPE_GPRS_UPLOAD_PIC,0, 0,(void *)ALARM_TYPE_LOCK_TEMPERATURE);
+	static ALARM_TYPEDEF type = ALARM_TYPE_LOCK_TEMPERATURE;
 	
+	send_gprs_mail(ALARM_TYPE_GPRS_UPLOAD_PIC,0, 0,(void *)&type);
 }
 FINSH_FUNCTION_EXPORT(gprs_pic,gprs send picture);
 
@@ -528,6 +531,45 @@ void light_ir_test(rt_uint8_t	status)
 	}
 }
 FINSH_FUNCTION_EXPORT(light_ir_test,Infrared and optical test);
+
+void flashtest(void)
+{
+	rt_base_t temp;
+	rt_uint8_t	buffer[20] = "wang zhou wang";
+
+	SST25_W_BLOCK(FLASH_START_WRITE_ADDR,buffer,20);
+
+	SST25_R_BLOCK(FLASH_START_WRITE_ADDR,buffer,20);
+	temp = rt_hw_interrupt_disable();
+
+	rt_kprintf("read flash data : %s\n\n",buffer);
+	rt_hw_interrupt_enable(temp);
+}
+FINSH_FUNCTION_EXPORT(flashtest,test flash intterupt);
+
+void file_move_flash(const char *file_name)
+{
+
+	rt_uint32_t i = 0; 
+	rt_uint8_t	data;
+	struct  stat  Info;
+	extern rt_uint8_t file_write_flash_addr(const char *file_name,
+                                         rt_uint32_t addr);
+	stat(file_name,&Info);	
+	if(file_write_flash_addr(file_name,FLASH_START_WRITE_ADDR) == 1)
+	{
+		rt_kprintf("File move fail\n");
+	}
+
+	rt_thread_delay(500);
+	for(i = FLASH_START_WRITE_ADDR; i <FLASH_START_WRITE_ADDR + Info.st_size;i++)
+	{
+		SST25_R_BLOCK(i,&data,1);
+
+		rt_kprintf("%c",data);
+	}
+}
+FINSH_FUNCTION_EXPORT(file_move_flash,file system file move flash start addr);
 
 #endif
 
