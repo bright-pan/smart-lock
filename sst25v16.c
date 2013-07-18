@@ -517,7 +517,7 @@ rt_err_t rt_flash_register(const char * flash_device_name, const char * spi_devi
   sst25v16.parent.type    = RT_Device_Class_Block;
 
   sst25v16.geometry.bytes_per_sector = 4096;
-  sst25v16.geometry.sector_count = 512;
+  sst25v16.geometry.sector_count = (512 - 150);//flash set apart 600kbyte 
   sst25v16.geometry.block_size = 4096;
 
  
@@ -606,7 +606,7 @@ void flashreadc(u32 addr,u32 size)
 	for(i = addr;i < size;i++)
 	{
 		spi_flash_buffer_read(sst25v16.spi_device,&dat,i,1);
-		rt_kprintf("%c ",dat);
+		rt_kprintf("%c",dat);
 	}
 }
 FINSH_FUNCTION_EXPORT(flashreadc,flashreadc(start_addr, end_addr)-- Read_String);

@@ -15,11 +15,8 @@
 *
 */
 
-#include "stm32f10x.h"
 #include "SPI_Flash.h"
-#include "stm32f10x_spi.h"	
 
-u8 SST25_buffer[4096];
 
 void wip(void);
 void wen(void);
@@ -145,19 +142,21 @@ void SST25_R_BLOCK(u32 addr, u8 *readbuff, u16 BlockSize){
 ****************************************************************************/  
 void SST25_W_BLOCK(u32 addr, u8 *readbuff, u16 BlockSize){
 	u16 i=0,a2;
-	sect_clr(addr);   								  //删除页		  
+	
+	sect_clr(addr);//擦除这个扇区
 	wsr();
-  	wen();	
+	wen();	
 	Select_Flash();    
 	SPI_Flash_SendByte(0xad);
 	SPI_Flash_SendByte((addr&0xffffff)>>16);
 	SPI_Flash_SendByte((addr&0xffff)>>8);
 	SPI_Flash_SendByte(addr&0xff);
-  	SPI_Flash_SendByte(readbuff[0]);
+	SPI_Flash_SendByte(readbuff[0]);
 	SPI_Flash_SendByte(readbuff[1]);
 	NotSelect_Flash();
 	i=2;
-	while(i<BlockSize){
+	while(i<BlockSize)
+	{
 		a2=120;
 		while(a2>0) a2--;
 		Select_Flash();
@@ -173,6 +172,8 @@ void SST25_W_BLOCK(u32 addr, u8 *readbuff, u16 BlockSize){
 	Select_Flash();	
 	wip();
 }
+
+
 /****************************************************************************
 * 名    称：void sect_clr(u32 a1)
 * 功    能：页擦除
@@ -204,13 +205,13 @@ void sect_clr(u32 a1){
 void FlashReadID(void)
 {
 	Select_Flash();	
-  	SPI_Flash_SendByte(0x90);
+	SPI_Flash_SendByte(0x90);
 	SPI_Flash_SendByte(0x00);
 	SPI_Flash_SendByte(0x00);
 	SPI_Flash_SendByte(0x00);
-  	//fac_id= SPI_Flash_ReadByte();		          //BFH: 工程码SST
+	//fac_id= SPI_Flash_ReadByte();		          //BFH: 工程码SST
 	//dev_id= SPI_Flash_ReadByte();	              //41H: 器件型号SST25VF016B     
-  	NotSelect_Flash();	
+	NotSelect_Flash();	
 }
 
 /*******************************************************************************
