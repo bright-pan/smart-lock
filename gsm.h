@@ -58,7 +58,7 @@ typedef enum
   AT_CMMSPROTO,
   AT_CMMSSENDCFG,
   AT_SAPBR_CONTYPE,//index=25
-  AT_SAPBR_APN,
+  AT_SAPBR_APN_CMWAP,
   AT_SAPBR_OPEN,
   AT_SAPBR_CLOSE,
   AT_SAPBR_REQUEST,
@@ -80,6 +80,15 @@ typedef enum
   AT_V,//index=45
   AT_D1,
   AT_W,
+  AT_HTTPINIT,
+  AT_HTTPTERM,
+  AT_HTTPPARA_CID,//index=50
+  AT_HTTPPARA_URL,
+  AT_HTTPACTION_POST,
+  AT_HTTPACTION_GET,
+  AT_HTTPACTION_HEAD,
+  AT_HTTPREAD,//index=55
+  AT_SAPBR_APN_CMNET,
 
 }AT_COMMAND_INDEX_TYPEDEF;
 
@@ -136,7 +145,7 @@ typedef struct
 typedef struct
 {
   uint32_t length;
-}GSM_MAIL_CMD_CMMSDOWN_TXT;
+}GSM_MAIL_CMD_CMMSDOWN_TEXT;
 
 typedef struct
 {
@@ -145,14 +154,28 @@ typedef struct
   uint8_t has_complete;
 }GSM_MAIL_CMD_CMMSDOWN_DATA;
 
+typedef struct
+{
+  uint32_t length;
+  uint8_t *buf;
+}GSM_MAIL_CMD_HTTPPARA_URL;
+typedef struct
+{
+  uint32_t start;
+  uint32_t *length;
+  uint8_t *buf;
+}GSM_MAIL_CMD_HTTPREAD;
+
 typedef union
 {
   GSM_MAIL_CMD_CMGS cmgs;
   GSM_MAIL_CMD_CMMSRECP cmmsrecp;
   GSM_MAIL_CMD_CMMSDOWN_PIC cmmsdown_pic;
   GSM_MAIL_CMD_CMMSDOWN_TITLE cmmsdown_title;
-  GSM_MAIL_CMD_CMMSDOWN_TXT cmmsdown_txt;
+  GSM_MAIL_CMD_CMMSDOWN_TEXT cmmsdown_text;
   GSM_MAIL_CMD_CMMSDOWN_DATA cmmsdown_data;
+  GSM_MAIL_CMD_HTTPPARA_URL httppara_url;
+  GSM_MAIL_CMD_HTTPREAD httpread;
 }GSM_MAIL_CMD_DATA;
 
 typedef struct
@@ -202,7 +225,8 @@ rt_uint32_t gsm_mode_get(void);
 void gsm_mode_set(rt_uint32_t mode);
 void gsm_put_char(const uint8_t *str, uint16_t length);
 void gsm_put_hex(const uint8_t *str, uint16_t length);
-AT_RESPONSE_TYPEDEF send_cmd_mail(AT_COMMAND_INDEX_TYPEDEF command_index, uint16_t delay, uint8_t *buf, uint32_t length, uint8_t has_complete);
+
+AT_RESPONSE_TYPEDEF send_cmd_mail(AT_COMMAND_INDEX_TYPEDEF command_index, uint16_t delay, GSM_MAIL_CMD_DATA *cmd_data);
 
 extern char smsc[20];
 extern char phone_call[20];

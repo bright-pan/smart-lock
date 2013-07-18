@@ -24,6 +24,7 @@
 #include <rtc.h>
 #include "mms_dev.h"
 #include "gpio_pin.h"
+#include "aip.h"
 
 #define PIC_PER_PAGE_SIZE		512
 #define PIC_NAME						"/2.jpg"
@@ -42,7 +43,6 @@
 
 rt_mq_t gprs_mq = RT_NULL;
 
-uint8_t http_address[100] = {0, };
 
 static uint8_t gprs_order = 0;
 static uint16_t work_alarm_type_map[50] = {0, };
@@ -1577,9 +1577,9 @@ void process_gprs_set_http(GPRS_SET_HTTP *gprs_set_http, uint8_t length)
   {
     length = 99;
   }
-
-  memset(http_address, 0, sizeof(http_address));
-  memcpy(http_address, gprs_set_http->http_address, length);
+  aip_bin_http_address_length = length;
+  memset(aip_bin_http_address, 0, sizeof(aip_bin_http_address));
+  memcpy(aip_bin_http_address, gprs_set_http->http_address, length);
 }
 
 int8_t recv_gprs_frame(GPRS_RECV_FRAME_TYPEDEF *gprs_recv_frame, uint16_t recv_counts)

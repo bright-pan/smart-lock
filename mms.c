@@ -33,41 +33,51 @@ int8_t send_mms(char *pic_name)
   uint32_t read_size = 0;
   uint8_t *process_buf = (uint8_t *)rt_malloc(512);
   uint8_t alarm_telephone_counts;
+  GSM_MAIL_CMD_DATA cmd_data;
 
   if (stat(pic_name,&status))
   {
     rt_kprintf("\nsend mms but get picture size is error!!!\n");
     return result;
   }
-  send_cmd_mail(AT_CMMSEDIT_CLOSE, 50, (uint8_t *)"", 0, 0);
-  send_cmd_mail(AT_SAPBR_CLOSE, 50, (uint8_t *)"", 0, 0);
-  send_cmd_mail(AT_CMMSTERM, 50, (uint8_t *)"", 0, 0);
+  send_cmd_mail(AT_CMMSEDIT_CLOSE, 50, &cmd_data);
+  send_cmd_mail(AT_SAPBR_CLOSE, 50, &cmd_data);
+  send_cmd_mail(AT_CMMSTERM, 50, &cmd_data);
   // mms initial
-  if ((send_cmd_mail(AT_CMMSINIT, 50, (uint8_t *)"", 0, 0) == AT_RESPONSE_OK) &&
-      (send_cmd_mail(AT_CMMSCURL, 50, (uint8_t *)"", 0, 0) == AT_RESPONSE_OK) &&
-      (send_cmd_mail(AT_CMMSCID, 50, (uint8_t *)"", 0, 0) == AT_RESPONSE_OK) &&
-      (send_cmd_mail(AT_CMMSPROTO, 50, (uint8_t *)"", 0, 0) == AT_RESPONSE_OK) &&
-      (send_cmd_mail(AT_CMMSSENDCFG, 50, (uint8_t *)"", 0, 0) == AT_RESPONSE_OK))
+  if ((send_cmd_mail(AT_CMMSINIT, 50, &cmd_data) == AT_RESPONSE_OK) &&
+      (send_cmd_mail(AT_CMMSCURL, 50, &cmd_data) == AT_RESPONSE_OK) &&
+      (send_cmd_mail(AT_CMMSCID, 50, &cmd_data) == AT_RESPONSE_OK) &&
+      (send_cmd_mail(AT_CMMSPROTO, 50, &cmd_data) == AT_RESPONSE_OK) &&
+      (send_cmd_mail(AT_CMMSSENDCFG, 50, &cmd_data) == AT_RESPONSE_OK))
   {
     //active bearer profile
-    if ((send_cmd_mail(AT_SAPBR_CONTYPE, 50, (uint8_t *)"", 0, 0) == AT_RESPONSE_OK) &&
-        (send_cmd_mail(AT_SAPBR_APN, 50, (uint8_t *)"", 0, 0) == AT_RESPONSE_OK) &&
-        (send_cmd_mail(AT_SAPBR_OPEN, 50, (uint8_t *)"", 0, 0) == AT_RESPONSE_OK) &&
-        (send_cmd_mail(AT_SAPBR_REQUEST, 50, (uint8_t *)"", 0, 0) == AT_RESPONSE_OK))
+    if ((send_cmd_mail(AT_SAPBR_CONTYPE, 50, &cmd_data) == AT_RESPONSE_OK) &&
+        (send_cmd_mail(AT_SAPBR_APN_CMWAP, 50, &cmd_data) == AT_RESPONSE_OK) &&
+        (send_cmd_mail(AT_SAPBR_OPEN, 50, &cmd_data) == AT_RESPONSE_OK) &&
+        (send_cmd_mail(AT_SAPBR_REQUEST, 50, &cmd_data) == AT_RESPONSE_OK))
     {
       //send mms
       //open mms edit
-      if (send_cmd_mail(AT_CMMSEDIT_OPEN, 50, (uint8_t *)"", 0, 0) == AT_RESPONSE_OK)
+      if (send_cmd_mail(AT_CMMSEDIT_OPEN, 50, &cmd_data) == AT_RESPONSE_OK)
       {
-        if (send_cmd_mail(AT_CMMSDOWN_TITLE, 50, (uint8_t *)"", sizeof(mms_title),0) == AT_RESPONSE_CONNECT_OK)
+        cmd_data.cmmsdown_title.length = sizeof(mms_title);
+        if (send_cmd_mail(AT_CMMSDOWN_TITLE, 50, &cmd_data) == AT_RESPONSE_CONNECT_OK)
         {
-          if(send_cmd_mail(AT_CMMSDOWN_DATA, 50, (uint8_t *)mms_title, sizeof(mms_title),1) == AT_RESPONSE_OK)
+          cmd_data.cmmsdown_data.buf = (uint8_t *)mms_title;
+          cmd_data.cmmsdown_data.length = sizeof(mms_title);
+          cmd_data.cmmsdown_data.has_complete = 1;
+          if(send_cmd_mail(AT_CMMSDOWN_DATA, 50, &cmd_data) == AT_RESPONSE_OK)
           {
-            if (send_cmd_mail(AT_CMMSDOWN_TEXT, 50, (uint8_t *)"", sizeof(mms_text),0) == AT_RESPONSE_CONNECT_OK)
+            cmd_data.cmmsdown_text.length = sizeof(mms_text);
+            if (send_cmd_mail(AT_CMMSDOWN_TEXT, 50, &cmd_data) == AT_RESPONSE_CONNECT_OK)
             {
-              if (send_cmd_mail(AT_CMMSDOWN_DATA, 50, (uint8_t *)mms_text, sizeof(mms_text),1) == AT_RESPONSE_OK)
+              cmd_data.cmmsdown_data.buf = (uint8_t *)mms_text;
+              cmd_data.cmmsdown_data.length = sizeof(mms_text);
+              cmd_data.cmmsdown_data.has_complete = 1;
+              if (send_cmd_mail(AT_CMMSDOWN_DATA, 50, &cmd_data) == AT_RESPONSE_OK)
               {
-                if (send_cmd_mail(AT_CMMSDOWN_PIC, 50, (uint8_t *)"", status.st_size,0) == AT_RESPONSE_CONNECT_OK)
+                cmd_data.cmmsdown_pic.length = status.st_size;
+                if (send_cmd_mail(AT_CMMSDOWN_PIC, 50, &cmd_data) == AT_RESPONSE_CONNECT_OK)
                 {
                   extern rt_mutex_t pic_file_mutex;
                   rt_mutex_take(pic_file_mutex,RT_WAITING_FOREVER);
@@ -96,11 +106,19 @@ int8_t send_mms(char *pic_name)
 
                     if (status.st_size > 0)
                     {
-                      send_cmd_mail(AT_CMMSDOWN_DATA, 50, process_buf, read_size, 0);
+                      cmd_data.cmmsdown_data.buf = process_buf;
+                      cmd_data.cmmsdown_data.length = read_size;
+                      cmd_data.cmmsdown_data.has_complete = 0;
+
+                      send_cmd_mail(AT_CMMSDOWN_DATA, 50, &cmd_data);
                     }
                     else
                     {
-                      if (send_cmd_mail(AT_CMMSDOWN_DATA, 50, process_buf, read_size, 1) == AT_RESPONSE_OK)
+                      cmd_data.cmmsdown_data.buf = process_buf;
+                      cmd_data.cmmsdown_data.length = read_size;
+                      cmd_data.cmmsdown_data.has_complete = 1;
+
+                      if (send_cmd_mail(AT_CMMSDOWN_DATA, 50, &cmd_data) == AT_RESPONSE_OK)
                       {
                       }
                     }
@@ -118,16 +136,18 @@ int8_t send_mms(char *pic_name)
                   {
                     if (device_parameters.alarm_telephone[alarm_telephone_counts].flag)
                     {
-                      if (send_cmd_mail(AT_CMMSRECP, 50, (uint8_t *)(device_parameters.alarm_telephone[alarm_telephone_counts].address + 2), 0,0) != AT_RESPONSE_OK)
+                      cmd_data.cmmsrecp.buf = (uint8_t *)(device_parameters.alarm_telephone[alarm_telephone_counts].address + 2);
+                      if (send_cmd_mail(AT_CMMSRECP, 50, &cmd_data) != AT_RESPONSE_OK)
                       {
                         rt_kprintf("set telephone %s error\n", (device_parameters.alarm_telephone[alarm_telephone_counts].address + 2));
                       }
                     }
                     alarm_telephone_counts++;
                   }
-                  if (send_cmd_mail(AT_CMMSRECP, 50, (uint8_t *)"21255274@qq.com", 0,0) == AT_RESPONSE_OK)
+                  cmd_data.cmmsrecp.buf = (uint8_t *)"21255274@qq.com";
+                  if (send_cmd_mail(AT_CMMSRECP, 50, &cmd_data) == AT_RESPONSE_OK)
                   {
-                    if (send_cmd_mail(AT_CMMSSEND, 50, (uint8_t *)"", 0,0) == AT_RESPONSE_OK)
+                    if (send_cmd_mail(AT_CMMSSEND, 50, &cmd_data) == AT_RESPONSE_OK)
                     {
                       result = 0;
                     }
@@ -141,9 +161,9 @@ int8_t send_mms(char *pic_name)
     }
   }
 process_result:
-  send_cmd_mail(AT_CMMSEDIT_CLOSE, 50, (uint8_t *)"", 0, 0);
-  send_cmd_mail(AT_SAPBR_CLOSE, 50, (uint8_t *)"", 0, 0);
-  send_cmd_mail(AT_CMMSTERM, 50, (uint8_t *)"", 0, 0);
+  send_cmd_mail(AT_CMMSEDIT_CLOSE, 50, &cmd_data);
+  send_cmd_mail(AT_SAPBR_CLOSE, 50, &cmd_data);
+  send_cmd_mail(AT_CMMSTERM, 50, &cmd_data);
 
   rt_free(process_buf);
   return result;

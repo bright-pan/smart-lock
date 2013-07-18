@@ -405,14 +405,15 @@ void send_local_mail(ALARM_TYPEDEF alarm_type, time_t time)
 static void gsm_ring_process(void)
 {
   uint8_t call_telephone_counts = 0;
+  GSM_MAIL_CMD_DATA cmd_data;
 
   rt_thread_delay(50);
   rt_mutex_take(mutex_gsm_mail_sequence,RT_WAITING_FOREVER);
   if (gpio_pin_input(DEVICE_NAME_GSM_RING) == 0)
   {
     //phone call
-    if (send_cmd_mail(AT_RING, 200, (uint8_t *)"", 0, 0) == AT_RESPONSE_OK &&
-        send_cmd_mail(AT_CLCC, 100, (uint8_t *)"", 0, 0) == AT_RESPONSE_OK)
+    if (send_cmd_mail(AT_RING, 200, &cmd_data) == AT_RESPONSE_OK &&
+        send_cmd_mail(AT_CLCC, 100, &cmd_data) == AT_RESPONSE_OK)
     {
       call_telephone_counts = 0;
       while (call_telephone_counts < TELEPHONE_NUMBERS)
@@ -422,9 +423,10 @@ static void gsm_ring_process(void)
           if (strstr(phone_call, device_parameters.call_telephone[call_telephone_counts].address))
           {
             rt_kprintf("\nAnswer %s phone call!!!\n", (char *)(device_parameters.call_telephone[call_telephone_counts].address));
-            send_cmd_mail(ATA, 100, (uint8_t *)"", 0, 0);
+            send_cmd_mail(ATA, 100, &cmd_data);
             rt_event_send(call_event,CALL_EVENT_START);
             voice_output(0);
+
             break;
           }
 
@@ -433,14 +435,14 @@ static void gsm_ring_process(void)
       }
       if (call_telephone_counts >= TELEPHONE_NUMBERS)
       {
-        send_cmd_mail(ATH5, 100, (uint8_t *)"", 0, 0);
+        send_cmd_mail(ATH5, 100, &cmd_data);
       }
     }
   }
   else
   {
     //sms receive
-    send_cmd_mail(AT_RECV_SMS, 100, (uint8_t *)"", 0, 0);
+    send_cmd_mail(AT_RECV_SMS, 100, &cmd_data);
   }
   rt_mutex_release(mutex_gsm_mail_sequence);
 }
