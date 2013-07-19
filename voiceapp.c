@@ -71,7 +71,7 @@ void voice_thread_entry(void *arg)
 	
 	while(1)
 	{
-		result =  rt_sem_take(voice_start_sem,100);
+		result =  rt_sem_take(voice_start_sem,500);
 		if(RT_EOK == result)
 		{
 			result = rt_event_recv(call_event,CALL_EVENT_START,RT_EVENT_FLAG_OR | RT_EVENT_FLAG_CLEAR,RT_WAITING_NO,&event);
@@ -90,6 +90,9 @@ void voice_thread_entry(void *arg)
 		}
 		else if(result == -RT_ETIMEOUT)
 		{
+			sound_channel_switch(0);
+			sound_channel_switch(0);
+			Amplifier_switch(1);
 			if( 1 == get_call_status())
 			{
 				//rt_kprintf("close amp power\n");
