@@ -62,6 +62,6 @@ elif GetDepend(['RT_USING_RTT_CMSIS']):
     path += [RTT_ROOT + '/components/CMSIS/Include']
 
 CPPDEFINES = ['USE_STDPERIPH_DRIVER', rtconfig.STM32_TYPE]
-group = DefineGroup('STM32_StdPeriph', src, depend = [''], CPPPATH = path, CPPDEFINES = CPPDEFINES)
+group = DefineGroup('STM32_StdPeriph', src, depend = [''], CPPPATH = path, CPPDEFINES = CPPDEFINES, LIBRARY=1)
 
 Return('group')

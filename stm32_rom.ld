@@ -14,13 +14,21 @@ _system_stack_size = 0x100;
 
 SECTIONS
 {
-    .text :
+    .aip 0x8060000 :
+    {
+        . = ALIGN(4);
+	build/bsp/Libraries/libSTM32_StdPeriph.a(.text .text.* .rodata .rodata*)
+	build/SPI_Flash.o(.text .text.* .rodata .rodata*)
+	build/firm_update.o(.text .text.* .rodata .rodata*)
+        . = ALIGN(4);
+    }
+    .text : 
     {
         . = ALIGN(4);
         _stext = .;
         KEEP(*(.isr_vector))            /* Startup code */
         . = ALIGN(4);
-        *(.text)                        /* remaining code */
+       	*(.text)                       /* remaining code */
         *(.text.*)                      /* remaining code */
         *(.rodata)                      /* read-only data (constants) */
         *(.rodata*)
@@ -53,6 +61,7 @@ SECTIONS
         _sidata = .;
     } > CODE
     __exidx_end = .;
+
 
     /* .data section which is used for initialized data */
 
@@ -132,4 +141,5 @@ SECTIONS
     .debug_funcnames 0 : { *(.debug_funcnames) }
     .debug_typenames 0 : { *(.debug_typenames) }
     .debug_varnames  0 : { *(.debug_varnames) }
+
 }

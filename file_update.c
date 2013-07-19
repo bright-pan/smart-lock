@@ -61,14 +61,6 @@ rt_uint8_t file_write_flash_addr(const char *file_name,
 			rt_kprintf("read file fail\n");
 			break;
 		}
-		{
-			rt_uint32_t i;
-
-			for(i = 0;i < FILE_WRITE_FLASH_BUFFER_SIZE;i++)
-			{
-				rt_kprintf("%c",buffer[i]);
-			}
-		}
 		SST25_W_BLOCK(WriteAddr,buffer,ReadSize);
 		WriteAddr += ReadSize;
 	}

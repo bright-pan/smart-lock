@@ -89,6 +89,8 @@ void at_command_map_init(void)
   at_command_map[AT_HTTPACTION_GET] = "AT+HTTPACTION=0\r";
   at_command_map[AT_HTTPACTION_HEAD] = "AT+HTTPACTION=2\r";
   at_command_map[AT_HTTPREAD] = "AT+HTTPREAD=%d,%d\r";
+  at_command_map[AT_HTTPPARA_BREAK] = "AT+HTTPPARA=\"BREAK\",%d\r";
+  at_command_map[AT_HTTPPARA_BREAKEND] = "AT+HTTPPARA=\"BREAKEND\",%d\r";
 
 }
 
@@ -318,7 +320,7 @@ int8_t at_response_process(AT_COMMAND_INDEX_TYPEDEF index, uint8_t *buf, GSM_MAI
   uint16_t recv_counts = 0;
   int8_t result = AT_RESPONSE_ERROR;
   uint8_t *process_buf = (uint8_t *)rt_malloc(512);
-  int temp_length = 0;
+  int temp = 0;
   rt_device_t device_gsm_usart;
 
   device_gsm_usart = rt_device_find(DEVICE_NAME_GSM_USART);
@@ -396,6 +398,8 @@ int8_t at_response_process(AT_COMMAND_INDEX_TYPEDEF index, uint8_t *buf, GSM_MAI
           }
           break;
         };
+        case AT_HTTPPARA_BREAK:
+        case AT_HTTPPARA_BREAKEND:
         case AT_HTTPPARA_URL : {
 
           if (strstr((char *)process_buf, (char *)buf))
@@ -577,12 +581,37 @@ int8_t at_response_process(AT_COMMAND_INDEX_TYPEDEF index, uint8_t *buf, GSM_MAI
                     gsm_put_char(process_buf, strlen((char *)process_buf));
                     gsm_put_hex(process_buf, strlen((char *)process_buf));
 
-                    if (strstr((char *)process_buf, "+HTTPACTION:0,200,"))
+                    if (strstr((char *)process_buf, "+HTTPACTION:0"))
                     {
-                      sscanf((char *)process_buf, "+HTTPACTION:0,200,%d", &aip_bin_size);
-                      result = AT_RESPONSE_OK;
+                      sscanf((char *)process_buf, "+HTTPACTION:0,%d,%d", &temp ,&aip_bin_size);
+                      switch (temp)
+                      {
+                        case 200 : {
+                          result = AT_RESPONSE_OK;
+                          break;
+                        }
+                        case 206 : {
+                          result = AT_RESPONSE_PARTIAL_CONTENT;
+                          break;
+                        }
+                        case 400 : {
+                          result = AT_RESPONSE_BAD_REQUEST;
+                          break;
+                        }
+                        case 602 : {
+                          result = AT_RESPONSE_NO_MEMORY;
+                          break;
+                        }
+                        default : {
+                          break;
+                        }
+                      }
+                      break;
                     }
-                    break;
+                    else
+                    {
+                      continue;
+                    }
                   }
                 }
               }
@@ -603,15 +632,15 @@ int8_t at_response_process(AT_COMMAND_INDEX_TYPEDEF index, uint8_t *buf, GSM_MAI
               gsm_put_hex(process_buf, strlen((char *)process_buf));
               if (strstr((char *)process_buf, "+HTTPREAD:"))
               {
-                sscanf((char *)process_buf, "+HTTPREAD:%d", &temp_length);
-                if (temp_length <= 512)
+                sscanf((char *)process_buf, "+HTTPREAD:%d", &temp);
+                if (temp <= 512)
                 {
                   recv_counts = rt_device_read(device_gsm_usart, 0,
                                                cmd_data->httpread.buf,
-                                               temp_length);
+                                               temp);
                   if (recv_counts)
                   {
-                    *(cmd_data->httpread.length) = recv_counts;
+                    *(cmd_data->httpread.recv_counts) = recv_counts;
                     memset(process_buf, 0, 512);
                     recv_counts = gsm_recv_frame(process_buf);
                     if (recv_counts)
@@ -906,6 +935,36 @@ int8_t gsm_command(AT_COMMAND_INDEX_TYPEDEF index, uint16_t delay, GSM_MAIL_CMD_
   device_gsm_usart = rt_device_find(DEVICE_NAME_GSM_USART);
   switch (index)
   {
+    case AT_HTTPPARA_BREAK:{
+
+      memset(process_buf, 0, 512);
+      rt_sprintf((char *)process_buf,
+                 at_command_map[index],
+                 cmd_data->httppara_break.start);
+
+      rt_device_write(device_gsm_usart, 0,
+                      process_buf,
+                      strlen((char *)process_buf));
+
+      gsm_put_char(process_buf, strlen((char *)process_buf));
+
+      break;
+    };
+    case AT_HTTPPARA_BREAKEND:{
+
+      memset(process_buf, 0, 512);
+      rt_sprintf((char *)process_buf,
+                 at_command_map[index],
+                 cmd_data->httppara_breakend.end);
+
+      rt_device_write(device_gsm_usart, 0,
+                      process_buf,
+                      strlen((char *)process_buf));
+
+      gsm_put_char(process_buf, strlen((char *)process_buf));
+
+      break;
+    };
     case AT_HTTPPARA_URL:{
 
       memset(process_buf, 0, 512);
@@ -927,7 +986,7 @@ int8_t gsm_command(AT_COMMAND_INDEX_TYPEDEF index, uint16_t delay, GSM_MAIL_CMD_
       rt_sprintf((char *)process_buf,
                  at_command_map[index],
                  cmd_data->httpread.start,
-                 512);
+                 cmd_data->httpread.size_of_process);
 
       rt_device_write(device_gsm_usart, 0,
                       process_buf,

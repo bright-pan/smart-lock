@@ -89,6 +89,8 @@ typedef enum
   AT_HTTPACTION_HEAD,
   AT_HTTPREAD,//index=55
   AT_SAPBR_APN_CMNET,
+  AT_HTTPPARA_BREAK,
+  AT_HTTPPARA_BREAKEND,
 
 }AT_COMMAND_INDEX_TYPEDEF;
 
@@ -162,9 +164,20 @@ typedef struct
 typedef struct
 {
   uint32_t start;
-  uint32_t *length;
+  uint32_t *recv_counts;
   uint8_t *buf;
+  uint32_t size_of_process;
 }GSM_MAIL_CMD_HTTPREAD;
+
+typedef struct
+{
+  uint32_t start;
+}GSM_MAIL_CMD_HTTPPARA_BREAK;
+
+typedef struct
+{
+  uint32_t end;
+}GSM_MAIL_CMD_HTTPPARA_BREAKEND;
 
 typedef union
 {
@@ -176,6 +189,8 @@ typedef union
   GSM_MAIL_CMD_CMMSDOWN_DATA cmmsdown_data;
   GSM_MAIL_CMD_HTTPPARA_URL httppara_url;
   GSM_MAIL_CMD_HTTPREAD httpread;
+  GSM_MAIL_CMD_HTTPPARA_BREAK httppara_break;
+  GSM_MAIL_CMD_HTTPPARA_BREAKEND httppara_breakend;
 }GSM_MAIL_CMD_DATA;
 
 typedef struct
@@ -210,6 +225,9 @@ typedef enum {
   AT_RESPONSE_TCP_CLOSED,
   AT_RESPONSE_CONNECT_OK,
   AT_RESPONSE_PDP_DEACT,
+  AT_RESPONSE_PARTIAL_CONTENT,
+  AT_RESPONSE_BAD_REQUEST,
+  AT_RESPONSE_NO_MEMORY,
 
 }AT_RESPONSE_TYPEDEF;
 
