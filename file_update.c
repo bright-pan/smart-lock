@@ -51,6 +51,8 @@ rt_uint8_t file_write_flash_addr(const char *file_name,
 	else
 	{	
 		rt_kprintf("RAM too little file move fail");
+		close(FileId);
+		rt_free(buffer);
 		return 1;
 	}
 	for(i = 0;i < page ;i++)
