@@ -1020,7 +1020,7 @@ void camera_infrared_thread_enter(void *arg)
 			else if(0 == leave_flag)
 			{
 				rt_device_read(ir_dev,0,&ir_pin_dat,1);
-				if(ir_pin_dat == 1)
+				if(ir_pin_dat == IR_ACTIVE_STATUS)
 				{
 					cm_ir_time_value = 2;
 					rt_sem_release(cm_ir_sem);	
