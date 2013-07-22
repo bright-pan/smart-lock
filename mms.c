@@ -43,18 +43,19 @@ int8_t send_mms(char *pic_name)
   send_cmd_mail(AT_CMMSEDIT_CLOSE, 50, &cmd_data);
   send_cmd_mail(AT_SAPBR_CLOSE, 50, &cmd_data);
   send_cmd_mail(AT_CMMSTERM, 50, &cmd_data);
-  // mms initial
-  if ((send_cmd_mail(AT_CMMSINIT, 50, &cmd_data) == AT_RESPONSE_OK) &&
-      (send_cmd_mail(AT_CMMSCURL, 50, &cmd_data) == AT_RESPONSE_OK) &&
-      (send_cmd_mail(AT_CMMSCID, 50, &cmd_data) == AT_RESPONSE_OK) &&
-      (send_cmd_mail(AT_CMMSPROTO, 50, &cmd_data) == AT_RESPONSE_OK) &&
-      (send_cmd_mail(AT_CMMSSENDCFG, 50, &cmd_data) == AT_RESPONSE_OK))
+
+  //active bearer profile
+  if ((send_cmd_mail(AT_SAPBR_CONTYPE, 50, &cmd_data) == AT_RESPONSE_OK) &&
+      (send_cmd_mail(AT_SAPBR_APN_CMWAP, 50, &cmd_data) == AT_RESPONSE_OK) &&
+      (send_cmd_mail(AT_SAPBR_OPEN, 50, &cmd_data) == AT_RESPONSE_OK) &&
+      (send_cmd_mail(AT_SAPBR_REQUEST, 50, &cmd_data) == AT_RESPONSE_OK))
   {
-    //active bearer profile
-    if ((send_cmd_mail(AT_SAPBR_CONTYPE, 50, &cmd_data) == AT_RESPONSE_OK) &&
-        (send_cmd_mail(AT_SAPBR_APN_CMWAP, 50, &cmd_data) == AT_RESPONSE_OK) &&
-        (send_cmd_mail(AT_SAPBR_OPEN, 50, &cmd_data) == AT_RESPONSE_OK) &&
-        (send_cmd_mail(AT_SAPBR_REQUEST, 50, &cmd_data) == AT_RESPONSE_OK))
+    // mms initial
+    if ((send_cmd_mail(AT_CMMSINIT, 50, &cmd_data) == AT_RESPONSE_OK) &&
+        (send_cmd_mail(AT_CMMSCURL, 50, &cmd_data) == AT_RESPONSE_OK) &&
+        (send_cmd_mail(AT_CMMSCID, 50, &cmd_data) == AT_RESPONSE_OK) &&
+        (send_cmd_mail(AT_CMMSPROTO, 50, &cmd_data) == AT_RESPONSE_OK) &&
+        (send_cmd_mail(AT_CMMSSENDCFG, 50, &cmd_data) == AT_RESPONSE_OK))
     {
       //send mms
       //open mms edit
