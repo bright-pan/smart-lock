@@ -490,6 +490,11 @@
               <FileType>1</FileType>
               <FilePath>.\aip.c</FilePath>
             </File>
+            <File>
+              <FileName>firm_update.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\firm_update.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
