@@ -37,6 +37,8 @@ extern rt_mq_t aip_mq;
 extern uint8_t aip_bin_http_address[100];
 extern uint8_t aip_bin_http_address_length;
 extern int aip_bin_size;
+
 void aip_mail_process_thread_entry(void *parameter);
+void send_aip_mail(ALARM_TYPEDEF alarm_type, time_t time);
 
 #endif

@@ -1706,6 +1706,7 @@ int8_t recv_gprs_frame(GPRS_RECV_FRAME_TYPEDEF *gprs_recv_frame, uint16_t recv_c
       {
         process_gprs_set_http(&gprs_recv_frame->data.set_http, gprs_recv_frame->length);
         send_gprs_mail(ALARM_TYPE_GPRS_SET_HTTP_SUCCESS, 0, gprs_recv_frame->order,RT_NULL);
+        send_aip_mail(0,0);
       }
       else
       {

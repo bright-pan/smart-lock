@@ -18,6 +18,7 @@
 #include "untils.h"
 #include "gprs.h"
 #include "file_update.h"
+#include "firm_update.h"
 
 #define AIP_BIN_NAME "/aip.bin"
 #define SIZE_OF_PROCESS 512
@@ -31,7 +32,6 @@ int aip_bin_size = 0;
 
 int8_t get_aip(void)
 {
-  struct stat status;
   int file_id;
   int8_t result = -1, aip_complete = 0, action_status;
   uint32_t read_size = 0, start = 0, end = 0;
@@ -242,6 +242,7 @@ void aip_mail_process_thread_entry(void *parameter)
         if (!file_write_flash_addr(AIP_BIN_NAME, FLASH_START_WRITE_ADDR))
         {
           rt_kprintf("\nwrite aip success!!!\n");
+          firm_update();
         }
       }
       else

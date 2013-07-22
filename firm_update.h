@@ -20,4 +20,6 @@
 #include <rthw.h>
 #include <rtthread.h>
 
+void firm_update(void);
+
 #endif
