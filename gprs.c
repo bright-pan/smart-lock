@@ -15,6 +15,8 @@
 #include "gprs.h"
 #include "gpio_exti.h"
 #include "gpio_adc.h"
+#include "gpio_pin.h"
+#include "gpio_pwm.h"
 #include "gsm.h"
 #include "gsm_usart.h"
 #include "untils.h"
@@ -23,8 +25,8 @@
 #include "battery.h"
 #include <rtc.h>
 #include "mms_dev.h"
-#include "gpio_pin.h"
 #include "aip.h"
+
 
 #define PIC_PER_PAGE_SIZE		512
 #define PIC_NAME						"/2.jpg"
@@ -92,7 +94,7 @@ void gprs_mail_process_thread_entry(void *parameter)
   create_k1();
   work_alarm_type_map_init();
   fault_alarm_type_map_init();
-
+  
   while (1)
   {
     /* process mail */
@@ -195,7 +197,7 @@ uint8_t dec_to_bcd(uint8_t dec)
   return ((temp / 10)<<4) + ((temp % 10) & 0x0F); 
 }
 
-static void get_dec_to_bcd_time(uint8_t date[],time_t time)
+/*static void get_dec_to_bcd_time(uint8_t date[],time_t time)
 {
   struct tm time_tm;
 	
@@ -208,7 +210,7 @@ static void get_dec_to_bcd_time(uint8_t date[],time_t time)
   date[3] = dec_to_bcd((uint8_t)(time_tm.tm_hour % 100));
   date[4] = dec_to_bcd((uint8_t)(time_tm.tm_min % 100));
   date[5] = dec_to_bcd((uint8_t)(time_tm.tm_sec % 100));
-}
+}*/
 static void get_pic_size(const char* name ,rt_uint32_t *size)
 {
 	struct stat status;
@@ -1095,7 +1097,24 @@ int8_t send_gprs_frame(ALARM_TYPEDEF alarm_type, time_t time, uint8_t order, voi
     	goto	quitgprsdatasend;
     	//break;
     }
-
+		case ALARM_TYPE_GPRS_SLEEP:
+		{
+			gprs_send_frame->length = 1;
+      		gprs_send_frame->cmd = 0x0C;
+      		gprs_send_frame->order = order;
+      		gprs_send_frame->data.sleep_ack.result = 1;
+      		gsm_mail_buf.mail_data.gprs.has_response = 0;
+      		break;
+		}
+		case ALARM_TYPE_GPRS_WAKE_UP:
+		{
+			gprs_send_frame->length = 1;
+      		gprs_send_frame->cmd = 0x0d;
+      		gprs_send_frame->order = order;
+      		gprs_send_frame->data.wake_up_ack.result= 1;
+      		gsm_mail_buf.mail_data.gprs.has_response = 0;
+			break;
+		}
     default : { 
       break;
     };
@@ -1390,6 +1409,18 @@ int8_t send_gprs_frame(ALARM_TYPEDEF alarm_type, time_t time, uint8_t order, voi
     	*process_buf_bk++ = gprs_send_frame->data.picture.page;
     	rt_memcpy(process_buf_bk,gprs_send_frame->data.picture.time,6);
     	process_length+=12;
+			break;
+    }
+    case ALARM_TYPE_GPRS_SLEEP://sleep mode
+    {
+    	*process_buf_bk++ = gprs_send_frame->data.sleep_ack.result;
+      process_length += 1;
+			break;
+    }
+    case ALARM_TYPE_GPRS_WAKE_UP:
+    {
+			*process_buf_bk++ = gprs_send_frame->data.wake_up_ack.result;
+      process_length += 1;
 			break;
     }
     default : {
@@ -1765,6 +1796,21 @@ int8_t recv_gprs_frame(GPRS_RECV_FRAME_TYPEDEF *gprs_recv_frame, uint16_t recv_c
     	}
         break;
       }
+    case 0x8c:
+    {
+    	rt_kprintf("sleep \n");
+    	send_gprs_mail(ALARM_TYPE_GPRS_SLEEP, 0, gprs_recv_frame->order,RT_NULL);
+    	machine_status_deal(RT_FALSE,RT_EVENT_FLAG_OR|RT_EVENT_FLAG_CLEAR,RT_WAITING_NO);
+    	lock_output(GATE_UNLOCK);
+			break;
+    }
+    case 0x8d:
+    {
+    	rt_kprintf("wake up\n");
+    	send_gprs_mail(ALARM_TYPE_GPRS_WAKE_UP, 0, gprs_recv_frame->order,RT_NULL);
+    	machine_status_deal(RT_TRUE,0,0);
+			break;
+    }
     default : {
       if (recv_counts == 4 &&
           gprs_recv_frame->length == 0)

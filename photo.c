@@ -922,23 +922,12 @@ void camera_infrared_thread_enter(void *arg)
 	
 	while(1)
 	{
+		/*check up machine work status(sleep or wake up)*/
+  	machine_status_deal(RT_FALSE,RT_EVENT_FLAG_OR,RT_WAITING_FOREVER);
 		result = rt_sem_take(cm_ir_sem,200);//ir alarm touch off
 		if(RT_EOK == result)
 		{	
-/*			if(2 == leave_flag) 	//touch off period not arrive
-			{
-				if(cm_alarm_cnt_time_value > CM_IR_ALARM_TOUCH_PERIOD)
-				{
-					leave_flag = 0;
-					rt_timer_stop(cm_alarm_timer);
-				}
-				if(2 == leave_flag)
-				{
-					rt_kprintf("@@@not is photo time\n\n");
-					continue;
-				}
-			}
-*/		/* recv work event*/
+			/* recv work event*/
 			result = rt_event_recv(alarm_inform_event,
 														INFO_SEND_MMS,
 														RT_EVENT_FLAG_AND|RT_EVENT_FLAG_CLEAR,

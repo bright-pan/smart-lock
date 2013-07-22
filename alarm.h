@@ -22,6 +22,8 @@
 #define ALARM_MAIL_MAX_MSGS 20
 
 #define ALARM_INTERVAL 10
+
+#define MACHINE_ON_WORK	(0X01<<0)
 /*
  * alarm type and items
  *
@@ -67,7 +69,9 @@ typedef enum
   ALARM_TYPE_GPRS_SET_HTTP_SUCCESS,
   ALARM_TYPE_GPRS_SET_HTTP_FAILURE,
   ALARM_TYPE_GPRS_UPLOAD_PIC,
-  ALARM_TYPE_GPRS_SEND_PIC_DATA
+  ALARM_TYPE_GPRS_SEND_PIC_DATA,
+  ALARM_TYPE_GPRS_SLEEP,
+  ALARM_TYPE_GPRS_WAKE_UP
 }ALARM_TYPEDEF;
 
 /*
@@ -100,13 +104,14 @@ typedef struct
  * alarm msg queue
  */
 extern rt_mq_t alarm_mq;
-
 extern const char *alarm_help_map[];
-
+extern rt_event_t machine_work_status;
 /*
  * alarm mail process function
  *
  */
 void alarm_mail_process_thread_entry(void *parameter);
 void send_alarm_mail(ALARM_TYPEDEF alarm_type, ALARM_PROCESS_FLAG_TYPEDEF alarm_process_flag, rt_int8_t gpio_value, time_t time);
+rt_err_t machine_status_deal(rt_uint8_t operate,rt_uint8_t  option,rt_uint32_t wait_time);
+
 #endif

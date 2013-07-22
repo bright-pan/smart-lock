@@ -64,7 +64,27 @@ const char *alarm_help_map[] = {
   "ALARM_TYPE_GPRS_UPLOAD_PIC",
   "ALARM_TYPE_GPRS_SEND_PIC_DATA",
 };
+rt_event_t machine_work_status = RT_NULL;
 //char s[512];
+
+rt_err_t machine_status_deal(rt_uint8_t operate,rt_uint8_t  option,rt_uint32_t wait_time)
+{
+	rt_uint32_t	event_reslut;
+
+	if(operate)
+	{
+		return rt_event_send(machine_work_status,MACHINE_ON_WORK);
+	}
+	else
+	{
+		/*check up machine work status(sleep or wake up)*/
+		return rt_event_recv(machine_work_status,
+												 MACHINE_ON_WORK,
+												 option,
+												 wait_time,
+												 &event_reslut);
+	}
+}
 void alarm_mail_process_thread_entry(void *parameter)
 {
   rt_err_t result;
@@ -76,7 +96,11 @@ void alarm_mail_process_thread_entry(void *parameter)
   
   while (1)
   {
-    result = rt_mq_recv(alarm_mq, &alarm_mail_buf, sizeof(ALARM_MAIL_TYPEDEF), RT_WAITING_FOREVER);
+    result = rt_mq_recv(alarm_mq, &alarm_mail_buf, sizeof(ALARM_MAIL_TYPEDEF), 100);
+    if(machine_status_deal(RT_FALSE,RT_EVENT_FLAG_OR,RT_WAITING_NO) != RT_EOK)//is sleep status
+    {
+			result = -RT_ETIMEOUT;
+    }
     if (result == RT_EOK)
     {
       if (alarm_mail_buf.alarm_process_flag & ALARM_PROCESS_FLAG_SMS)
@@ -136,11 +160,11 @@ void send_alarm_mail(ALARM_TYPEDEF alarm_type, ALARM_PROCESS_FLAG_TYPEDEF alarm_
   buf.gpio_value = gpio_value;
   if (alarm_mq != NULL)
   {
-    result = rt_mq_send(alarm_mq, &buf, sizeof(ALARM_MAIL_TYPEDEF));
+	result = rt_mq_send(alarm_mq, &buf, sizeof(ALARM_MAIL_TYPEDEF));
     if (result == -RT_EFULL)
     {
       rt_kprintf("alarm_mq is full!!!\n");
-    }
+    }	
   }
   else
   {
