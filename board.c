@@ -23,6 +23,35 @@
  * @addtogroup STM32
  */
 
+/*
+ * Function gpio_config ()
+ *
+ *    将IO端口都设置成模拟输入，以降低功耗以及增强电磁兼容
+ *
+ */
+//IO端口配置结构体变量
+
+static void gpio_config_init(void)
+{
+  GPIO_InitTypeDef GPIO_InitStructure;
+
+  RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA | RCC_APB2Periph_GPIOB |
+                         RCC_APB2Periph_GPIOC | RCC_APB2Periph_GPIOD |
+                         RCC_APB2Periph_GPIOE, ENABLE);
+
+  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_All;
+  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AIN;
+  GPIO_Init(GPIOA, &GPIO_InitStructure);
+  GPIO_Init(GPIOB, &GPIO_InitStructure);
+  GPIO_Init(GPIOC, &GPIO_InitStructure);
+  GPIO_Init(GPIOD, &GPIO_InitStructure);
+  GPIO_Init(GPIOE, &GPIO_InitStructure);
+
+  RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA | RCC_APB2Periph_GPIOB |
+                         RCC_APB2Periph_GPIOC | RCC_APB2Periph_GPIOD |
+                         RCC_APB2Periph_GPIOE, DISABLE);
+}
+
 /*@{*/
 
 /*******************************************************************************
@@ -169,6 +198,7 @@ void rt_hw_timer_handler(void)
  */
 void rt_hw_board_init()
 {
+  gpio_config_init();
 	
   /* NVIC Configuration */
   NVIC_Configuration();
