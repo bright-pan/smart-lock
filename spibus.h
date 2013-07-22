@@ -24,16 +24,17 @@
 #define USING_SPI2
 #define SPI_USE_DMA
 
+
 #ifdef USING_SPI1
-static struct stm32_spi_bus stm32_spi_bus_1;
+extern struct stm32_spi_bus stm32_spi_bus_1;
 #endif /* #ifdef USING_SPI1 */
 
 #ifdef USING_SPI2
-static struct stm32_spi_bus stm32_spi_bus_2;
+extern struct stm32_spi_bus stm32_spi_bus_2;
 #endif /* #ifdef USING_SPI2 */
 
 #ifdef USING_SPI3
-static struct stm32_spi_bus stm32_spi_bus_3;
+extern struct stm32_spi_bus stm32_spi_bus_3;
 #endif /* #ifdef USING_SPI3 */
 
 
