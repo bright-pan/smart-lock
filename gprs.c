@@ -928,8 +928,8 @@ int8_t send_gprs_frame(ALARM_TYPEDEF alarm_type, time_t time, uint8_t order, voi
       gprs_send_frame->cmd = 0x0E;
       gprs_send_frame->order = 	gprs_order++;
 
-      result = process_gprs_pic_arg(&(gprs_send_frame->data.picture),time,user);
-      if(result == -1)
+      send_result = process_gprs_pic_arg(&(gprs_send_frame->data.picture),time,user);
+      if(send_result == -1)
       {
 				goto	quitgprsdatasend;
       }
