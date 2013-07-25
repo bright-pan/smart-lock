@@ -844,12 +844,12 @@ void photo_thread_init(void)
 void camera_send_mail(ALARM_TYPEDEF alarm_type, time_t time)
 {
 	struct cm_recv_mq send_mq;
-
-	send_mq.time = 0;
+	
+	send_mq.time = 2;											//photograph time interval
 	send_mq.name1 = "/1.jpg";
 	send_mq.name2 = "/2.jpg";
-	send_mq.date = time;
-	send_mq.alarm_type = alarm_type;
+	send_mq.date = time;									//send information photogragh time 
+	send_mq.alarm_type = alarm_type;		
 
 	if(photo_start_mq != RT_NULL)
 	{

@@ -331,7 +331,7 @@ struct gpio_exti_user_data camera_irdasensor_user_data =
   DEVICE_NAME_CAMERA_IRDASENSOR,
   GPIOB,
   GPIO_Pin_1,
-  GPIO_Mode_IN_FLOATING,
+  GPIO_Mode_IPD,
   GPIO_Speed_50MHz,
   RCC_APB2Periph_GPIOB |RCC_APB2Periph_AFIO,
   GPIO_PortSourceGPIOB,
