@@ -25,7 +25,15 @@
 #include "sms.h"
 #include "gprs.h"
 
-#define IR_ACTIVE_STATUS								0
+#define IR_ACTIVE_STATUS								0			//infrared testing
+#define POWR_ACTIVE_STATUS							1			//camera power 
+#define LED_ACTIVE_STATUS								1			//Fill Light
+#define LIGHT_ACTIVE_STATUS							1			//light
+#define PHOTO_INTERVAL_TIME							200 //2	//2s
+#define PIC_DATA_MAX_SIZE								70000	//70K
+#define PIC_DATA_MIN_SIZE								10000	//10K
+
+extern void photo_light_control(camera_dev_t camera,rt_uint8_t status);
 
 const rt_uint8_t reset_camrea_cmd[] =	{0x56,0x00,0x26,0x00};
 const rt_uint8_t switch_frame_cmd[] = {0x56,0x00,0x36,0x01,0x03};
@@ -230,6 +238,25 @@ void glint_light_control(camera_dev_t camera , rt_uint8_t status)
 
 void camera_power_control(camera_dev_t camera,rt_uint8_t status)
 {
+	rt_device_t dev;
+
+	dev = rt_device_find(DEVICE_NAME_CAMERA_USART_TX);
+	if(dev == RT_NULL)
+	{
+		rt_kprintf("camera tx pin device is rt_null");
+		return ;
+	}
+	if(status == POWR_ACTIVE_STATUS)//Open camera 
+	{
+		/* set Tx pin input */
+		rt_device_control(dev,GPIO_CMD_INIT_CONFIG,(void*)GPIO_Mode_AF_PP);
+		rt_kprintf("open camrea modlue \n");
+	}
+	else
+	{
+		rt_device_control(dev,GPIO_CMD_INIT_CONFIG,(void*)GPIO_Mode_IN_FLOATING);
+		rt_kprintf("close camrea modlue \n");
+	}
 	rt_device_write(camera->power,0,&status,1);
 }
 
@@ -259,9 +286,6 @@ void photo_stop_cur_frame(camera_dev_t camera)
 	rt_thread_delay(1);
 	
 	rt_device_read(camera->device,0,camera->data,CM_BUFFER_LEN);
-
-	/* close camera glint light */
-	glint_light_control(camera,0);
 }
 
 
@@ -272,17 +296,12 @@ void photo_stop_next_frame(camera_dev_t camera)
 	rt_thread_delay(1);
 	
 	rt_device_read(camera->device,0,camera->data,CM_BUFFER_LEN);
-
-	/* close camera glint light */
-	glint_light_control(camera,0);
 }
 
 
 void photo_switch_frame(camera_dev_t camera)
 {
 	rt_device_write(camera->device,0,switch_frame_cmd,sizeof(switch_frame_cmd)); 
-
-	glint_light_control(camera,0);
 	
 	rt_thread_delay(1);
 	
@@ -325,7 +344,7 @@ void photo_get_size(camera_dev_t camera,rt_uint8_t frame_flag)
 		rt_kprintf("max_cnt = %d\n",max_cnt);
 #endif
 	}
-	while((camera->size >60000) ||(camera->size < 20000));
+	while((camera->size >PIC_DATA_MAX_SIZE) ||(camera->size < PIC_DATA_MIN_SIZE));
 	/*   calculate receive size		*/
 	//camera->size = (camera->data[5] << 24) |(camera->data[6] << 16) \
 	//|(camera->data[7] << 8) |(camera->data[8]); 
@@ -433,6 +452,8 @@ void photo_set_per_read_size(camera_dev_t camera,rt_uint8_t frame_type)
 void photo_create_file_two(camera_dev_t camera,const char *pathname1,const char *pathname2)
 {
 	int file_id = 0;
+
+	photo_light_control(camera,LED_ACTIVE_STATUS);//open fill-in light
 	
 	photo_update_frame(camera);
 	
@@ -443,6 +464,8 @@ void photo_create_file_two(camera_dev_t camera,const char *pathname1,const char 
 	photo_switch_frame(camera);
 
 	photo_stop_next_frame(camera);
+
+	photo_light_control(camera,!LED_ACTIVE_STATUS);//close fill-in light
 
 	/*deal photo one */
 	photo_get_size(camera,0);
@@ -493,11 +516,13 @@ void photo_create_file_one(camera_dev_t camera,const char *pathname )
 {
 	int file_id;
 
+	photo_light_control(camera,LED_ACTIVE_STATUS);//open fill-in light
 	camera->addr = 0;
-	
 	photo_update_frame(camera);
 	
 	photo_stop_cur_frame(camera);
+
+	photo_light_control(camera,!LED_ACTIVE_STATUS);//close fill-in light
 	
 	photo_get_size(camera,0);
 
@@ -615,14 +640,14 @@ void photo_light_control(camera_dev_t camera,rt_uint8_t status)
 	if(RT_NULL!= camera)
 	{
 		rt_device_read(camera->infrared,0,&dat,1);
-		if(1 == status)
+		if(LED_ACTIVE_STATUS== status)
 		{
-			if(1 == dat)
+			if(LIGHT_ACTIVE_STATUS == dat)
 			{
 				rt_device_write(camera->glint_led,0,&status,1);
 			}
 		}
-		else if(0 == status)
+		else if(!LED_ACTIVE_STATUS == status)
 		{
 			rt_device_write(camera->glint_led,0,&status,1);
 		}
@@ -635,7 +660,7 @@ void camera_module_self_test(camera_dev_t camera)
 	rt_uint8_t error_num = 0;
 	const char result[6] = {0x76,0x00,0x36,0x00,0x00,'\0'};
 
-	camera_power_control(camera,1);	
+	camera_power_control(camera,POWR_ACTIVE_STATUS);	
 	/*
 	if(com_recv_data_analyze(camera->device,200,300,1,"User-defined") != 1)
 	{
@@ -656,7 +681,7 @@ void camera_module_self_test(camera_dev_t camera)
 			}
 		}
 	}
-	camera_power_control(camera,0); 
+	camera_power_control(camera,!POWR_ACTIVE_STATUS); 
 }
 
 rt_err_t work_flow_status(void)
@@ -687,10 +712,10 @@ void photo_thread_entry(void *arg)
 															RT_TIMER_FLAG_PERIODIC);
 	photo_struct_init(&photo);
 
-	camera_power_control(&photo,1);	
+	camera_power_control(&photo,!POWR_ACTIVE_STATUS);	
 	while(1)
 	{
-		result =  rt_mq_recv(photo_start_mq,&recv_mq,sizeof(recv_mq),24*360000);//3600sx24h
+		result =  rt_mq_recv(photo_start_mq,&recv_mq,sizeof(recv_mq),24*360000);//3600sx24h is a day
 
 		/*if(work_flow_status() == -RT_ETIMEOUT)
 		{
@@ -702,7 +727,7 @@ void photo_thread_entry(void *arg)
 		*/
 		if(RT_EOK == result)								//in working order
 		{
-			camera_power_control(&photo,1); 	//open camera power
+			camera_power_control(&photo,POWR_ACTIVE_STATUS); 	//open camera power
 			
 			rt_thread_delay(1);
 
@@ -713,8 +738,8 @@ void photo_thread_entry(void *arg)
 			/*start camera job */
 			rt_timer_start(pic_timer);
 			
-//			glint_light_control(&photo,1);
-			photo_light_control(&photo,1);
+			//glint_light_control(&photo,1);
+			//photo_light_control(&photo,LED_ACTIVE_STATUS);
 
 			
 			photo.time = recv_mq.time;
@@ -845,7 +870,7 @@ void camera_send_mail(ALARM_TYPEDEF alarm_type, time_t time)
 {
 	struct cm_recv_mq send_mq;
 	
-	send_mq.time = 2;											//photograph time interval
+	send_mq.time = PHOTO_INTERVAL_TIME;											//photograph time interval
 	send_mq.name1 = "/1.jpg";
 	send_mq.name2 = "/2.jpg";
 	send_mq.date = time;									//send information photogragh time 

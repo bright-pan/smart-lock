@@ -53,6 +53,39 @@ rt_err_t gpio_pin_configure(gpio_device *gpio)
 
 rt_err_t gpio_pin_control(gpio_device *gpio, rt_uint8_t cmd, void *arg)
 {
+	GPIO_InitTypeDef	gpio_struct;
+	GPIOMode_TypeDef	gpio_mode = *(GPIOMode_TypeDef*)arg;
+	struct gpio_pin_user_data *user = (struct gpio_pin_user_data*)gpio->parent.user_data;
+	
+	switch(cmd)
+	{
+		case GPIO_CMD_INIT_CONFIG://config gpio pin
+		{
+			gpio_struct.GPIO_Mode = gpio_mode;
+			gpio_struct.GPIO_Pin = user->gpio_pinx;
+			gpio_struct.GPIO_Speed = user->gpio_speed;
+			GPIO_Init(user->gpiox,&gpio_struct);
+			/* if gpio is output mode */
+			if((gpio_mode != GPIO_Mode_IN_FLOATING)&&
+				 (gpio_mode != GPIO_Mode_IPD)&&
+				 (gpio_mode != GPIO_Mode_IPU))
+			{
+				gpio->parent.flag &= ~RT_DEVICE_FLAG_RDONLY;
+				gpio->parent.flag |= RT_DEVICE_FLAG_WRONLY;
+				
+			}
+			else
+			{
+				gpio->parent.flag &= ~RT_DEVICE_FLAG_WRONLY;
+				gpio->parent.flag |= RT_DEVICE_FLAG_RDONLY;
+			}
+			break;
+		}
+		default:
+		{
+			break;
+		}
+	}
   return RT_EOK;
 }
 
@@ -411,6 +444,33 @@ void rt_hw_camera_photosensor_register(void)
   
   rt_hw_gpio_register(gpio_device, gpio_user_data->name, (RT_DEVICE_FLAG_RDWR), gpio_user_data);
 }
+
+/* camera usart tx pin input */
+gpio_device camera_TX_device;
+
+struct gpio_pin_user_data camera_TX_user_data = 
+{
+  DEVICE_NAME_CAMERA_USART_TX,
+  GPIOC,
+  GPIO_Pin_12,
+  GPIO_Mode_IN_FLOATING,
+  GPIO_Speed_50MHz,
+  RCC_APB2Periph_GPIOC|RCC_APB2Periph_AFIO,
+	0
+};
+
+void rt_hw_camera_usart_tx(void)
+{
+  gpio_device *gpio_device = &camera_TX_device;
+  struct gpio_pin_user_data *gpio_user_data = &camera_TX_user_data;
+
+  gpio_device->ops = &gpio_pin_user_ops;
+  
+  rt_hw_gpio_register(gpio_device, gpio_user_data->name, (RT_DEVICE_FLAG_RDWR), gpio_user_data);
+}
+
+
+
 
 void gpio_pin_output(char *str, const rt_uint8_t dat)
 {

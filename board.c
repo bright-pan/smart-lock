@@ -236,6 +236,7 @@ void rt_hw_board_init()
   rt_hw_camera_irdasensor_register();
   rt_hw_camera_power_register();
   rt_hw_camera_led_register();
+  rt_hw_camera_usart_tx();
   /* motor device register */
   rt_hw_motor_status_register();
   rt_hw_motor_a_pulse_register();
