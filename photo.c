@@ -926,19 +926,7 @@ void camera_infrared_thread_enter(void *arg)
   	machine_status_deal(RT_FALSE,RT_EVENT_FLAG_OR,RT_WAITING_FOREVER);
 		result = rt_sem_take(cm_ir_sem,200);//ir alarm touch off
 		if(RT_EOK == result)
-		{	
-			/* recv work event*/
-			result = rt_event_recv(alarm_inform_event,
-														INFO_SEND_MMS,
-														RT_EVENT_FLAG_AND|RT_EVENT_FLAG_CLEAR,
-														RT_WAITING_NO,
-														&recv_e);
-														
-			if(result == -RT_ETIMEOUT)
-			{
-				continue;
-			}
-					
+		{			
 			rt_timer_start(cm_ir_timer);
 			if(ir_dev != RT_NULL)
 			{
@@ -949,7 +937,7 @@ void camera_infrared_thread_enter(void *arg)
 				{
 					rt_device_read(ir_dev,0,&ir_pin_dat,1);
 					rt_thread_delay(1);
-					if(ir_pin_dat == IR_ACTIVE_STATUS)
+					if(ir_pin_dat == IR_ACTIVE_STATUS)//have  shield
 					{
 						if(flag>0)
 						{
@@ -958,22 +946,22 @@ void camera_infrared_thread_enter(void *arg)
 					}
 					else
 					{
-						if(flag < CM_IR_TEST_TIME)
+						if(flag < CM_IR_TEST_TIME)//not have shield
 						{
 							flag++;
 						}
 						else
 						{
-							if(1 == leave_flag)
+							if(1 == leave_flag)//man leave
 							{
 								leave_flag = 2;//start	photo 
 								cm_alarm_cnt_time_value = 0;
 								rt_timer_start(cm_alarm_timer);//start alarm cnt timer
 								camera_send_mail(ALARM_TYPE_CAMERA_IRDASENSOR,0);//send sem camera 
 							}
-							else
+							else	
 							{
-								rt_event_send(alarm_inform_event,INFO_SEND_MMS);//send alarm info event
+								//rt_event_send(alarm_inform_event,INFO_SEND_MMS);//send alarm info event
 							}
 							rt_timer_stop(cm_ir_timer);
 							
@@ -986,16 +974,31 @@ void camera_infrared_thread_enter(void *arg)
 						time_t			cur_data;
 						
 						cm_ir_time_value = 0;
-						leave_flag = 1;
 						rt_timer_stop(cm_ir_timer);
 						
 						rtc_dev = rt_device_find("rtc");
 						
 						rt_device_control(rtc_dev, RT_DEVICE_CTRL_RTC_GET_TIME, &cur_data);
-						//send sem alarm information
-						send_alarm_mail(ALARM_TYPE_CAMERA_IRDASENSOR,
-													 ALARM_PROCESS_FLAG_SMS | ALARM_PROCESS_FLAG_GPRS | ALARM_PROCESS_FLAG_LOCAL,
-													 ir_pin_dat, cur_data);
+						/* recv work event*/
+						result = rt_event_recv(alarm_inform_event,
+																	INFO_SEND_MMS,
+																	RT_EVENT_FLAG_AND|RT_EVENT_FLAG_CLEAR,
+																	RT_WAITING_NO,
+																	&recv_e);
+																	
+						if(result == RT_EOK)
+						{
+							rt_kprintf("send mms sem\n");
+							leave_flag = 1;							//have man leave
+							//send sem alarm information
+							send_alarm_mail(ALARM_TYPE_CAMERA_IRDASENSOR,
+														 ALARM_PROCESS_FLAG_SMS |
+														 ALARM_PROCESS_FLAG_GPRS | 
+														 ALARM_PROCESS_FLAG_LOCAL,
+														 ir_pin_dat, 
+														 cur_data);
+						}
+						
 					}
 				}
 			}
