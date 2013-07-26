@@ -108,7 +108,7 @@ void gprs_mail_process_thread_entry(void *parameter)
       //send gprs data
       rt_mutex_take(mutex_gsm_mail_sequence,RT_WAITING_FOREVER);
 
-      if (send_gprs_frame(gprs_mail_buf.alarm_type, gprs_mail_buf.time, gprs_mail_buf.order, gprs_mail_buf.user) == 1)
+      if (send_gprs_frame(gprs_mail_buf.alarm_type, gprs_mail_buf.time, gprs_mail_buf.order, gprs_mail_buf.user) == AT_RESPONSE_OK)
       {
         rt_kprintf("\nsend gprs data success!!!\n");
         error_counts = 0;
@@ -230,7 +230,7 @@ void lock_open_process(GPRS_LOCK_OPEN *lock_open,time_t time,rt_uint8_t key[])
 {
   struct tm time_tm;
 	
-  strncpy((char*)lock_open->key,(const char*)key,4);
+  memcpy((char*)lock_open->key,(const char*)key,4);
   time_tm = *localtime(&time);
   time_tm.tm_year += 1900;
   time_tm.tm_mon += 1;
@@ -497,7 +497,7 @@ int8_t send_gprs_auth_frame(void)
     }
   }
 
-rt_free(process_buf);
+  rt_free(process_buf);
   rt_free(gprs_send_frame);
   rt_free(gprs_recv_frame);
   return send_result;
@@ -1578,24 +1578,15 @@ int8_t send_gprs_frame(ALARM_TYPEDEF alarm_type, time_t time, uint8_t order, voi
             {
               send_result = 1;
             }
-            else
-            {
-              send_result = -1;
-            }
           }
-          else
-          {
-            send_result = -1;
-          }
-        }
-        else
-        {
-          send_result = -1;
         }
       }
       else
       {
-        send_result = 1;
+        if (send_result == AT_RESPONSE_OK)
+        {
+          send_result = 1;
+        }
       }
     }
     rt_sem_delete(gsm_mail_buf.result_sem);
