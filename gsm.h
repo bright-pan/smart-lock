@@ -91,6 +91,9 @@ typedef enum
   AT_SAPBR_APN_CMNET,
   AT_HTTPPARA_BREAK,
   AT_HTTPPARA_BREAKEND,
+  AT_CIPSEND,
+  AT_CIPSEND_SUFFIX,//index=60
+  AT_CIPMUX1,
 
 }AT_COMMAND_INDEX_TYPEDEF;
 
@@ -119,7 +122,7 @@ typedef struct
   uint8_t *request;
   uint8_t *response;
   uint16_t request_length;
-  uint16_t *response_length;
+  uint32_t *response_length;
   uint8_t has_response;
 }GSM_MAIL_GPRS;
 
@@ -128,6 +131,12 @@ typedef struct
   uint16_t length;
   uint8_t *buf;
 }GSM_MAIL_CMD_CMGS;
+
+typedef struct
+{
+  uint16_t length;
+  uint8_t *buf;
+}GSM_MAIL_CMD_CIPSEND;
 
 typedef struct
 {
@@ -182,6 +191,7 @@ typedef struct
 typedef union
 {
   GSM_MAIL_CMD_CMGS cmgs;
+  GSM_MAIL_CMD_CIPSEND cipsend;
   GSM_MAIL_CMD_CMMSRECP cmmsrecp;
   GSM_MAIL_CMD_CMMSDOWN_PIC cmmsdown_pic;
   GSM_MAIL_CMD_CMMSDOWN_TITLE cmmsdown_title;

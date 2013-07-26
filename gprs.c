@@ -424,13 +424,14 @@ int8_t send_gprs_auth_frame(void)
 {
   uint8_t *process_buf = RT_NULL;
   uint8_t *process_buf_bk = RT_NULL;
-  uint16_t process_length = 0;
+  uint32_t process_length = 0;
   GPRS_SEND_FRAME_TYPEDEF *gprs_send_frame = RT_NULL;
   GPRS_RECV_FRAME_TYPEDEF *gprs_recv_frame = RT_NULL;
   rt_device_t device = RT_NULL;
   int8_t send_result = -1;
   rt_size_t recv_counts;
-  int8_t send_counts;
+  GSM_MAIL_CMD_DATA gsm_mail_cmd_data;
+  int8_t recv_times = 0;
 
   device = rt_device_find(DEVICE_NAME_GSM_USART);
 
@@ -470,22 +471,33 @@ int8_t send_gprs_auth_frame(void)
   process_length += 22;
   //send frame
   gsm_put_hex(process_buf, process_length);
-  rt_device_write(device, 0, process_buf, process_length);
 
-  send_counts = 10;
-  while (send_counts-- > 0)
+  gsm_mail_cmd_data.cipsend.length = process_length;
+  gsm_mail_cmd_data.cipsend.buf = process_buf;
+  send_result = gsm_command(AT_CIPSEND, 50, &gsm_mail_cmd_data);
+  if (send_result == AT_RESPONSE_OK)
   {
-    rt_thread_delay(100);
-    //gprs data
-    recv_counts = rt_device_read(device, 0, gprs_recv_frame, sizeof(GPRS_RECV_FRAME_TYPEDEF));
-    if (recv_counts)
+    recv_times = 0;
+    while (recv_times < 10)
     {
-      recv_gprs_frame(gprs_recv_frame, recv_counts);
-      break;
+      rt_thread_delay(100);
+      memset(process_buf, 0, 512);
+      recv_counts = gsm_recv_frame(process_buf);
+      if (recv_counts && strstr((char *)process_buf, "+RECEIVE"))
+      {
+        sscanf((char *)process_buf, "+RECEIVE,0,%d:", &process_length);
+        recv_counts = rt_device_read(device, 0, process_buf, process_length);
+        if (recv_counts == process_length)
+        {
+          recv_gprs_frame((GPRS_RECV_FRAME_TYPEDEF *)process_buf, process_length);
+        }
+        break;
+      }
+      recv_times++;
     }
   }
 
-  rt_free(process_buf);
+rt_free(process_buf);
   rt_free(gprs_send_frame);
   rt_free(gprs_recv_frame);
   return send_result;
@@ -854,7 +866,7 @@ int8_t send_gprs_frame(ALARM_TYPEDEF alarm_type, time_t time, uint8_t order, voi
   GSM_MAIL_TYPEDEF gsm_mail_buf;
   int8_t result = -1;
   int8_t send_result = -1;
-  uint16_t recv_counts = 0;
+  uint32_t recv_counts = 0;
 
   device = rt_device_find(DEVICE_NAME_GSM_USART);
 
@@ -1557,7 +1569,7 @@ int8_t send_gprs_frame(ALARM_TYPEDEF alarm_type, time_t time, uint8_t order, voi
       gsm_put_hex(gsm_mail_buf.mail_data.gprs.request, gsm_mail_buf.mail_data.gprs.request_length);
       if (gsm_mail_buf.mail_data.gprs.has_response == 1)
       {
-        if (send_result == 1)
+        if (send_result == AT_RESPONSE_OK)
         {
           if (recv_gprs_frame(gprs_recv_frame, recv_counts) == 1)
           {
