@@ -1383,7 +1383,6 @@ int8_t gsm_init_process(void)
 
 void gsm_process_thread_entry(void *parameters)
 {
-
   rt_device_t device_gsm_status;
   rt_device_t device_gsm_usart;
   static GSM_MODE_TYPEDEF gsm_mode = GSM_MODE_CMD;
@@ -1393,8 +1392,8 @@ void gsm_process_thread_entry(void *parameters)
   uint16_t recv_counts = 0;
   int8_t recv_times = 0;
   uint8_t process_buf[512];
-  GPRS_RECV_FRAME_TYPEDEF gprs_recv_frame;
   GSM_MAIL_CMD_DATA gsm_mail_cmd_data;
+  int response_length;
 
   device_gsm_status = rt_device_find(DEVICE_NAME_GSM_STATUS);
   device_gsm_usart = rt_device_find(DEVICE_NAME_GSM_USART);
@@ -1466,7 +1465,7 @@ void gsm_process_thread_entry(void *parameters)
                 *(gsm_mail_buf.mail_data.gprs.response_length) = recv_counts;
                 if (recv_counts && strstr((char *)process_buf, "+RECEIVE"))
                 {
-                  sscanf((char *)process_buf, "+RECEIVE,0,%d:", gsm_mail_buf.mail_data.gprs.response_length);
+                  sscanf((char *)process_buf, "+RECEIVE,0,%d:", (int *)gsm_mail_buf.mail_data.gprs.response_length);
                   recv_counts = rt_device_read(device_gsm_usart, 0, gsm_mail_buf.mail_data.gprs.response, *gsm_mail_buf.mail_data.gprs.response_length);
                   if (recv_counts == *gsm_mail_buf.mail_data.gprs.response_length)
                   {
@@ -1519,13 +1518,28 @@ void gsm_process_thread_entry(void *parameters)
           }
           else
           {
-            *(gsm_mail_buf.result) = -1;
+            *(gsm_mail_buf.result) = AT_RESPONSE_ERROR;
           }
         }
         rt_sem_release(gsm_mail_buf.result_sem);
       }
       else
       {
+        memset(process_buf, 0, 512);
+        recv_counts = gsm_recv_frame(process_buf);
+        if (recv_counts)
+        {
+          if(strstr((char *)process_buf, "+RECEIVE"))
+          {
+            sscanf((char *)process_buf, "+RECEIVE,0,%d:", &response_length);
+            recv_counts = rt_device_read(device_gsm_usart, 0, process_buf, response_length);
+            if (recv_counts == response_length)
+            {
+              recv_gprs_frame((GPRS_RECV_FRAME_TYPEDEF *)process_buf, response_length);
+            }
+          }
+        }
+        /*
         if (gsm_mode == GSM_MODE_CMD)
         {
           //cmd data
@@ -1550,6 +1564,7 @@ void gsm_process_thread_entry(void *parameters)
             }
           }
         }
+        */
       }
     }
     else
