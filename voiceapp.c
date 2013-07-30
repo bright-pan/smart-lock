@@ -5,7 +5,7 @@
 rt_sem_t    voice_start_sem = RT_NULL;
 rt_event_t	call_event;
 
-void voice_play(rt_uint8_t counts)
+void voice_play(rt_uint16_t counts)
 {
   rt_device_t device = RT_NULL;
   rt_device_t reset_device = RT_NULL;
