@@ -277,7 +277,7 @@ typedef struct
 {
   uint8_t	result;
   uint8_t	resend_num;
-  uint8_t	data[100];
+  uint8_t	data[150];
 }GPRS_PIC_RESULT;
 typedef union
 {
