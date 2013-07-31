@@ -310,7 +310,7 @@ void sms_mail_process_thread_entry(void *parameter)
                         100);
     if (result == RT_EOK)
     {
-      rt_kprintf("\nreceive sms mail < time: %d alarm_type: %d >\n", sms_mail_buf.time, sms_mail_buf.alarm_type);
+      rt_kprintf("\nreceive sms mail < time: %d alarm_type: %s >\n", sms_mail_buf.time, alarm_help_map[sms_mail_buf.alarm_type]);
 
       // sms content process
       //memset(ucs_buf, 0, 512);

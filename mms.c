@@ -184,7 +184,7 @@ void mms_mail_process_thread_entry(void *parameter)
     /* mail receive ok */
     if (result == RT_EOK)
     {
-      rt_kprintf("\nreceive mms mail < time: %d alarm_type: %d >\n", mms_mail_buf.time, mms_mail_buf.alarm_type);
+      rt_kprintf("\nreceive mms mail < time: %d alarm_type: %s >\n", mms_mail_buf.time, alarm_help_map[mms_mail_buf.alarm_type]);
       rt_mutex_take(mutex_gsm_mail_sequence,RT_WAITING_FOREVER);
       if (!send_mms(mms_mail_buf.pic_name))
       {

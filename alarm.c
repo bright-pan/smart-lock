@@ -21,6 +21,49 @@
 #include <stdlib.h>
 
 rt_mq_t alarm_mq = RT_NULL;
+
+const char *alarm_help_map[] = {
+  "ALARM_TYPE_LOCK_SHELL",// lock shell alarm type
+  "ALARM_TYPE_LOCK_TEMPERATURE",// lock temperatrue
+  "ALARM_TYPE_GATE_TEMPERATURE",// lock temperatrue
+  "ALARM_TYPE_LOCK_GATE",// lock gate status
+  "ALARM_TYPE_GSM_RING",// lock gate status
+  "ALARM_TYPE_RFID_KEY_DETECT",// rfid key detect alarm type
+  "ALARM_TYPE_CAMERA_PHOTOSENSOR", // camera photo sensor
+  "ALARM_TYPE_CAMERA_IRDASENSOR", // camera irda sensor
+  "ALARM_TYPE_MOTOR_STATUS", // motor status sensor
+  "ALARM_TYPE_BATTERY_WORKING_20M",
+  "ALARM_TYPE_BATTERY_REMAIN_50P",
+  "ALARM_TYPE_BATTERY_REMAIN_20P",
+  "ALARM_TYPE_BATTERY_REMAIN_5P",
+  "ALARM_TYPE_BATTERY_SWITCH",
+  "ALARM_TYPE_RFID_KEY_ERROR",// rfid key detect error alarm type 14
+  "ALARM_TYPE_RFID_KEY_SUCCESS",// rfid key detect success alarm type
+  "ALARM_TYPE_RFID_KEY_PLUGIN",// rfid key detect plugin alarm type
+  "ALARM_TYPE_RFID_FAULT",
+  "ALARM_TYPE_CAMERA_FAULT",
+  "ALARM_TYPE_MOTOR_FAULT",
+  "ALARM_TYPE_POWER_FAULT",
+  "ALARM_TYPE_GPRS_AUTH",
+  "ALARM_TYPE_GPRS_HEART",
+  "ALARM_TYPE_GPRS_LIST_TELEPHONE",
+  "ALARM_TYPE_GPRS_LIST_RFID_KEY",
+  "ALARM_TYPE_GPRS_SET_TELEPHONE_SUCCESS",
+  "ALARM_TYPE_GPRS_SET_TELEPHONE_FAILURE",
+  "ALARM_TYPE_GPRS_SET_RFID_KEY_SUCCESS",
+  "ALARM_TYPE_GPRS_SET_RFID_KEY_FAILURE",
+  "ALARM_TYPE_GPRS_LIST_USER_PARAMETERS",
+  "ALARM_TYPE_GPRS_SET_USER_PARAMETERS_SUCCESS",
+  "ALARM_TYPE_GPRS_SET_USER_PARAMETERS_FAILURE",//31
+  "ALARM_TYPE_GPRS_SET_TIME_SUCCESS",
+  "ALARM_TYPE_GPRS_SET_TIME_FAILURE",
+  "ALARM_TYPE_GPRS_SET_KEY0_SUCCESS",
+  "ALARM_TYPE_GPRS_SET_KEY0_FAILURE",
+  "ALARM_TYPE_GPRS_SET_HTTP_SUCCESS",
+  "ALARM_TYPE_GPRS_SET_HTTP_FAILURE",
+  "ALARM_TYPE_GPRS_UPLOAD_PIC",
+  "ALARM_TYPE_GPRS_SEND_PIC_DATA",
+};
 //char s[512];
 void alarm_mail_process_thread_entry(void *parameter)
 {
@@ -29,7 +72,7 @@ void alarm_mail_process_thread_entry(void *parameter)
   SMS_MAIL_TYPEDEF sms_mail_buf;
   GPRS_MAIL_TYPEDEF gprs_mail_buf;
   LOCAL_MAIL_TYPEDEF local_mail_buf;
-  MMS_MAIL_TYPEDEF mms_mail_buf;
+  //  MMS_MAIL_TYPEDEF mms_mail_buf;
   
   while (1)
   {
@@ -52,11 +95,11 @@ void alarm_mail_process_thread_entry(void *parameter)
         /* send to gprs_mq */
         rt_mq_send(gprs_mq, &gprs_mail_buf, sizeof(GPRS_MAIL_TYPEDEF));
       }
-      if (alarm_mail_buf.alarm_process_flag & ALARM_PROCESS_FLAG_MMS)
+      //if (alarm_mail_buf.alarm_process_flag & ALARM_PROCESS_FLAG_MMS)
       {
         /* produce mail */
-        mms_mail_buf.time = alarm_mail_buf.time;
-        mms_mail_buf.alarm_type = alarm_mail_buf.alarm_type;
+        //mms_mail_buf.time = alarm_mail_buf.time;
+        //mms_mail_buf.alarm_type = alarm_mail_buf.alarm_type;
         /* send to mms_mq */
         //rt_mq_send(mms_mq, &mms_mail_buf, sizeof(MMS_MAIL_TYPEDEF));
       }

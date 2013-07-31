@@ -101,7 +101,7 @@ void gprs_mail_process_thread_entry(void *parameter)
     /* mail receive ok */
     if (result == RT_EOK)
     {
-      rt_kprintf("receive gprs mail < time: %d alarm_type: %d >\n", gprs_mail_buf.time, gprs_mail_buf.alarm_type);
+      rt_kprintf("receive gprs mail < time: %d alarm_type: %s >\n", gprs_mail_buf.time, alarm_help_map[gprs_mail_buf.alarm_type]);
 
       //send gprs data
       rt_mutex_take(mutex_gsm_mail_sequence,RT_WAITING_FOREVER);

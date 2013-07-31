@@ -101,6 +101,8 @@ typedef struct
  */
 extern rt_mq_t alarm_mq;
 
+extern const char *alarm_help_map[];
+
 /*
  * alarm mail process function
  *

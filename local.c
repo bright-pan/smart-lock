@@ -22,6 +22,7 @@
 #include "untils.h"
 #include "rfid_uart.h"
 #include "photo.h"
+#include "alarm.h"
 #include "voiceapp.h"
 /* local msg queue for local alarm */
 rt_mq_t local_mq;
@@ -60,7 +61,7 @@ void local_mail_process_thread_entry(void *parameter)
     if (result == RT_EOK)
     {
       /* process mail */
-      rt_kprintf("receive local mail < time: %d alarm_type: %d >\n", local_mail_buf->time, local_mail_buf->alarm_type);
+      rt_kprintf("receive local mail < time: %d alarm_type: %s >\n", local_mail_buf->time, alarm_help_map[local_mail_buf->alarm_type]);
 
       switch (local_mail_buf->alarm_type)
       {
