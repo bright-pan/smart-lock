@@ -1902,6 +1902,7 @@ int8_t recv_gprs_frame(GPRS_RECV_FRAME_TYPEDEF *gprs_recv_frame, uint16_t recv_c
     	rt_kprintf("sleep \n");
     	send_gprs_mail(ALARM_TYPE_GPRS_SLEEP, 0, gprs_recv_frame->order,RT_NULL);
     	machine_status_deal(RT_FALSE,RT_EVENT_FLAG_OR|RT_EVENT_FLAG_CLEAR,RT_WAITING_NO);
+    	rt_thread_delay(200);//prior send gprs data
     	lock_output(GATE_UNLOCK);
 			break;
     }
