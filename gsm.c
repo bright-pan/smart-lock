@@ -29,7 +29,7 @@ rt_mutex_t mutex_gsm_mail_sequence;
 char smsc[20] = {0,};
 char phone_call[20] = {0,};
 
-const char *at_command_map[70];
+const char *at_command_map[80];
 
 void at_command_map_init(void)
 {
@@ -91,7 +91,11 @@ void at_command_map_init(void)
   at_command_map[AT_HTTPREAD] = "AT+HTTPREAD=%d,%d\r";
   at_command_map[AT_HTTPPARA_BREAK] = "AT+HTTPPARA=\"BREAK\",%d\r";
   at_command_map[AT_HTTPPARA_BREAKEND] = "AT+HTTPPARA=\"BREAKEND\",%d\r";
-
+  at_command_map[AT_SIDET] = "AT+SIDET=0,0\r";
+  at_command_map[AT_CMIC] = "AT+CMIC=0,12\r";
+  at_command_map[AT_CLVL] = "AT+CLVL=50\r";
+  at_command_map[AT_CHFA] = "AT+CHFA=0\r";
+  at_command_map[AT_ECHO] = "AT+ECHO=0,8,5,0\r";
 }
 
 void gsm_put_char(const uint8_t *str, uint16_t length)
@@ -359,6 +363,11 @@ int8_t at_response_process(AT_COMMAND_INDEX_TYPEDEF index, uint8_t *buf, GSM_MAI
         case AT_SAPBR_CLOSE :
         case AT_CMMSEDIT_OPEN :
         case AT_CMMSEDIT_CLOSE :
+        case AT_SIDET :
+        case AT_CMIC :
+        case AT_CLVL :
+        case AT_CHFA :
+        case AT_ECHO :
         case ATA:
         case ATH5: {
 
@@ -1248,6 +1257,11 @@ int8_t gsm_init_process(void)
       gsm_put_char(process_buf, strlen((char *)process_buf));
       gsm_put_hex(process_buf, strlen((char *)process_buf));
       if ((gsm_command(AT_D1, 50, &gsm_mail_cmd_data) == AT_RESPONSE_OK) &&
+          (gsm_command(AT_SIDET, 50, &gsm_mail_cmd_data) == AT_RESPONSE_OK) &&
+          (gsm_command(AT_CMIC, 50, &gsm_mail_cmd_data) == AT_RESPONSE_OK) &&
+          (gsm_command(AT_CLVL, 50, &gsm_mail_cmd_data) == AT_RESPONSE_OK) &&
+          (gsm_command(AT_CHFA, 50, &gsm_mail_cmd_data) == AT_RESPONSE_OK) &&
+          (gsm_command(AT_ECHO, 50, &gsm_mail_cmd_data) == AT_RESPONSE_OK) &&
           (gsm_command(AT_W, 50, &gsm_mail_cmd_data) == AT_RESPONSE_OK) &&
           (gsm_command(AT_CNMI, 50, &gsm_mail_cmd_data) == AT_RESPONSE_OK) &&
           (gsm_command(AT_CSCA, 50, &gsm_mail_cmd_data) == AT_RESPONSE_OK) &&
