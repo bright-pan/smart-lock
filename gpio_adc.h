@@ -12,7 +12,7 @@
  ********************************************************************/
 
 #ifndef _GPIO_ADC_H_
-#define _GPIO_PWM_H_
+#define _GPIO_ADC_H_
 
 #include <rthw.h>
 #include <rtthread.h>

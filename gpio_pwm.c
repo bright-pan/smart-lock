@@ -488,19 +488,6 @@ int8_t lock_output(uint8_t direction)
         //motor error
         send_sms_mail(ALARM_TYPE_MOTOR_FAULT, 0);
         send_gprs_mail(ALARM_TYPE_MOTOR_FAULT, 0, 0,RT_NULL);
-/*       {
-        	rt_uint8_t i;
-
-        	for(i = 0 ;i < 8;i++)
-        	{
-						if (gprs_send_heart() == 1)
-						{
-							rt_kprintf("heart ok\n");
-						}
-        	}
-					
-        }
-*/
         return -1;
       }
     }

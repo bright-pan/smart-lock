@@ -17,6 +17,19 @@
 
 
 
+#ifdef USING_SPI1
+struct stm32_spi_bus stm32_spi_bus_1;
+#endif /* #ifdef USING_SPI1 */
+
+#ifdef USING_SPI2
+struct stm32_spi_bus stm32_spi_bus_2;
+#endif /* #ifdef USING_SPI2 */
+
+#ifdef USING_SPI3
+struct stm32_spi_bus stm32_spi_bus_3;
+#endif /* #ifdef USING_SPI3 */
+
+
 static rt_err_t configure(struct rt_spi_device* device, struct rt_spi_configuration* configuration);
 static rt_uint32_t xfer(struct rt_spi_device* device, struct rt_spi_message* message);
 

@@ -15,6 +15,8 @@
 #include "gprs.h"
 #include "gpio_exti.h"
 #include "gpio_adc.h"
+#include "gpio_pin.h"
+#include "gpio_pwm.h"
 #include "gsm.h"
 #include "gsm_usart.h"
 #include "untils.h"
@@ -23,8 +25,8 @@
 #include "battery.h"
 #include <rtc.h>
 #include "mms_dev.h"
-#include "gpio_pin.h"
 #include "aip.h"
+
 
 #define PIC_PER_PAGE_SIZE		512
 #define PIC_NAME						"/2.jpg"
@@ -92,7 +94,7 @@ void gprs_mail_process_thread_entry(void *parameter)
   create_k1();
   work_alarm_type_map_init();
   fault_alarm_type_map_init();
-
+  
   while (1)
   {
     /* process mail */
@@ -195,7 +197,7 @@ uint8_t dec_to_bcd(uint8_t dec)
   return ((temp / 10)<<4) + ((temp % 10) & 0x0F); 
 }
 
-static void get_dec_to_bcd_time(uint8_t date[],time_t time)
+/*static void get_dec_to_bcd_time(uint8_t date[],time_t time)
 {
   struct tm time_tm;
 	
@@ -208,7 +210,7 @@ static void get_dec_to_bcd_time(uint8_t date[],time_t time)
   date[3] = dec_to_bcd((uint8_t)(time_tm.tm_hour % 100));
   date[4] = dec_to_bcd((uint8_t)(time_tm.tm_min % 100));
   date[5] = dec_to_bcd((uint8_t)(time_tm.tm_sec % 100));
-}
+}*/
 static void get_pic_size(const char* name ,rt_uint32_t *size)
 {
 	struct stat status;
@@ -494,7 +496,10 @@ static void get_page_pic_data(int file_id,GPRS_SEND_PIC *pic,rt_uint8_t cur_page
 	rt_uint32_t				offset = 0;
 
 	offset = cur_page * PIC_PER_PAGE_SIZE;		//read data pos
-	lseek(file_id,offset,SEEK_SET);								//file fixed position
+	if(lseek(file_id,offset,SEEK_SET) == -1)  //file fixed position
+	{
+		return;
+	}
 	read(file_id,(void*)(pic->data+5),pic->length-1);
 	rt_kprintf("get this of data length %d\n",pic->length);
 	*((pic->data)+0) = (rt_uint8_t)((pic->length) >> 8 & 0xff);
@@ -504,7 +509,8 @@ static void get_page_pic_data(int file_id,GPRS_SEND_PIC *pic,rt_uint8_t cur_page
 	*((pic->data)+4) = cur_page;
 }
 
-void send_page_pic_data(int file_id,GPRS_SEND_PIC* pic,rt_uint8_t page,GSM_MAIL_TYPEDEF* gsm_mail)
+/*0 ok  1:fail*/
+rt_uint8_t send_page_pic_data(int file_id,GPRS_SEND_PIC* pic,rt_uint8_t page,GSM_MAIL_TYPEDEF* gsm_mail)
 {
 	rt_uint32_t	pic_size;
 	rt_uint32_t	cur_size;
@@ -515,11 +521,13 @@ void send_page_pic_data(int file_id,GPRS_SEND_PIC* pic,rt_uint8_t page,GSM_MAIL_
 	{
 		pic->length = PIC_PER_PAGE_SIZE+1; 			//data length include curpage and data
 		gsm_mail->mail_data.gprs.has_response = 0; 	
+		rt_kprintf("no data recv\n");
 	}
 	else
 	{  
 		pic->length = pic_size % PIC_PER_PAGE_SIZE+1; 	//send data length
 		gsm_mail->mail_data.gprs.has_response = 1;			//last page data need recv response
+		rt_kprintf("have data recv");
 	}
 	get_page_pic_data(file_id,pic,page);
 	gsm_mail->mail_data.gprs.request = pic->data;
@@ -536,13 +544,20 @@ void send_page_pic_data(int file_id,GPRS_SEND_PIC* pic,rt_uint8_t page,GSM_MAIL_
 	if(*(gsm_mail->result) == 1)
 	{
 		rt_kprintf("send picture data ok\n");
+		return 0;
+	}
+	else
+	{
+		rt_kprintf("send picture data fail\n");
+		return 1;
 	}
 }
 
-void send_last_page_data(int file_id,GPRS_SEND_PIC* pic,GSM_MAIL_TYPEDEF* gsm_mail)
+rt_uint8_t send_last_page_data(int file_id,GPRS_SEND_PIC* pic,GSM_MAIL_TYPEDEF* gsm_mail)
 {
 	rt_uint32_t pic_size;
 	rt_uint8_t	last_page_pos;
+	rt_uint8_t	has_response = gsm_mail->mail_data.gprs.has_response;
 	
 	get_pic_size(PIC_NAME,&pic_size);
 	if((pic_size % PIC_PER_PAGE_SIZE) != 0)
@@ -556,7 +571,14 @@ void send_last_page_data(int file_id,GPRS_SEND_PIC* pic,GSM_MAIL_TYPEDEF* gsm_ma
 		rt_kprintf("\n\nlast page data lentg %d\n",(pic_size / PIC_PER_PAGE_SIZE)-1);	
 	}
 	gsm_mail->mail_data.gprs.has_response = 1; 	
-	send_page_pic_data(file_id,pic,last_page_pos,gsm_mail);
+	if(send_page_pic_data(file_id,pic,last_page_pos,gsm_mail) == 1)
+	{
+		gsm_mail->mail_data.gprs.has_response = has_response; 
+		return 1;//send a page data fail
+	}
+	gsm_mail->mail_data.gprs.has_response = has_response; 	
+	return 0;//send a page data ok
+	
 }
 rt_int8_t send_picture_data(void)
 {
@@ -566,7 +588,8 @@ rt_int8_t send_picture_data(void)
 	rt_uint8_t        page_error = 0;
 	rt_uint8_t        resend_num = 0;
 	rt_int8_t         send_result = 1;
-	rt_uint16_t				delay_time = 300;
+	rt_uint8_t				send_last_cnt = 0;
+	rt_uint16_t				delay_time = 100;
 	rt_uint16_t       recv_counts;
 	rt_uint32_t       pic_size;
 	rt_uint32_t       send_length;
@@ -574,7 +597,7 @@ rt_int8_t send_picture_data(void)
 	GSM_MAIL_TYPEDEF 	gsm_mail_buf;
 	GPRS_RECV_FRAME_TYPEDEF gprs_recv_frame;
 
-	delay_time = debug_delay1 = 200;
+	delay_time = 100;
 	/* send file deal */
 	get_pic_size(PIC_NAME,&pic_size);
 	if(pic_size == 0)
@@ -589,6 +612,11 @@ rt_int8_t send_picture_data(void)
 	}
 	/* picture data init */
 	pic_data.data = rt_malloc(PIC_PER_PAGE_SIZE+5);
+	if(pic_data.data == RT_NULL)
+	{
+		rt_kprintf("pic data buffer malloc fial\n");
+		return -1;
+	}
 	rt_memset(pic_data.data,0,PIC_PER_PAGE_SIZE+5);
 	pic_data.cmd = 0x0F;
 	pic_data.cur_page  = 0;
@@ -610,9 +638,14 @@ rt_int8_t send_picture_data(void)
 		close(pic_file_id);		
 		return -1;
 	}
+	gsm_mail_buf.send_mode = GSM_MODE_GPRS;
+	gsm_mail_buf.result = &send_result;
+	gsm_mail_buf.mail_data.gprs.response = (uint8_t *)&gprs_recv_frame;
+	gsm_mail_buf.mail_data.gprs.response_length = &recv_counts;
+	rt_thread_delay(200); 
 	while(page_sum--)
 	{
-		if(page_sum > 0)
+		if(page_sum > 0)//not last page data
 		{
 			pic_data.length = PIC_PER_PAGE_SIZE+1; //data length include curpage and data
 			gsm_mail_buf.mail_data.gprs.has_response = 0;
@@ -625,10 +658,8 @@ rt_int8_t send_picture_data(void)
 		send_length = pic_data.length+4;
 		get_page_pic_data(pic_file_id,&pic_data,pic_data.cur_page);
 		pic_data.cur_page++;
-		gsm_put_hex(pic_data.data, send_length);
+		//gsm_put_hex(pic_data.data, send_length);
 		/*padding send data sturct*/
-		gsm_mail_buf.send_mode = GSM_MODE_GPRS;
-		gsm_mail_buf.result = &send_result;
 		gsm_mail_buf.mail_data.gprs.request = pic_data.data;
 		gsm_mail_buf.mail_data.gprs.request_length = send_length;
 		/*padding recv data struct*/
@@ -645,13 +676,10 @@ rt_int8_t send_picture_data(void)
 		{
 			rt_kprintf("mq_gsm is NUll picture uploading\n");
 			/*send system unusual*/
-			
-			rt_free(pic_data.data);
-			rt_sem_delete(gsm_mail_buf.result_sem);
-			close(pic_file_id);			
-			return -1;
+			send_result = -1;
+			goto EXIT_PICTURE_SEND;		
 		}
-		rt_sem_take(gsm_mail_buf.result_sem, 500);
+		rt_sem_take(gsm_mail_buf.result_sem, RT_WAITING_FOREVER);
 		if(send_result == 1)//send data ok
 		{
 			rt_kprintf("send picture data ok\n");
@@ -662,19 +690,47 @@ rt_int8_t send_picture_data(void)
 			page_error++;
 			if(page_error >= 3)
 			{
-				rt_free(pic_data.data);
-				rt_sem_delete(gsm_mail_buf.result_sem);
-				close(pic_file_id);
-				return -1;
+				send_result = -1;
+				goto EXIT_PICTURE_SEND;
 			}
 			page_sum++;
 			pic_data.cur_page--;
 		}
 		rt_thread_delay(delay_time);										//wait server Processed data		
+		if((pic_data.cur_page % 10) == 0 )
+		{
+CHECK_SERVER_SEND:
+			if(send_last_page_data(pic_file_id,&pic_data,&gsm_mail_buf) == 1)
+			{	
+				/*send 10 page data all fail*/
+				if(send_last_cnt < 10)
+				{
+					/* send last page data fail */
+					page_sum++;
+					pic_data.cur_page--;
+					rt_thread_delay(200);
+					send_last_cnt++;
+					goto CHECK_SERVER_SEND;
+				}
+				else
+				{
+					send_result = -1;
+					goto EXIT_PICTURE_SEND;//send picture fail
+				}
+			}
+			else//send data ok recv server 	Response data
+			{
+				recv_gprs_frame(&gprs_recv_frame, recv_counts);
+				send_last_cnt = 0;
+				rt_kprintf("recv_counts = %d\n",recv_counts);
+			}
+		}
 		if(gsm_mail_buf.mail_data.gprs.has_response == 1)	//last frame picture data need recv answer
 		{
 			rt_int8_t result;
+			rt_int8_t rsend_cnt = 0;
 
+RSEND_LOST_PAGE:
 			result = recv_gprs_frame(&gprs_recv_frame, recv_counts);
 			switch(result)
 			{
@@ -685,27 +741,55 @@ rt_int8_t send_picture_data(void)
 				}
 				case -2:
 				{
+					rt_uint8_t  error = 0;
 					rt_uint8_t	cur_page = 0;
 
 					while(cur_page != gprs_recv_frame.data.pic_send_result.resend_num)
 					{
-						send_page_pic_data(pic_file_id,	//resend lost data packet
-															&pic_data,
-															gprs_recv_frame.data.pic_send_result.data[cur_page++],
-															&gsm_mail_buf);										
-						rt_thread_delay(delay_time);		
+						rt_uint8_t	result;
+						result = send_page_pic_data(pic_file_id,	//resend lost data packet
+																				&pic_data,
+																				gprs_recv_frame.data.pic_send_result.data[cur_page++],
+																				&gsm_mail_buf);	
+						if((result == 1) || ((cur_page % 10 == 0)))//rsend fail
+						{
+							if(send_last_page_data(pic_file_id,&pic_data,&gsm_mail_buf) == 1)
+							{
+								rt_thread_delay(200); 	
+							}
+							else
+							{
+								recv_gprs_frame(&gprs_recv_frame, recv_counts);
+								cur_page = 0;
+							}
+						}
+						rt_thread_delay(200);		
+						
 					}
-					send_last_page_data(pic_file_id,&pic_data,&gsm_mail_buf);
-					/*page_sum++;
-					pic_data.cur_page--;
-					resend_num++;
-					if(resend_num > 3)
+					if(recv_gprs_frame(&gprs_recv_frame, recv_counts) == 1)
 					{
-						rt_free(pic_data.data);
-						rt_sem_delete(gsm_mail_buf.result_sem);
-						close(pic_file_id);
-						return -1;
-					}*/
+						send_result = 1;
+						break;
+					}
+					/* send last page fail */
+LASTPAGELOOP:	
+					if(send_last_page_data(pic_file_id,&pic_data,&gsm_mail_buf) == 1)
+					{
+						error++;
+						if(error < 3)
+						{
+							goto LASTPAGELOOP;
+						}
+						send_result = 1;
+					}
+					else
+					{
+						if(rsend_cnt++ < 10)
+						{
+							goto RSEND_LOST_PAGE;
+						}
+					}
+					/* send last page ok */
 					break;
 				}
 				case -3:
@@ -718,11 +802,9 @@ rt_int8_t send_picture_data(void)
 				}
 				case -4:	//receive unusual	send sotp
 				{
-					rt_free(pic_data.data);
-					rt_sem_delete(gsm_mail_buf.result_sem);
-					close(pic_file_id);
-					return -1;
-					//break;
+					send_result = -1;
+					goto EXIT_PICTURE_SEND;
+					break;
 				}
 				default:
 				{
@@ -733,10 +815,8 @@ rt_int8_t send_picture_data(void)
 					resend_num++;
 					if(resend_num > 3)
 					{
-						rt_free(pic_data.data);
-						rt_sem_delete(gsm_mail_buf.result_sem);
-						close(pic_file_id);
-						return -1;
+						send_result = -1;
+						goto EXIT_PICTURE_SEND;
 					}
 					break;
 				}
@@ -744,12 +824,23 @@ rt_int8_t send_picture_data(void)
 		}
 		rt_kprintf("loop_cnt = %d\n",page_sum);
 		rt_memset(pic_data.data,0,PIC_PER_PAGE_SIZE+5);
+		rt_memset(&gprs_recv_frame.data.pic_send_result,0,sizeof(gprs_recv_frame.data.pic_send_result));
 	}
+EXIT_PICTURE_SEND:
 	close(pic_file_id);
 	rt_thread_delay(300);
 	rt_sem_delete(gsm_mail_buf.result_sem);
 	rt_free(pic_data.data);
-	return 1;
+	//send_gprs_mail(ALARM_TYPE_GPRS_UPLOAD_PIC,0, 0,(void *)ALARM_TYPE_LOCK_TEMPERATURE);//test
+	if(send_result)
+	{
+		rt_kprintf("发送成功\n");
+	}
+	else
+	{
+		rt_kprintf("发送失败\n");
+	}
+	return send_result;
 }
 
 int8_t send_gprs_frame(ALARM_TYPEDEF alarm_type, time_t time, uint8_t order, void* user)
@@ -926,8 +1017,8 @@ int8_t send_gprs_frame(ALARM_TYPEDEF alarm_type, time_t time, uint8_t order, voi
       gprs_send_frame->cmd = 0x0E;
       gprs_send_frame->order = 	gprs_order++;
 
-      result = process_gprs_pic_arg(&(gprs_send_frame->data.picture),time,user);
-      if(result == -1)
+      send_result = process_gprs_pic_arg(&(gprs_send_frame->data.picture),time,user);
+      if(send_result == -1)
       {
 				goto	quitgprsdatasend;
       }
@@ -1095,7 +1186,24 @@ int8_t send_gprs_frame(ALARM_TYPEDEF alarm_type, time_t time, uint8_t order, voi
     	goto	quitgprsdatasend;
     	//break;
     }
-
+		case ALARM_TYPE_GPRS_SLEEP:
+		{
+			gprs_send_frame->length = 1;
+      		gprs_send_frame->cmd = 0x0C;
+      		gprs_send_frame->order = order;
+      		gprs_send_frame->data.sleep_ack.result = 1;
+      		gsm_mail_buf.mail_data.gprs.has_response = 0;
+      		break;
+		}
+		case ALARM_TYPE_GPRS_WAKE_UP:
+		{
+			gprs_send_frame->length = 1;
+      		gprs_send_frame->cmd = 0x0d;
+      		gprs_send_frame->order = order;
+      		gprs_send_frame->data.wake_up_ack.result= 1;
+      		gsm_mail_buf.mail_data.gprs.has_response = 0;
+			break;
+		}
     default : { 
       break;
     };
@@ -1390,6 +1498,18 @@ int8_t send_gprs_frame(ALARM_TYPEDEF alarm_type, time_t time, uint8_t order, voi
     	*process_buf_bk++ = gprs_send_frame->data.picture.page;
     	rt_memcpy(process_buf_bk,gprs_send_frame->data.picture.time,6);
     	process_length+=12;
+			break;
+    }
+    case ALARM_TYPE_GPRS_SLEEP://sleep mode
+    {
+    	*process_buf_bk++ = gprs_send_frame->data.sleep_ack.result;
+      process_length += 1;
+			break;
+    }
+    case ALARM_TYPE_GPRS_WAKE_UP:
+    {
+			*process_buf_bk++ = gprs_send_frame->data.wake_up_ack.result;
+      process_length += 1;
 			break;
     }
     default : {
@@ -1723,48 +1843,76 @@ int8_t recv_gprs_frame(GPRS_RECV_FRAME_TYPEDEF *gprs_recv_frame, uint16_t recv_c
 			break;
     }
     case 0x8F:
-      {
-    	rt_uint8_t i;
-        rt_kprintf("picture send data recv respond \n");
-        rt_kprintf("%d\n",gprs_recv_frame->data.pic_send_result.resend_num);
-        for(i = 0; i < 100;i++)
-        {
-          rt_kprintf("%x",gprs_recv_frame->data.pic_send_result.data[i]);
-        }
+    {
+			rt_uint8_t i;
 
-        switch(gprs_recv_frame->data.pic_send_result.result)
-    	{
-          case 0:					//send ok
-            {
-              result = 1;
-              rt_kprintf("gprs data send ok\n");
-              break;
-            }
-          case 1:					//receive imperfect
-            {
-              result = -2;
-              rt_kprintf("gprs data receive imperfect\n");
-              break;
-            }case 2:				//receive	unusual resend
-            {
-              result = -3;
-              rt_kprintf("gprs data receive	unusual resend\n");
-              break;
-            }
-          case 3:					//receive unusual	send sotp
-            {
-              result = -4;
-              rt_kprintf("gprs data receive unusual	send sotp\n");
-              break;
-            }
-          default:
-            {
-              result = -1;
-              rt_kprintf("gprs data error\n");
-            }
-    	}
-        break;
-      }
+			/* RecvResponse data validity analyse */
+			rt_kprintf("picture send data recv respond \n");
+			rt_kprintf("%d\n",gprs_recv_frame->data.pic_send_result.resend_num);
+			for(i = 0; i < gprs_recv_frame->data.pic_send_result.resend_num;i++)
+			{
+			  rt_kprintf("%d ",gprs_recv_frame->data.pic_send_result.data[i]);
+			  if(i%10 == 0)
+			  {
+							rt_kprintf("\n");
+			  }
+			  /*if(i > 0)
+			  {
+			  	if(gprs_recv_frame->data.pic_send_result.data[i-1] < gprs_recv_frame->data.pic_send_result.data[i])
+			  	{
+						gprs_recv_frame->data.pic_send_result.resend_num = i;
+			  	}
+			  }*/
+			}
+			switch(gprs_recv_frame->data.pic_send_result.result)
+				{
+			      case 0:					//send ok
+			        {
+			          result = 1;
+			          rt_kprintf("gprs data send ok\n");
+			          break;
+			        }
+			      case 1:					//receive imperfect
+			        {
+			          result = -2;
+			          rt_kprintf("gprs data receive imperfect\n");
+			          break;
+			        }case 2:				//receive	unusual resend
+			        {
+			          result = -3;
+			          rt_kprintf("gprs data receive	unusual resend\n");
+			          break;
+			        }
+			      case 3:					//receive unusual	send sotp
+			        {
+			          result = -4;
+			          rt_kprintf("gprs data receive unusual	send sotp\n");
+			          break;
+			        }
+			      default:
+			        {
+			          result = -1;
+			          rt_kprintf("gprs data error\n");
+			        }
+				}
+			break;
+    }
+    case 0x8c:
+    {
+    	rt_kprintf("sleep \n");
+    	send_gprs_mail(ALARM_TYPE_GPRS_SLEEP, 0, gprs_recv_frame->order,RT_NULL);
+    	machine_status_deal(RT_FALSE,RT_EVENT_FLAG_OR|RT_EVENT_FLAG_CLEAR,RT_WAITING_NO);
+    	rt_thread_delay(200);//prior send gprs data
+    	lock_output(GATE_UNLOCK);
+			break;
+    }
+    case 0x8d:
+    {
+    	rt_kprintf("wake up\n");
+    	send_gprs_mail(ALARM_TYPE_GPRS_WAKE_UP, 0, gprs_recv_frame->order,RT_NULL);
+    	machine_status_deal(RT_TRUE,0,0);
+			break;
+    }
     default : {
       if (recv_counts == 4 &&
           gprs_recv_frame->length == 0)

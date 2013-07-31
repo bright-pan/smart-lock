@@ -194,6 +194,10 @@ int rt_application_init()
   aip_mq = rt_mq_create("aip", sizeof(AIP_MAIL_TYPEDEF),
                         AIP_MAIL_MAX_MSGS,
                         RT_IPC_FLAG_FIFO);
+  /* Current SmartLock Status (sleep, wake up)*/
+  machine_work_status = rt_event_create("workstat",RT_IPC_FLAG_FIFO);
+  rt_event_send(machine_work_status,MACHINE_ON_WORK);
+  
   /* initial gprs msg queue */
   gprs_mq = rt_mq_create("gprs", sizeof(GPRS_MAIL_TYPEDEF),
                          GPRS_MAIL_MAX_MSGS,

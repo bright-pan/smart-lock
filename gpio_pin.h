@@ -22,6 +22,9 @@
 #include "stm32f10x.h"
 #include "gpio.h"
 
+
+#define GPIO_CMD_INIT_CONFIG						1
+
 #define DEVICE_NAME_GSM_POWER "g_power"
 #define DEVICE_NAME_GSM_STATUS "g_stat"
 #define DEVICE_NAME_GSM_LED "g_led"
@@ -36,7 +39,7 @@
 #define DEVICE_NAME_CAMERA_LED "cm_led"
 #define DEVICE_NAME_CAMERA_POWER "cm_power"
 #define DEVICE_NAME_CAMERA_PHOTOSENSOR "cm_photo"
-
+#define DEVICE_NAME_CAMERA_USART_TX	"cm_txpin"
 
 #define DEVICE_NAME_RFID_POWER "rf_power"
 
@@ -52,6 +55,8 @@ void rt_hw_rfid_power_register(void);
 
 void rt_hw_camera_power_register(void);
 void rt_hw_camera_led_register(void);
+void rt_hw_camera_usart_tx(void);
+
 
 void rt_hw_logo_led_register(void);
 

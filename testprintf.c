@@ -571,5 +571,27 @@ void file_move_flash(const char *file_name)
 }
 FINSH_FUNCTION_EXPORT(file_move_flash,file system file move flash start addr);
 
+void gprs_test_timer_entry(void *arg)
+{
+	static rt_uint32_t	cnt = 0;
+	cnt++;
+	if((cnt%15) == 0)//15 min send gprs picture
+	{
+		gprs_pic();
+	}
+}
+void test_gprs_pic(void)
+{	
+	rt_timer_t gprs_test_timer;
+
+	gprs_test_timer = rt_timer_create("g_test",
+																		gprs_test_timer_entry,
+																		RT_NULL,
+																		6000,
+																		RT_TIMER_FLAG_PERIODIC);
+	rt_timer_start(gprs_test_timer);
+}
+FINSH_FUNCTION_EXPORT(test_gprs_pic,succession send gprs pictuer data);
+
 #endif
 

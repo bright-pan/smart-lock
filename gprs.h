@@ -177,6 +177,11 @@ typedef struct
 	
 }GPRS_SEND_PIC;
 
+typedef struct 
+{
+	uint8_t result;
+}GPRS_RTU_ACK;
+
 typedef union
 {
 
@@ -197,6 +202,8 @@ typedef union
   GPRS_SEND_SET_HTTP set_http;
   GPRS_POWER_ALARM	battery;
   GPRS_SEND_PIC_ASK picture;
+  GPRS_RTU_ACK sleep_ack;
+  GPRS_RTU_ACK wake_up_ack;
 }GPRS_SEND_DATA;
 
 typedef struct
@@ -270,9 +277,8 @@ typedef struct
 {
   uint8_t	result;
   uint8_t	resend_num;
-  uint8_t	data[100];
+  uint8_t	data[150];
 }GPRS_PIC_RESULT;
-
 typedef union
 {
   GPRS_LIST_TELEPHONE list_telephone;
