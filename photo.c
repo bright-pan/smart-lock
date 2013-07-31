@@ -732,6 +732,11 @@ void photo_thread_entry(void *arg)
 			rt_thread_delay(1);
 
 			photo.data = (rt_uint8_t*)rt_malloc(CM_BUFFER_LEN);
+			if(photo.data == RT_NULL)
+			{
+				rt_kprintf("camera buffer create fail\n");
+				continue;
+			}
 			rt_memset(photo.data,0,CM_BUFFER_LEN);
 			photo_reset(&photo);
 
