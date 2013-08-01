@@ -12,6 +12,9 @@
  ********************************************************************/
 
 #include "gsm_usart.h"
+#define GSM_RX_BUFFER_LEN							1024
+#define GSM_TX_BUFFER_LEN							1024
+
 
 /*
  * Use UART2 with interrupt Rx and dma Tx
@@ -86,6 +89,10 @@ struct gsm_usart_user_data_t gsm_usart_user_data =
   GSM_USART_TX_DMA_CHANNEL,
   GSM_USART_RX_DMA_CHANNEL,
 };
+rt_uint8_t	gsm_rx_buffer[GSM_RX_BUFFER_LEN];
+rt_uint8_t	gsm_tx_buffer[GSM_TX_BUFFER_LEN];
+
+
 struct serial_ringbuffer gsm_usart_int_rx;
 struct serial_ringbuffer gsm_usart_int_tx;
 
@@ -401,6 +408,10 @@ static rt_err_t gsm_usart_pos_configure(struct rt_serial_device *serial, struct 
 void rt_hw_gsm_usart_register(void)
 {
   gsm_usart_device.ops = &gsm_usart_pos;
+  gsm_usart_int_rx.buffer = gsm_rx_buffer;
+  gsm_usart_int_tx.buffer = gsm_tx_buffer;
+  gsm_usart_int_rx.size = GSM_RX_BUFFER_LEN;
+  gsm_usart_int_tx.size = GSM_TX_BUFFER_LEN;
   gsm_usart_device.int_rx = &gsm_usart_int_rx;
   gsm_usart_device.int_tx = &gsm_usart_int_tx;
   gsm_usart_device.config = gsm_usart_default_config;

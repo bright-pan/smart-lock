@@ -186,7 +186,7 @@ void mms_mail_process_thread_entry(void *parameter)
     {
       rt_kprintf("\nreceive mms mail < time: %d alarm_type: %s >\n", mms_mail_buf.time, alarm_help_map[mms_mail_buf.alarm_type]);
       rt_mutex_take(mutex_gsm_mail_sequence,RT_WAITING_FOREVER);
-      if (!send_mms(mms_mail_buf.pic_name))
+      //if (!send_mms(mms_mail_buf.pic_name))
       {
       	static ALARM_TYPEDEF alarm_type ;
       	
@@ -194,7 +194,7 @@ void mms_mail_process_thread_entry(void *parameter)
       	send_gprs_mail(ALARM_TYPE_GPRS_UPLOAD_PIC,0, 0,(void *)&alarm_type);
         rt_kprintf("\nsend mms success!!!\n");
       }
-      else
+      //else
       {
         rt_kprintf("\nsend mms failure!!!\n");
       }

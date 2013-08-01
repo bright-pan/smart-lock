@@ -34,6 +34,17 @@
  * USART3 Rx --> DMA Channel 3
  */
 
+#define USART1_RX_BUFFER_LEN					64
+#define USART1_TX_BUFFER_LEN					64
+
+#define USART2_RX_BUFFER_LEN					64
+#define USART2_TX_BUFFER_LEN					64
+
+#define USART3_RX_BUFFER_LEN					64
+#define USART3_TX_BUFFER_LEN					64
+
+
+
 
 
 struct serial_user_data
@@ -126,6 +137,8 @@ struct serial_user_data usart1_user_data =
   USART1_TX_DMA,
   USART1_RX_DMA,
 };
+rt_uint8_t	usart1_rx_buffer[USART1_RX_BUFFER_LEN];
+rt_uint8_t	usart1_tx_buffer[USART1_TX_BUFFER_LEN];
 
 struct serial_ringbuffer usart1_int_rx;
 struct serial_ringbuffer usart1_int_tx;
@@ -140,6 +153,9 @@ struct serial_user_data usart2_user_data =
   USART2_TX_DMA,
   USART2_RX_DMA,
 };
+rt_uint8_t	usart2_rx_buffer[USART2_RX_BUFFER_LEN];
+rt_uint8_t	usart2_tx_buffer[USART2_TX_BUFFER_LEN];
+
 struct serial_ringbuffer usart2_int_rx;
 struct serial_ringbuffer usart2_int_tx;
 
@@ -154,6 +170,9 @@ struct serial_user_data usart3_user_data =
   USART3_TX_DMA,
   USART3_RX_DMA,
 };
+rt_uint8_t	usart3_rx_buffer[USART3_RX_BUFFER_LEN];
+rt_uint8_t	usart3_tx_buffer[USART3_TX_BUFFER_LEN];
+
 struct serial_ringbuffer usart3_int_rx;
 struct serial_ringbuffer usart3_int_tx;
 
@@ -635,9 +654,11 @@ void rt_hw_usart_init()
 {
   /* register uart1 */
 #ifdef RT_USING_USART1
-  
-
   serial_device_usart1.ops = &usart_ops;
+  usart1_int_rx.buffer = usart1_rx_buffer;
+  usart1_int_tx.buffer = usart1_tx_buffer;
+  usart1_int_rx.size = USART1_RX_BUFFER_LEN;
+  usart1_int_tx.size = USART1_TX_BUFFER_LEN;
   serial_device_usart1.int_rx = &usart1_int_rx;
   serial_device_usart1.int_tx = &usart1_int_tx;
   serial_device_usart1.config = serial_device_1_config;
@@ -652,6 +673,10 @@ void rt_hw_usart_init()
 
 #ifdef RT_USING_USART2
   serial_device_usart2.ops = &usart_ops;
+  usart2_int_rx.buffer = usart2_rx_buffer;
+  usart2_int_tx.buffer = usart2_tx_buffer;
+  usart2_int_rx.size = USART2_RX_BUFFER_LEN;
+  usart2_int_tx.size = USART2_TX_BUFFER_LEN;
   serial_device_usart2.int_rx = &usart2_int_rx;
   serial_device_usart2.int_tx = &usart2_int_tx;
   serial_device_usart2.config = serial_device_default_config;

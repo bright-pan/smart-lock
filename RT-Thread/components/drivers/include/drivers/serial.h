@@ -17,7 +17,6 @@
 #define __SERIAL_H__
 
 #include <rtthread.h>
-#include <rtdevice.h>
 
 #define BAUD_RATE_4800                  4800
 #define BAUD_RATE_9600                  9600
@@ -44,9 +43,9 @@
 #define NRZ_NORMAL                      0       /* Non Return to Zero : normal mode */
 #define NRZ_INVERTED                    1       /* Non Return to Zero : inverted mode */
 
-#define UART_RX_BUFFER_SIZE             1024*2
+#define UART_RX_BUFFER_SIZE             64
 #define UART_TX_BUFFER_SIZE             64
-#define SERIAL_RBUFFER_SIZE             1024*2
+#define SERIAL_RBUFFER_SIZE             64
 
 #define RT_DEVICE_CTRL_CONFIG           0x03    /* configure device */
 #define RT_DEVICE_CTRL_SET_INT          0x10    /* enable receive irq */
@@ -77,7 +76,8 @@
 
 struct serial_ringbuffer
 {
-    rt_uint8_t  buffer[SERIAL_RBUFFER_SIZE];
+    rt_uint8_t  *buffer;
+    rt_size_t		size;
     rt_uint16_t put_index, get_index;
 };
 
