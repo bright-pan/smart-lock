@@ -70,7 +70,7 @@ struct camera_dev
 	rt_base_t		size;
 	rt_uint32_t	time;
 	rt_uint8_t	error;
-	rt_uint8_t	*data;
+	rt_uint8_t	data[CM_BUFFER_LEN];
 };
 typedef struct camera_dev*	camera_dev_t;
 
