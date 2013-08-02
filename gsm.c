@@ -333,7 +333,7 @@ int8_t at_response_process(AT_COMMAND_INDEX_TYPEDEF index, uint8_t *buf, GSM_MAI
   uint8_t delay_counts = 0;
   uint16_t recv_counts = 0;
   int8_t result = AT_RESPONSE_ERROR;
-  uint8_t *process_buf = (uint8_t *)rt_malloc(512);
+  uint8_t *process_buf = (uint8_t *)rt_malloc(GSM_PROCESS_BUF_SIZE);
   int temp = 0;
   uint8_t temp_buf[20];
   rt_device_t device_gsm_usart;
@@ -344,14 +344,14 @@ int8_t at_response_process(AT_COMMAND_INDEX_TYPEDEF index, uint8_t *buf, GSM_MAI
   {
     if (index == AT_CIPSEND_SUFFIX)
     {
-      memset(process_buf, 0, 512);
+      memset(process_buf, 0, GSM_PROCESS_BUF_SIZE);
       recv_counts = rt_device_read(device_gsm_usart, 0 ,process_buf, cmd_data->cipsend.length);
       gsm_put_char(process_buf, recv_counts);
       gsm_put_hex(process_buf, recv_counts);
     }
     else
     {
-      memset(process_buf, 0, 512);
+      memset(process_buf, 0, GSM_PROCESS_BUF_SIZE);
       recv_counts = gsm_recv_frame(process_buf);
       gsm_put_char(process_buf, strlen((char *)process_buf));
       gsm_put_hex(process_buf, strlen((char *)process_buf));
@@ -394,7 +394,7 @@ int8_t at_response_process(AT_COMMAND_INDEX_TYPEDEF index, uint8_t *buf, GSM_MAI
 
           if (strstr((char *)process_buf, at_command_map[index]))
           {
-            memset(process_buf, 0, 512);
+            memset(process_buf, 0, GSM_PROCESS_BUF_SIZE);
             recv_counts = gsm_recv_frame(process_buf);
             if (recv_counts)
             {
@@ -413,7 +413,7 @@ int8_t at_response_process(AT_COMMAND_INDEX_TYPEDEF index, uint8_t *buf, GSM_MAI
 
           if (strstr((char *)process_buf, (char *)buf))
           {
-            memset(process_buf, 0, 512);
+            memset(process_buf, 0, GSM_PROCESS_BUF_SIZE);
             recv_counts = gsm_recv_frame(process_buf);
             if (recv_counts)
             {
@@ -434,7 +434,7 @@ int8_t at_response_process(AT_COMMAND_INDEX_TYPEDEF index, uint8_t *buf, GSM_MAI
 
           if (strstr((char *)process_buf, (char *)buf))
           {
-            memset(process_buf, 0, 512);
+            memset(process_buf, 0, GSM_PROCESS_BUF_SIZE);
             recv_counts = gsm_recv_frame(process_buf);
             if (recv_counts)
             {
@@ -457,7 +457,7 @@ int8_t at_response_process(AT_COMMAND_INDEX_TYPEDEF index, uint8_t *buf, GSM_MAI
             while (delay_counts++ < 10)
             {
               rt_thread_delay(200);
-              memset(process_buf, 0, 512);
+              memset(process_buf, 0, GSM_PROCESS_BUF_SIZE);
               recv_counts = gsm_recv_frame(process_buf);
               if (recv_counts)
               {
@@ -482,7 +482,7 @@ int8_t at_response_process(AT_COMMAND_INDEX_TYPEDEF index, uint8_t *buf, GSM_MAI
             while (delay_counts++ < 10)
             {
               rt_thread_delay(200);
-              memset(process_buf, 0, 512);
+              memset(process_buf, 0, GSM_PROCESS_BUF_SIZE);
               recv_counts = gsm_recv_frame(process_buf);
               if (recv_counts)
               {
@@ -507,7 +507,7 @@ int8_t at_response_process(AT_COMMAND_INDEX_TYPEDEF index, uint8_t *buf, GSM_MAI
             while (delay_counts++ < 10)
             {
               rt_thread_delay(200);
-              memset(process_buf, 0, 512);
+              memset(process_buf, 0, GSM_PROCESS_BUF_SIZE);
               recv_counts = gsm_recv_frame(process_buf);
               if (recv_counts)
               {
@@ -532,7 +532,7 @@ int8_t at_response_process(AT_COMMAND_INDEX_TYPEDEF index, uint8_t *buf, GSM_MAI
             while (delay_counts++ < 100)
             {
               rt_thread_delay(200);
-              memset(process_buf, 0, 512);
+              memset(process_buf, 0, GSM_PROCESS_BUF_SIZE);
               recv_counts = gsm_recv_frame(process_buf);
               if (recv_counts)
               {
@@ -553,7 +553,7 @@ int8_t at_response_process(AT_COMMAND_INDEX_TYPEDEF index, uint8_t *buf, GSM_MAI
 
           if (strstr((char *)process_buf, at_command_map[index]))
           {
-            memset(process_buf, 0, 512);
+            memset(process_buf, 0, GSM_PROCESS_BUF_SIZE);
             recv_counts = gsm_recv_frame(process_buf);
             if (recv_counts)
             {
@@ -561,7 +561,7 @@ int8_t at_response_process(AT_COMMAND_INDEX_TYPEDEF index, uint8_t *buf, GSM_MAI
               gsm_put_hex(process_buf, strlen((char *)process_buf));
               if (!strstr((char *)process_buf, "ERROR"))
               {
-                memset(process_buf + 200, 0, 512-200);
+                memset(process_buf + 200, 0, GSM_PROCESS_BUF_SIZE-200);
                 recv_counts = gsm_recv_frame(process_buf + 200);
                 if (recv_counts)
                 {
@@ -585,7 +585,7 @@ int8_t at_response_process(AT_COMMAND_INDEX_TYPEDEF index, uint8_t *buf, GSM_MAI
 
           if (strstr((char *)process_buf, at_command_map[index]))
           {
-            memset(process_buf, 0, 512);
+            memset(process_buf, 0, GSM_PROCESS_BUF_SIZE);
             recv_counts = gsm_recv_frame(process_buf);
             if (recv_counts)
             {
@@ -593,7 +593,7 @@ int8_t at_response_process(AT_COMMAND_INDEX_TYPEDEF index, uint8_t *buf, GSM_MAI
               gsm_put_hex(process_buf, strlen((char *)process_buf));
               if (!strstr((char *)process_buf, "ERROR"))
               {
-                memset(process_buf + 200, 0, 512-200);
+                memset(process_buf + 200, 0, GSM_PROCESS_BUF_SIZE-200);
                 recv_counts = gsm_recv_frame(process_buf + 200);
                 if (recv_counts)
                 {
@@ -617,7 +617,7 @@ int8_t at_response_process(AT_COMMAND_INDEX_TYPEDEF index, uint8_t *buf, GSM_MAI
 
           if (strstr((char *)process_buf, at_command_map[index]))
           {
-            memset(process_buf, 0, 512);
+            memset(process_buf, 0, GSM_PROCESS_BUF_SIZE);
             recv_counts = gsm_recv_frame(process_buf);
             if (recv_counts)
             {
@@ -629,7 +629,7 @@ int8_t at_response_process(AT_COMMAND_INDEX_TYPEDEF index, uint8_t *buf, GSM_MAI
                 while (delay_counts++ < 100)
                 {
                   rt_thread_delay(200);
-                  memset(process_buf, 0, 512);
+                  memset(process_buf, 0, GSM_PROCESS_BUF_SIZE);
                   recv_counts = gsm_recv_frame(process_buf);
                   if (recv_counts)
                   {
@@ -679,7 +679,7 @@ int8_t at_response_process(AT_COMMAND_INDEX_TYPEDEF index, uint8_t *buf, GSM_MAI
 
           if (strstr((char *)process_buf, (char *)buf))
           {
-            memset(process_buf, 0, 512);
+            memset(process_buf, 0, GSM_PROCESS_BUF_SIZE);
             recv_counts = gsm_recv_frame(process_buf);
             if (recv_counts)
             {
@@ -696,7 +696,7 @@ int8_t at_response_process(AT_COMMAND_INDEX_TYPEDEF index, uint8_t *buf, GSM_MAI
                   if (recv_counts)
                   {
                     *(cmd_data->httpread.recv_counts) = recv_counts;
-                    memset(process_buf, 0, 512);
+                    memset(process_buf, 0, GSM_PROCESS_BUF_SIZE);
                     recv_counts = gsm_recv_frame(process_buf);
                     if (recv_counts)
                     {
@@ -721,7 +721,7 @@ int8_t at_response_process(AT_COMMAND_INDEX_TYPEDEF index, uint8_t *buf, GSM_MAI
 
           if (strstr((char *)process_buf, at_command_map[index]))
           {
-            memset(process_buf, 0, 512);
+            memset(process_buf, 0, GSM_PROCESS_BUF_SIZE);
             recv_counts = gsm_recv_frame(process_buf);
             if (recv_counts)
             {
@@ -738,7 +738,7 @@ int8_t at_response_process(AT_COMMAND_INDEX_TYPEDEF index, uint8_t *buf, GSM_MAI
 
           if (strstr((char *)process_buf, at_command_map[index]))
           {
-            memset(process_buf, 0, 512);
+            memset(process_buf, 0, GSM_PROCESS_BUF_SIZE);
             recv_counts = gsm_recv_frame(process_buf);
             if (recv_counts)
             {
@@ -746,7 +746,7 @@ int8_t at_response_process(AT_COMMAND_INDEX_TYPEDEF index, uint8_t *buf, GSM_MAI
               gsm_put_hex(process_buf, strlen((char *)process_buf));
               if (strstr((char *)process_buf, "OK"))
               {
-                memset(process_buf, 0, 512);
+                memset(process_buf, 0, GSM_PROCESS_BUF_SIZE);
                 recv_counts = gsm_recv_frame(process_buf);
                 if (recv_counts && strstr((char *)process_buf, "STATE"))
                 {
@@ -756,7 +756,7 @@ int8_t at_response_process(AT_COMMAND_INDEX_TYPEDEF index, uint8_t *buf, GSM_MAI
                   while (delay_counts < 8)
                   {
                     //rt_thread_delay(100);
-                    memset(process_buf, 0, 512);
+                    memset(process_buf, 0, GSM_PROCESS_BUF_SIZE);
                     recv_counts = gsm_recv_frame(process_buf);
                     if (recv_counts)
                     {
@@ -789,7 +789,7 @@ int8_t at_response_process(AT_COMMAND_INDEX_TYPEDEF index, uint8_t *buf, GSM_MAI
 
           if (strstr((char *)process_buf, (char *)buf))
           {
-            memset(process_buf, 0, 512);
+            memset(process_buf, 0, GSM_PROCESS_BUF_SIZE);
             recv_counts = gsm_recv_frame(process_buf);
             if (recv_counts)
             {
@@ -801,7 +801,7 @@ int8_t at_response_process(AT_COMMAND_INDEX_TYPEDEF index, uint8_t *buf, GSM_MAI
                 while (delay_counts++ < 10)
                 {
                   rt_thread_delay(200);
-                  memset(process_buf, 0, 512);
+                  memset(process_buf, 0, GSM_PROCESS_BUF_SIZE);
                   recv_counts = gsm_recv_frame(process_buf);
                   if (recv_counts)
                   {
@@ -825,7 +825,7 @@ int8_t at_response_process(AT_COMMAND_INDEX_TYPEDEF index, uint8_t *buf, GSM_MAI
 
           if (strstr((char *)process_buf, (char *)buf))
           {
-            memset(process_buf, 0, 512);
+            memset(process_buf, 0, GSM_PROCESS_BUF_SIZE);
             recv_counts = gsm_recv_frame(process_buf);
             if (recv_counts)
             {
@@ -845,7 +845,7 @@ int8_t at_response_process(AT_COMMAND_INDEX_TYPEDEF index, uint8_t *buf, GSM_MAI
 
           if (strstr((char *)process_buf, (char *)buf))
           {
-            memset(process_buf, 0, 512);
+            memset(process_buf, 0, GSM_PROCESS_BUF_SIZE);
             recv_counts = gsm_recv_frame(process_buf);
             if (recv_counts)
             {
@@ -853,7 +853,7 @@ int8_t at_response_process(AT_COMMAND_INDEX_TYPEDEF index, uint8_t *buf, GSM_MAI
               gsm_put_hex(process_buf, strlen((char *)process_buf));
               if (strstr((char *)process_buf, "+CMGS:"))
               {
-                memset(process_buf, 0, 512);
+                memset(process_buf, 0, GSM_PROCESS_BUF_SIZE);
                 recv_counts = gsm_recv_frame(process_buf);
                 if (recv_counts)
                 {
@@ -875,7 +875,7 @@ int8_t at_response_process(AT_COMMAND_INDEX_TYPEDEF index, uint8_t *buf, GSM_MAI
 
           if (strstr((char *)process_buf, (char *)buf))
           {
-            memset(process_buf, 0, 512);
+            memset(process_buf, 0, GSM_PROCESS_BUF_SIZE);
             recv_counts = gsm_recv_frame(process_buf);
             if (recv_counts)
             {
@@ -898,7 +898,7 @@ int8_t at_response_process(AT_COMMAND_INDEX_TYPEDEF index, uint8_t *buf, GSM_MAI
             while (delay_counts++ < 10)
             {
               rt_thread_delay(200);
-              memset(process_buf, 0, 512);
+              memset(process_buf, 0, GSM_PROCESS_BUF_SIZE);
               recv_counts = gsm_recv_frame(process_buf);
               if (recv_counts)
               {
@@ -920,7 +920,7 @@ int8_t at_response_process(AT_COMMAND_INDEX_TYPEDEF index, uint8_t *buf, GSM_MAI
 
           if (strstr((char *)process_buf, at_command_map[index]))
           {
-            memset(process_buf, 0, 512);
+            memset(process_buf, 0, GSM_PROCESS_BUF_SIZE);
             recv_counts = gsm_recv_frame(process_buf);
             if (recv_counts)
             {
@@ -954,7 +954,7 @@ int8_t at_response_process(AT_COMMAND_INDEX_TYPEDEF index, uint8_t *buf, GSM_MAI
 
           if (strstr((char *)process_buf, (char *)buf))
           {
-            memset(process_buf, 0, 512);
+            memset(process_buf, 0, GSM_PROCESS_BUF_SIZE);
             recv_counts = gsm_recv_frame(process_buf);
             if (recv_counts)
             {
@@ -991,7 +991,7 @@ int8_t at_response_process(AT_COMMAND_INDEX_TYPEDEF index, uint8_t *buf, GSM_MAI
         case AT_CLCC : {
           if (strstr((char *)process_buf, at_command_map[index]))
           {
-            memset(process_buf, 0, 512);
+            memset(process_buf, 0, GSM_PROCESS_BUF_SIZE);
             recv_counts = gsm_recv_frame(process_buf);
             if (recv_counts)
             {
@@ -999,7 +999,7 @@ int8_t at_response_process(AT_COMMAND_INDEX_TYPEDEF index, uint8_t *buf, GSM_MAI
               gsm_put_hex(process_buf, strlen((char *)process_buf));
               if (!strstr((char *)process_buf, "ERROR"))
               {
-                memset(process_buf + 200, 0, 512-200);
+                memset(process_buf + 200, 0, GSM_PROCESS_BUF_SIZE-200);
                 recv_counts = gsm_recv_frame(process_buf + 200);
                 if (recv_counts)
                 {
@@ -1403,7 +1403,7 @@ void gsm_process_thread_entry(void *parameters)
   rt_uint8_t gsm_status;
   uint16_t recv_counts = 0;
   int8_t recv_times = 0;
-  uint8_t process_buf[512];
+  uint8_t process_buf[768];
   GSM_MAIL_CMD_DATA gsm_mail_cmd_data;
   int response_length;
 
