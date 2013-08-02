@@ -13,6 +13,8 @@
 
 #include "camera_uart.h"
 
+#define CAMERA_USART_TX_BUFFER_LEN			256
+#define CAMERA_USART_RX_BUFFER_LEN			2048
 /*
  * Use UART4 with interrupt Rx and poll Tx
  *
@@ -50,6 +52,9 @@ struct camera_uart_user_data_t camera_uart_user_data =
   RT_NULL,
   RT_NULL,
 };
+rt_uint8_t	camera_uart_rx_buffer[CAMERA_USART_TX_BUFFER_LEN];
+rt_uint8_t	camera_uart_tx_buffer[CAMERA_USART_RX_BUFFER_LEN];
+
 struct serial_ringbuffer camera_uart_int_rx;
 struct serial_ringbuffer camera_uart_int_tx;
 
@@ -293,6 +298,10 @@ static rt_err_t camera_uart_pos_configure(struct rt_serial_device *serial, struc
 void rt_hw_camera_uart_register(void)
 {
   camera_uart_device.ops = &camera_uart_pos;
+  camera_uart_int_rx.buffer = camera_uart_rx_buffer;
+  camera_uart_int_tx.buffer = camera_uart_tx_buffer;
+  camera_uart_int_rx.size = CAMERA_USART_RX_BUFFER_LEN;
+  camera_uart_int_tx.size = CAMERA_USART_TX_BUFFER_LEN;
   camera_uart_device.int_rx = &camera_uart_int_rx;
   camera_uart_device.int_tx = &camera_uart_int_tx;
   camera_uart_device.config = camera_uart_default_config;

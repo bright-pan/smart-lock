@@ -502,7 +502,7 @@ void set_delay(rt_uint32_t t)
 
 FINSH_FUNCTION_EXPORT(set_delay,set delay time);
 
-void light_ir_test(rt_uint8_t	status)
+void light_ir_test(void)
 {
 	rt_uint8_t dat = 0;
 	rt_device_t dev = RT_NULL;
@@ -516,16 +516,13 @@ void light_ir_test(rt_uint8_t	status)
 		while(loop--)
 		{
 			rt_device_read(dev,0,&dat,1);
-			if(1 == status)
+			if(dat == 1)
 			{
-				if(1 == dat)
-				{
-					rt_device_write(led,0,&status,1);
-				}
+				rt_device_write(led,0,&dat,1);
 			}
-			else if(0 == status)
+			else
 			{
-				rt_device_write(led,0,&status,1);
+				rt_device_write(led,0,&dat,1);
 			}
 		}
 	}
@@ -575,9 +572,11 @@ void gprs_test_timer_entry(void *arg)
 {
 	static rt_uint32_t	cnt = 0;
 	cnt++;
-	if((cnt%15) == 0)//15 min send gprs picture
+	if((cnt%10) == 0)//15 min send gprs picture
 	{
-		gprs_pic();
+		extern void mq(rt_uint32_t time);
+		mq(200);
+		//gprs_pic();
 	}
 }
 void test_gprs_pic(void)

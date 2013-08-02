@@ -136,22 +136,7 @@ void rt_init_thread_entry(void* parameter)
     rtgui_system_server_init();
   }
 #endif /* #ifdef RT_USING_RTGUI */
-  {
-    extern void photo_thread_init(void);
-    extern void filesystem_test(void);
-    extern void send_photo_thread_init(void);
-    extern void rt_mms_thread_init(void);
-		extern void voice_thread_init(void);
-		
-    //		extern void picture_thread_init(void);
 
-    //		picture_thread_init();
-    //		send_photo_thread_init();
-    			photo_thread_init();
-    			voice_thread_init();
-    //		filesystem_test();
-    //		rt_mms_thread_init();
-  }
 #ifdef	USE_WILDFIRE_TEST
   rt_kprintf("User Wild Fire Hardware Piatform TESE\n");
 #endif
@@ -168,6 +153,8 @@ static void logo_led_timeout(void *parameters)
 
 int rt_application_init()
 {
+	extern void photo_thread_init(void);
+	extern void voice_thread_init(void); 			
   rt_thread_t init_thread;
   rt_thread_t alarm_mail_process_thread;
   rt_thread_t sms_mail_process_thread;
@@ -272,7 +259,8 @@ int rt_application_init()
   {
     rt_thread_startup(battery_check_process_thread);
   }
-  
+  photo_thread_init();
+ 	voice_thread_init();
   
   /* init init_thread */
 #if (RT_THREAD_PRIORITY_MAX == 32)

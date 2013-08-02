@@ -13,6 +13,11 @@
 
 #include "rfid_uart.h"
 #include "gpio_pin.h"
+
+#define RFID_USART_TX_BUFFER_LEN   		64
+#define RFID_USART_RX_BUFFER_LEN   		64
+
+
 /*
  * Use UART4 with interrupt Rx and dma Tx
  *
@@ -54,6 +59,9 @@ struct rfid_uart_user_data_t rfid_uart_user_data =
   RFID_UART_TX_DMA_CHANNEL,
   RFID_UART_RX_DMA_CHANNEL,
 };
+rt_uint8_t	rfid_uart_rx_buffer[RFID_USART_TX_BUFFER_LEN];
+rt_uint8_t	rfid_uart_tx_buffer[RFID_USART_RX_BUFFER_LEN];
+
 struct serial_ringbuffer rfid_uart_int_rx;
 struct serial_ringbuffer rfid_uart_int_tx;
 
@@ -354,6 +362,10 @@ static rt_err_t rfid_uart_pos_configure(struct rt_serial_device *serial, struct 
 void rt_hw_rfid_uart_register(void)
 {
   rfid_uart_device.ops = &rfid_uart_pos;
+  rfid_uart_int_rx.buffer = rfid_uart_rx_buffer;
+  rfid_uart_int_tx.buffer = rfid_uart_tx_buffer;
+  rfid_uart_int_rx.size = RFID_USART_RX_BUFFER_LEN;
+  rfid_uart_int_tx.size = RFID_USART_TX_BUFFER_LEN;
   rfid_uart_device.int_rx = &rfid_uart_int_rx;
   rfid_uart_device.int_tx = &rfid_uart_int_tx;
   rfid_uart_device.config = rfid_uart_default_config;

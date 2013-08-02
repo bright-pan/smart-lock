@@ -30,6 +30,7 @@
 #define LED_ACTIVE_STATUS								1			//Fill Light
 #define LIGHT_ACTIVE_STATUS							1			//light
 #define PHOTO_INTERVAL_TIME							200 //2	//2s
+#define LIGHT_SAMPLING_CNT							100   //light sensor sampling number
 #define PIC_DATA_MAX_SIZE								70000	//70K
 #define PIC_DATA_MIN_SIZE								10000	//10K
 
@@ -597,9 +598,6 @@ void photo_change_pic_filename(cm_recv_mq_t recv_mq)
 }
 void photo_deal(camera_dev_t camera,cm_recv_mq_t recv_mq)
 {
-	//struct cm_send_mq send_mq;
-	//MMS_MAIL_TYPEDEF mms_mail_buf;
-
 	if('\0' == *(recv_mq->name2))
 	{
 		photo_create_file_one(camera,recv_mq->name1);	
@@ -614,14 +612,11 @@ void photo_deal(camera_dev_t camera,cm_recv_mq_t recv_mq)
 		rt_thread_delay(camera->time);
 		photo_create_file_one(camera,recv_mq->name2);	
 	}
-	/* camera woker finish send Message Queuing */
-	//mms_mail_buf.alarm_type = recv_mq->alarm_type;
-	//mms_mail_buf.time = recv_mq->date;
 	/*  Receive timeout make no difference */
 	if((CM_RUN_DEAL_OK == camera->error)||(CM_RECV_OUT_TIME & camera->error))
 	{
 		extern void send_mms_mail(ALARM_TYPEDEF alarm_type, time_t time, char *pic_name);
-		//rt_mq_send(mms_mq, &mms_mail_buf, sizeof(MMS_MAIL_TYPEDEF));
+
 		send_mms_mail(recv_mq->alarm_type,0,(char*)recv_mq->name2);//send mms
 	}
 	else
@@ -636,13 +631,26 @@ void photo_deal(camera_dev_t camera,cm_recv_mq_t recv_mq)
 void photo_light_control(camera_dev_t camera,rt_uint8_t status)
 {
 	rt_uint8_t dat = 0;
+	rt_uint8_t sample_cnt = LIGHT_SAMPLING_CNT;
+	rt_uint8_t result = 0;
 	
 	if(RT_NULL!= camera)
 	{
-		rt_device_read(camera->infrared,0,&dat,1);
+		/* supplementary lighting request */
 		if(LED_ACTIVE_STATUS== status)
 		{
-			if(LIGHT_ACTIVE_STATUS == dat)
+			/* sampling current light status */
+			while(sample_cnt--)
+			{
+				rt_device_read(camera->infrared,0,&dat,1);
+				rt_device_write(camera->glint_led,0,&dat,1);
+				/* current light is dark */
+				if(LIGHT_ACTIVE_STATUS == dat)
+				{
+					result++;
+				}
+			}
+			if(result > LIGHT_SAMPLING_CNT/2)
 			{
 				rt_device_write(camera->glint_led,0,&status,1);
 			}
@@ -702,7 +710,7 @@ rt_err_t work_flow_status(void)
 }
 void photo_thread_entry(void *arg)
 {
-	struct camera_dev photo;
+	struct camera_dev *photo = RT_NULL;
 	struct cm_recv_mq recv_mq;
 	rt_err_t	result;
 	
@@ -710,35 +718,31 @@ void photo_thread_entry(void *arg)
 															pic_timer_test,RT_NULL,
 															10,
 															RT_TIMER_FLAG_PERIODIC);
-	photo_struct_init(&photo);
+	//photo_struct_init(&photo);
 
-	camera_power_control(&photo,!POWR_ACTIVE_STATUS);	
+	//camera_power_control(&photo,!POWR_ACTIVE_STATUS);	
 	while(1)
 	{
 		result =  rt_mq_recv(photo_start_mq,&recv_mq,sizeof(recv_mq),24*360000);//3600sx24h is a day
-
-		/*if(work_flow_status() == -RT_ETIMEOUT)
-		{
-#ifdef	CMAERA_DEBUG_INFO_PRINTF
-			rt_kprintf("one work flow not finsh\n\n");
-#endif
-			continue;
-		}
-		*/
 		if(RT_EOK == result)								//in working order
 		{
-			camera_power_control(&photo,POWR_ACTIVE_STATUS); 	//open camera power
-			
-			rt_thread_delay(1);
-
-			photo.data = (rt_uint8_t*)rt_malloc(CM_BUFFER_LEN);
-			if(photo.data == RT_NULL)
+			photo = (struct camera_dev*)rt_malloc(sizeof(struct camera_dev));
+			if(photo == RT_NULL)
 			{
 				rt_kprintf("camera buffer create fail\n");
 				continue;
 			}
-			rt_memset(photo.data,0,CM_BUFFER_LEN);
-			photo_reset(&photo);
+			rt_kprintf("camrea data bufer %d\n",sizeof(struct camera_dev));
+			
+			rt_memset(photo,0,sizeof(struct camera_dev));
+			
+			photo_struct_init(photo);
+			
+			camera_power_control(photo,POWR_ACTIVE_STATUS); 	//open camera power
+			
+			rt_thread_delay(1);
+
+			photo_reset(photo);
 
 			/*start camera job */
 			rt_timer_start(pic_timer);
@@ -746,35 +750,32 @@ void photo_thread_entry(void *arg)
 			//glint_light_control(&photo,1);
 			//photo_light_control(&photo,LED_ACTIVE_STATUS);
 
-			
-			photo.time = recv_mq.time;
-			rt_device_set_rx_indicate(photo.device,com2_photo_data_rx_indicate);
-			photo.error = CM_RUN_DEAL_OK;
+			photo->time = recv_mq.time;
+			rt_device_set_rx_indicate(photo->device,com2_photo_data_rx_indicate);
+			photo->error = CM_RUN_DEAL_OK;
 
-			
-			
-			com2_release_buffer(&photo);
+			com2_release_buffer(photo);
 
 			rt_kprintf("\n%d\n%s\n%s",recv_mq.time,recv_mq.name1,recv_mq.name2);
 
 			rt_mutex_take(pic_file_mutex,RT_WAITING_FOREVER);
 			
-			photo_deal(&photo,&recv_mq);	
+			photo_deal(photo,&recv_mq);	
 
 			rt_mutex_release(pic_file_mutex);
 			
-			camera_power_control(&photo,0); 	//close camera power
+			camera_power_control(photo,0); 	//close camera power
 
 		}
 		else if(-RT_ETIMEOUT == result)			//timeout checout module
 		{
-			camera_module_self_test(&photo);
+			camera_module_self_test(photo);
 			
 			rt_kprintf("camera close power!!!\n");
 		}
 		rt_thread_delay(50);								//wait picture send finish
 		
-		rt_free(photo.data);
+		rt_free(photo);
 	}
 }
 
@@ -931,13 +932,9 @@ void camera_infrared_timer(void *arg)
 }
 void camera_infrared_thread_enter(void *arg)
 {
-	rt_device_t ir_dev;									//ir device
-	rt_uint8_t	ir_pin_dat;									
-	rt_uint32_t flag = 0;								//ir pin status real-time monitoring
 	rt_uint8_t	leave_flag = 0;				
 	rt_err_t 		result = RT_NULL;
-	rt_uint32_t	recv_e;
-
+	
 	cm_ir_timer = rt_timer_create("cm_ir_t",
 																camera_infrared_timer,
 																RT_NULL,100,
@@ -947,16 +944,18 @@ void camera_infrared_thread_enter(void *arg)
 																		camera_alarm_time_interval,
 																		RT_NULL,3000,
 																		RT_TIMER_FLAG_PERIODIC);
-
-	ir_dev = rt_device_find(DEVICE_NAME_CAMERA_IRDASENSOR);
-	
 	while(1)
 	{
 		/*check up machine work status(sleep or wake up)*/
   	machine_status_deal(RT_FALSE,RT_EVENT_FLAG_OR,RT_WAITING_FOREVER);
 		result = rt_sem_take(cm_ir_sem,200);//ir alarm touch off
 		if(RT_EOK == result)
-		{			
+		{		
+			rt_uint8_t	ir_pin_dat; 						//ir gpio
+			rt_device_t ir_dev;									//ir device
+			rt_uint32_t flag = 0;								//ir pin status real-time monitoring
+			
+			ir_dev = rt_device_find(DEVICE_NAME_CAMERA_IRDASENSOR);
 			rt_timer_start(cm_ir_timer);
 			if(ir_dev != RT_NULL)
 			{
@@ -1002,6 +1001,7 @@ void camera_infrared_thread_enter(void *arg)
 					{
 						rt_device_t rtc_dev;
 						time_t			cur_data;
+						rt_uint32_t	recv_e;
 						
 						cm_ir_time_value = 0;
 						rt_timer_stop(cm_ir_timer);
@@ -1035,6 +1035,10 @@ void camera_infrared_thread_enter(void *arg)
 		}
 		else if(result == -RT_ETIMEOUT)
 		{
+			rt_uint8_t	ir_pin_dat; 
+			rt_device_t ir_dev;									//ir device
+			ir_dev = rt_device_find(DEVICE_NAME_CAMERA_IRDASENSOR);
+			
 			if(2 == leave_flag)
 			{
 

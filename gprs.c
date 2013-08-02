@@ -710,6 +710,7 @@ CHECK_SERVER_SEND:
 					pic_data.cur_page--;
 					rt_thread_delay(200);
 					send_last_cnt++;
+					send_result = -1;
 					goto CHECK_SERVER_SEND;
 				}
 				else
