@@ -23,6 +23,8 @@
 
 #define GSM_MAIL_MAX_MSGS 20
 
+#define GSM_PROCESS_BUF_SIZE 1024
+
 rt_mq_t mq_gsm = RT_NULL;
 rt_mutex_t mutex_gsm_mail_sequence;
 
@@ -340,10 +342,20 @@ int8_t at_response_process(AT_COMMAND_INDEX_TYPEDEF index, uint8_t *buf, GSM_MAI
 
   while (counts < 10)
   {
-    memset(process_buf, 0, 512);
-    recv_counts = gsm_recv_frame(process_buf);
-    gsm_put_char(process_buf, strlen((char *)process_buf));
-    gsm_put_hex(process_buf, strlen((char *)process_buf));
+    if (index == AT_CIPSEND_SUFFIX)
+    {
+      memset(process_buf, 0, 512);
+      recv_counts = rt_device_read(device_gsm_usart, 0 ,process_buf, cmd_data->cipsend.length);
+      gsm_put_char(process_buf, recv_counts);
+      gsm_put_hex(process_buf, recv_counts);
+    }
+    else
+    {
+      memset(process_buf, 0, 512);
+      recv_counts = gsm_recv_frame(process_buf);
+      gsm_put_char(process_buf, strlen((char *)process_buf));
+      gsm_put_hex(process_buf, strlen((char *)process_buf));
+    }
     if (recv_counts)
     {
       switch (index)
@@ -880,7 +892,7 @@ int8_t at_response_process(AT_COMMAND_INDEX_TYPEDEF index, uint8_t *buf, GSM_MAI
         }
         case AT_CIPSEND_SUFFIX : {
 
-          if (strstr((char *)process_buf, (char *)buf))
+          if (!memcmp(process_buf, buf, cmd_data->cipsend.length))
           {
             delay_counts = 0;
             while (delay_counts++ < 10)
@@ -1467,6 +1479,7 @@ void gsm_process_thread_entry(void *parameters)
                 {
                   sscanf((char *)process_buf, "+RECEIVE,0,%d:", (int *)gsm_mail_buf.mail_data.gprs.response_length);
                   recv_counts = rt_device_read(device_gsm_usart, 0, gsm_mail_buf.mail_data.gprs.response, *gsm_mail_buf.mail_data.gprs.response_length);
+                  //gsm_put_hex(gsm_mail_buf.mail_data.gprs.response, recv_counts);
                   if (recv_counts == *gsm_mail_buf.mail_data.gprs.response_length)
                   {
                     *(gsm_mail_buf.result) = AT_RESPONSE_OK;
@@ -1525,6 +1538,7 @@ void gsm_process_thread_entry(void *parameters)
       }
       else
       {
+        /*
         memset(process_buf, 0, 512);
         recv_counts = gsm_recv_frame(process_buf);
         if (recv_counts)

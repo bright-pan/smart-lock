@@ -477,6 +477,7 @@ int8_t send_gprs_auth_frame(void)
   send_result = gsm_command(AT_CIPSEND, 50, &gsm_mail_cmd_data);
   if (send_result == AT_RESPONSE_OK)
   {
+    gsm_put_char("send auth ok!!!", strlen("send auth ok!!!"));
     recv_times = 0;
     while (recv_times < 10)
     {
@@ -602,7 +603,7 @@ rt_int8_t send_picture_data(void)
 	rt_int8_t         send_result = 1;
 	rt_uint8_t				send_last_cnt = 0;
 	rt_uint16_t				delay_time = 100;
-	rt_uint16_t       recv_counts;
+	rt_uint32_t       recv_counts;
 	rt_uint32_t       pic_size;
 	rt_uint32_t       send_length;
 	GPRS_SEND_PIC     pic_data;
